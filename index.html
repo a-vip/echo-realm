@@ -1534,6 +1534,16 @@
     assets.registerImage('long_tavern', 'assets/sprites/long_tavern.png');
     assets.registerImage('shed', 'assets/sprites/shed.png');
     assets.registerImage('weathervane', 'assets/sprites/weathervane.png');
+    assets.registerImage('zelda_house_interior', 'assets/sprites/zelda_house_interior.png');
+    assets.registerImage('chest_small_closed', 'assets/sprites/chest_small_closed.png');
+    assets.registerImage('chest_small_open', 'assets/sprites/chest_small_open.png');
+    assets.registerImage('chest_big_closed', 'assets/sprites/chest_big_closed.png');
+    assets.registerImage('chest_big_open', 'assets/sprites/chest_big_open.png');
+    assets.registerImage('potion_red', 'assets/sprites/potion_red.png');
+    assets.registerImage('potion_green', 'assets/sprites/potion_green.png');
+    assets.registerImage('potion_blue', 'assets/sprites/potion_blue.png');
+    assets.registerImage('alttp_stump', 'assets/sprites/alttp_stump.png');
+    assets.registerImage('alttp_tallgrass', 'assets/sprites/alttp_tallgrass.png');
 
     // Legacy spritesheet registration for fallback
     assets.registerSpriteSheet('alttp_overworld', 'assets/sprites/alttp_overworld_spritesheet.jpg', 16, 16);
@@ -2352,8 +2362,8 @@
             mentorName: 'Sister Elena',
             portalTarget: 5,
             chest: { col: 6, row: 5, itemId: 'boots_inquiry' },
-            cols: 52,
-            rows: 50,
+            cols: 56,
+            rows: 54,
             buildings: [
                 { id: 'inquisition_hall', col: 12, row: 10, wCols: 5, hRows: 3, spriteKey: 'red_cottage_2', roofColor: 'terracotta', name: "Inquisition Chapterhouse" },
                 { id: 'cloister_cell', col: 34, row: 10, wCols: 4, hRows: 3, spriteKey: 'cyan_house', roofColor: 'slate', name: "Penitent's Cloister" },
@@ -2405,8 +2415,8 @@
             mentorName: 'Ranger Rowan',
             portalTarget: 6,
             chest: { col: 26, row: 5, itemId: 'raiment_solidarity' },
-            cols: 54,
-            rows: 50,
+            cols: 58,
+            rows: 54,
             buildings: [
                 { id: 'ranger_outpost', col: 12, row: 8, wCols: 4, hRows: 3, spriteKey: 'shed', roofColor: 'wood', name: "Ranger's Outpost" },
                 { id: 'herbalist_sanctuary', col: 38, row: 10, wCols: 4, hRows: 3, spriteKey: 'red_cottage_1', roofColor: 'terracotta', name: "Herbalist's Sanctuary" },
@@ -2443,8 +2453,8 @@
             mentorName: 'Organizer Kael',
             portalTarget: 7,
             chest: { col: 27, row: 5, itemId: 'gauntlets_solidarity' },
-            cols: 52,
-            rows: 48,
+            cols: 56,
+            rows: 52,
             buildings: [
                 { id: 'border_inspection', col: 12, row: 10, wCols: 5, hRows: 3, spriteKey: 'long_tavern', roofColor: 'terracotta', name: "Border Inspection Depot" },
                 { id: 'safehouse', col: 36, row: 10, wCols: 4, hRows: 3, spriteKey: 'blue_cottage_2', roofColor: 'blue', name: "Underground Safehouse" },
@@ -2496,8 +2506,8 @@
             mentorName: 'Comrade Tariq',
             portalTarget: 8,
             chest: { col: 7, row: 5, itemId: 'crown_veritas' },
-            cols: 54,
-            rows: 50,
+            cols: 58,
+            rows: 54,
             buildings: [
                 { id: 'oasis_lodge', col: 12, row: 10, wCols: 5, hRows: 3, spriteKey: 'long_tavern', roofColor: 'terracotta', name: "Oasis Springs Lodge" },
                 { id: 'platonic_villa', col: 36, row: 10, wCols: 4, hRows: 3, spriteKey: 'red_cottage_2', roofColor: 'terracotta', name: "Platonic Academy Villa" },
@@ -2534,8 +2544,8 @@
             mentorName: 'Professor Avi',
             portalTarget: 0,
             chest: { col: 6, row: 5, itemId: 'aegis_dialectics' },
-            cols: 52,
-            rows: 52,
+            cols: 56,
+            rows: 56,
             buildings: [
                 { id: 'citadel_armory', col: 12, row: 10, wCols: 5, hRows: 3, spriteKey: 'long_tavern', roofColor: 'terracotta', name: "Citadel Armory" },
                 { id: 'propaganda_ministry', col: 34, row: 10, wCols: 5, hRows: 3, spriteKey: 'red_cottage_2', roofColor: 'terracotta', name: "Ministry of Algorithmic Truth" },
@@ -4134,50 +4144,62 @@
         const hasWest = overPos.col > 0;
         const hasEast = overPos.col < 2;
 
-        const midC = Math.floor(cols / 2);
-        const midR = Math.floor(rows / 2);
-
+        // Unified symmetrical highway coordinates:
+        // North & South highway: cols 14..22 across ALL sectors
+        // West & East highway: rows 10..18 across ALL sectors
         if (hasNorth) {
-            for (let c = midC - 6; c <= midC + 6; c++) {
-                if (mapGrid[0]) mapGrid[0][c] = 1;
-                if (mapGrid[1]) mapGrid[1][c] = 1;
+            for (let c = 0; c < 14; c++) {
+                if (mapGrid[0]) mapGrid[0][c] = 3;
+                if (mapGrid[1]) mapGrid[1][c] = 3;
             }
-            // Ensure compatibility with tests checking standard corridor cols 14..20
-            for (let c = 14; c <= 20; c++) {
+            for (let c = 23; c < cols; c++) {
+                if (mapGrid[0]) mapGrid[0][c] = 3;
+                if (mapGrid[1]) mapGrid[1][c] = 3;
+            }
+            for (let c = 14; c <= 22; c++) {
                 if (mapGrid[0]) mapGrid[0][c] = 1;
                 if (mapGrid[1]) mapGrid[1][c] = 1;
             }
         }
         if (hasSouth) {
-            for (let c = midC - 6; c <= midC + 6; c++) {
-                if (mapGrid[rows - 1]) mapGrid[rows - 1][c] = 1;
-                if (mapGrid[rows - 2]) mapGrid[rows - 2][c] = 1;
+            for (let c = 0; c < 14; c++) {
+                if (mapGrid[rows - 1]) mapGrid[rows - 1][c] = 3;
+                if (mapGrid[rows - 2]) mapGrid[rows - 2][c] = 3;
             }
-            // Ensure compatibility with tests checking standard corridor cols 14..20
-            for (let c = 14; c <= 20; c++) {
+            for (let c = 23; c < cols; c++) {
+                if (mapGrid[rows - 1]) mapGrid[rows - 1][c] = 3;
+                if (mapGrid[rows - 2]) mapGrid[rows - 2][c] = 3;
+            }
+            for (let c = 14; c <= 22; c++) {
                 if (mapGrid[rows - 1]) mapGrid[rows - 1][c] = 1;
                 if (mapGrid[rows - 2]) mapGrid[rows - 2][c] = 1;
                 if (mapGrid[MAP_ROWS - 1] && MAP_ROWS <= rows) mapGrid[MAP_ROWS - 1][c] = 1;
             }
         }
         if (hasWest) {
-            for (let r = midR - 6; r <= midR + 6; r++) {
-                if (mapGrid[r]) mapGrid[r][0] = 1;
-                if (mapGrid[r]) mapGrid[r][1] = 1;
+            for (let r = 0; r < 10; r++) {
+                if (mapGrid[r]) mapGrid[r][0] = 3;
+                if (mapGrid[r]) mapGrid[r][1] = 3;
             }
-            // Ensure compatibility with tests checking standard corridor rows 10..16
-            for (let r = 10; r <= 16; r++) {
+            for (let r = 19; r < rows; r++) {
+                if (mapGrid[r]) mapGrid[r][0] = 3;
+                if (mapGrid[r]) mapGrid[r][1] = 3;
+            }
+            for (let r = 10; r <= 18; r++) {
                 if (mapGrid[r]) mapGrid[r][0] = 1;
                 if (mapGrid[r]) mapGrid[r][1] = 1;
             }
         }
         if (hasEast) {
-            for (let r = midR - 6; r <= midR + 6; r++) {
-                if (mapGrid[r]) mapGrid[r][cols - 1] = 1;
-                if (mapGrid[r]) mapGrid[r][cols - 2] = 1;
+            for (let r = 0; r < 10; r++) {
+                if (mapGrid[r]) mapGrid[r][cols - 1] = 3;
+                if (mapGrid[r]) mapGrid[r][cols - 2] = 3;
             }
-            // Ensure compatibility with tests checking standard corridor rows 10..16
-            for (let r = 10; r <= 16; r++) {
+            for (let r = 19; r < rows; r++) {
+                if (mapGrid[r]) mapGrid[r][cols - 1] = 3;
+                if (mapGrid[r]) mapGrid[r][cols - 2] = 3;
+            }
+            for (let r = 10; r <= 18; r++) {
                 if (mapGrid[r]) mapGrid[r][cols - 1] = 1;
                 if (mapGrid[r]) mapGrid[r][cols - 2] = 1;
                 if (mapGrid[r] && mapGrid[r][MAP_COLS - 1] !== undefined && MAP_COLS <= cols) {
@@ -4591,10 +4613,12 @@
     function isTileBlocked(col, row) {
         if (currentInterior) {
             if (row < 0 || row >= currentInterior.rows || col < 0 || col >= currentInterior.cols) return true;
-            // South doorway exit is open
             if (row >= currentInterior.rows - 2 && col === 7) return false;
-            const t = currentInterior.grid[row] ? currentInterior.grid[row][col] : 2;
-            return t === 2 || t === 12;
+            if (currentInterior.grid && currentInterior.grid[row]) {
+                const t = currentInterior.grid[row][col];
+                return t === 2 || t === 12;
+            }
+            return false;
         }
 
         const curCols = getMapCols(currentMapIndex);
@@ -4661,13 +4685,66 @@
         const maxBoundY = (curRows - 1) * TILE_SIZE - r - 2;
 
         if (currentInterior) {
-            ent.x = Math.max(minBoundX, Math.min(maxBoundX, ent.x));
-            // Door exit trigger
-            if (ent === player && ent.y >= (currentInterior.rows - 1.4) * TILE_SIZE && Math.floor(ent.x / TILE_SIZE) === 7) {
-                exitBuildingInterior();
-                return;
+            // Interior pixel boundaries (scaled Link's house interior 784x616)
+            const minX = 110;
+            const maxX = 674;
+            const minY = 125;
+            const maxY = 516;
+            const doorMinX = 330;
+            const doorMaxX = 454;
+            const doorMaxY = 575;
+
+            ent.x += dx;
+            // Bed collision
+            if (ent.x < 220 && ent.y < 255) {
+                if (dx > 0) ent.x = 220;
             }
-            ent.y = Math.max(minBoundY, Math.min((currentInterior.rows - 1) * TILE_SIZE - r, ent.y));
+            // Dining table collision
+            if (ent.x > 440 && ent.x < 635 && ent.y > 310 && ent.y < 450) {
+                if (dx > 0) ent.x = 440;
+                else if (dx < 0) ent.x = 635;
+            }
+            // Nightstand collision
+            if (ent.x < 250 && ent.y > 450) {
+                if (dx < 0) ent.x = 250;
+            }
+            // Treasure Chest collision
+            if (ent.x > 590 && ent.y > 450) {
+                if (dx > 0) ent.x = 590;
+            }
+
+            ent.x = Math.max(minX, Math.min(maxX, ent.x));
+
+            ent.y += dy;
+            // Bed collision
+            if (ent.x < 220 && ent.y < 255) {
+                if (dy < 0) ent.y = 255;
+            }
+            // Table collision
+            if (ent.x > 440 && ent.x < 635 && ent.y > 310 && ent.y < 450) {
+                if (dy > 0) ent.y = 310;
+                else if (dy < 0) ent.y = 450;
+            }
+            // Nightstand collision
+            if (ent.x < 250 && ent.y > 450) {
+                if (dy > 0) ent.y = 450;
+            }
+            // Chest collision
+            if (ent.x > 590 && ent.y > 450) {
+                if (dy > 0) ent.y = 450;
+            }
+
+            // Doorway exit detection
+            if (ent.x >= doorMinX && ent.x <= doorMaxX) {
+                ent.y = Math.max(minY, Math.min(doorMaxY, ent.y));
+                if (ent === player && ent.y >= 528) {
+                    exitBuildingInterior();
+                    return;
+                }
+            } else {
+                ent.y = Math.max(minY, Math.min(maxY, ent.y));
+            }
+            return;
         } else {
             ent.x = Math.max(minBoundX, Math.min(maxBoundX, ent.x));
             ent.y = Math.max(minBoundY, Math.min(maxBoundY, ent.y));
@@ -4974,32 +5051,24 @@
                 const westMap = overPos.col > 0 ? OVERWORLD_GRID[overPos.row][overPos.col - 1] : null;
                 const eastMap = overPos.col < 2 ? OVERWORLD_GRID[overPos.row][overPos.col + 1] : null;
 
+                // Symmetrical matching highway transitions
                 if (northMap !== null && player.y <= 0.8 * TILE_SIZE) {
                     const targetRows = getMapRows(northMap);
-                    const targetCols = getMapCols(northMap);
-                    const ratioX = player.x / (curCols * TILE_SIZE);
-                    const spawnX = Math.max(2 * TILE_SIZE, Math.min((targetCols - 2) * TILE_SIZE, ratioX * (targetCols * TILE_SIZE)));
-                    transitionToNeighborMap(northMap, spawnX, (targetRows - 2) * TILE_SIZE, 'North');
+                    const spawnX = Math.max(14.5 * TILE_SIZE, Math.min(21.5 * TILE_SIZE, player.x));
+                    transitionToNeighborMap(northMap, spawnX, (targetRows - 2.5) * TILE_SIZE, 'North');
                     return;
                 } else if (southMap !== null && player.y >= (curRows - 1.2) * TILE_SIZE) {
-                    const targetCols = getMapCols(southMap);
-                    const ratioX = player.x / (curCols * TILE_SIZE);
-                    const spawnX = Math.max(2 * TILE_SIZE, Math.min((targetCols - 2) * TILE_SIZE, ratioX * (targetCols * TILE_SIZE)));
-                    transitionToNeighborMap(southMap, spawnX, 1.8 * TILE_SIZE, 'South');
+                    const spawnX = Math.max(14.5 * TILE_SIZE, Math.min(21.5 * TILE_SIZE, player.x));
+                    transitionToNeighborMap(southMap, spawnX, 2.5 * TILE_SIZE, 'South');
                     return;
                 } else if (westMap !== null && player.x <= 0.8 * TILE_SIZE) {
                     const targetCols = getMapCols(westMap);
-                    const targetRows = getMapRows(westMap);
-                    const ratioY = player.y / (curRows * TILE_SIZE);
-                    const spawnY = Math.max(2 * TILE_SIZE, Math.min((targetRows - 2) * TILE_SIZE, ratioY * (targetRows * TILE_SIZE)));
-                    transitionToNeighborMap(westMap, (targetCols - 2) * TILE_SIZE, spawnY, 'West');
+                    const spawnY = Math.max(10.5 * TILE_SIZE, Math.min(17.5 * TILE_SIZE, player.y));
+                    transitionToNeighborMap(westMap, (targetCols - 2.5) * TILE_SIZE, spawnY, 'West');
                     return;
                 } else if (eastMap !== null && player.x >= (curCols - 1.2) * TILE_SIZE) {
-                    const targetCols = getMapCols(eastMap);
-                    const targetRows = getMapRows(eastMap);
-                    const ratioY = player.y / (curRows * TILE_SIZE);
-                    const spawnY = Math.max(2 * TILE_SIZE, Math.min((targetRows - 2) * TILE_SIZE, ratioY * (targetRows * TILE_SIZE)));
-                    transitionToNeighborMap(eastMap, 1.8 * TILE_SIZE, spawnY, 'East');
+                    const spawnY = Math.max(10.5 * TILE_SIZE, Math.min(17.5 * TILE_SIZE, player.y));
+                    transitionToNeighborMap(eastMap, 2.5 * TILE_SIZE, spawnY, 'East');
                     return;
                 }
             }
@@ -5300,19 +5369,31 @@
             }
         }
 
-        // 5. Check Proximity to Chests, Puzzle Pedestals, NPCs, or Portals for [SPACE] Interaction Prompt
+        // 5. Check Proximity for [SPACE] Interaction Prompt
         const promptEl = document.getElementById('interactPrompt');
         const nearTarget = findNearestInteractable();
         if (nearTarget) {
             promptEl.classList.remove('hidden');
-            if (nearTarget.type === 'chest') {
+            if (nearTarget.type === 'exit_door') {
+                promptEl.textContent = 'Press [SPACE] to Exit to Overworld';
+            } else if (nearTarget.type === 'door') {
+                const bName = (nearTarget.obj && nearTarget.obj.name) ? nearTarget.obj.name : 'Building';
+                promptEl.textContent = `Press [SPACE] to Enter ${bName}`;
+            } else if (nearTarget.type === 'pot') {
+                promptEl.textContent = 'Press [SPACE] to Lift Clay Pot';
+            } else if (nearTarget.type === 'throw_pot') {
+                promptEl.textContent = 'Press [SPACE] to Throw Clay Pot';
+            } else if (nearTarget.type === 'interior_chest' || nearTarget.type === 'chest') {
                 promptEl.textContent = 'Press [SPACE] to Open Treasure Chest';
-            } else if (nearTarget.type === 'pedestal') {
-                promptEl.textContent = `Press [SPACE] to Inspect ${nearTarget.obj.label}`;
+            } else if (nearTarget.type === 'narrative_prop') {
+                const pName = (nearTarget.obj && nearTarget.obj.name) ? nearTarget.obj.name : 'Manuscript';
+                promptEl.textContent = `Press [SPACE] to Inspect ${pName}`;
             } else if (nearTarget.type === 'npc') {
                 promptEl.textContent = `Press [SPACE] to Speak with ${nearTarget.obj.name}`;
+            } else if (nearTarget.type === 'pedestal') {
+                promptEl.textContent = `Press [SPACE] to Inspect ${nearTarget.obj.label}`;
             } else {
-                promptEl.textContent = `Press [SPACE] to Enter ${nearTarget.obj.label}`;
+                promptEl.textContent = 'Press [SPACE] to Interact';
             }
         } else {
             promptEl.classList.add('hidden');
@@ -5343,59 +5424,31 @@
     let activePotProjectiles = [];
 
     function enterBuildingInterior(building) {
-        const cols = 15;
-        const rows = 13;
-        const grid = [];
-        for (let r = 0; r < rows; r++) {
-            grid[r] = [];
-            for (let c = 0; c < cols; c++) {
-                if (r <= 1 || r === rows - 1 || c === 0 || c === cols - 1) {
-                    grid[r][c] = 2; // Outer Timber / Stone Walls
-                } else {
-                    grid[r][c] = 5; // Warm Floor Planks
-                }
-            }
-        }
-        // South doorway exit threshold
-        grid[rows - 1][7] = 1;
-        grid[rows - 2][7] = 1;
+        const scale = 3.5;
+        const roomW = 784;
+        const roomH = 616;
 
-        // Four-poster bed top-left (cols 2..3, rows 2..3)
-        grid[2][2] = 12; grid[2][3] = 12;
-        grid[3][2] = 12; grid[3][3] = 12;
-
-        // Stone hearth & fireplace top wall (cols 6..8, rows 1..2)
-        grid[1][6] = 12; grid[1][7] = 12; grid[1][8] = 12;
-
-        // Large carved oak dining table center-right (cols 8..11, rows 6..7)
-        grid[6][8] = 12; grid[6][9] = 12; grid[6][10] = 12; grid[6][11] = 12;
-        grid[7][8] = 12; grid[7][9] = 12; grid[7][10] = 12; grid[7][11] = 12;
-        // Stools
-        grid[5][9] = 12; grid[8][9] = 12;
-
-        // Writing desk / nightstand lower-left (col 3, row 8)
-        grid[8][3] = 12;
-
-        // 3 Clay pots along left wall next to bed
+        // 3 Authentic ALttP Clay pots on shelf beside the bed
         const pots = [
-            { id: 1, x: 2.5 * TILE_SIZE, y: 5.5 * TILE_SIZE, col: 2, row: 5, lifted: false, broken: false },
-            { id: 2, x: 2.5 * TILE_SIZE, y: 6.5 * TILE_SIZE, col: 2, row: 6, lifted: false, broken: false },
-            { id: 3, x: 2.5 * TILE_SIZE, y: 7.5 * TILE_SIZE, col: 2, row: 7, lifted: false, broken: false }
+            { id: 1, x: 126, y: 273, lifted: false, broken: false },
+            { id: 2, x: 126, y: 329, lifted: false, broken: false },
+            { id: 3, x: 126, y: 385, lifted: false, broken: false }
         ];
 
         const prop = getBuildingNarrativeProp(building);
         const chest = {
-            col: 11, row: 8,
-            x: 11.5 * TILE_SIZE, y: 8.5 * TILE_SIZE,
+            x: 620, y: 490,
             opened: !!building.interiorChestOpened
         };
 
         currentInterior = {
             building,
             name: building.name,
-            cols,
-            rows,
-            grid,
+            cols: 15,
+            rows: 13,
+            scale,
+            roomW,
+            roomH,
             pots,
             chest,
             prop,
@@ -5404,8 +5457,9 @@
             mapIndex: currentMapIndex
         };
 
-        player.x = 7.5 * TILE_SIZE;
-        player.y = 10.2 * TILE_SIZE;
+        // Spawn player right inside the south doorway facing UP
+        player.x = 392;
+        player.y = 480;
         player.dir = 1; // Facing Up
         player.holdingPot = null;
 
@@ -5416,10 +5470,29 @@
 
     function exitBuildingInterior() {
         if (!currentInterior) return;
+        const b = currentInterior.building;
         const bName = currentInterior.name;
-        player.x = currentInterior.returnX;
-        player.y = currentInterior.returnY + 16;
+        currentInterior = null;
+        if (player.holdingPot) player.holdingPot = null;
+
+        // Ensure safe, open spawn tile directly outside front door
+        const doorCol = b.col + Math.floor(b.wCols / 2);
+        const doorRow = b.row + b.hRows;
+
+        // Guarantee path is open below building
+        if (mapGrid[doorRow]) mapGrid[doorRow][doorCol] = 1;
+        if (mapGrid[doorRow + 1]) mapGrid[doorRow + 1][doorCol] = 1;
+        if (mapGrid[doorRow + 2]) mapGrid[doorRow + 2][doorCol] = 1;
+
+        player.x = (doorCol + 0.5) * TILE_SIZE;
+        player.y = (doorRow + 1.2) * TILE_SIZE;
         player.dir = 0; // Facing Down
+
+        // Anti-stuck safety check: if spawn tile is somehow blocked, nudge to open tile
+        if (isTileBlocked(doorCol, doorRow + 1)) {
+            player.y = (doorRow + 2.2) * TILE_SIZE;
+        }
+
         if (player.holdingPot) player.holdingPot = null;
         currentInterior = null;
         audio.playFootstep('stone');
@@ -5432,50 +5505,43 @@
         if (name.includes('Archive') || name.includes('Scriptoria') || name.includes('Hermitage')) {
             return {
                 name: "Scribe's Manuscript Desk",
-                col: 3, row: 8,
-                x: 3.5 * TILE_SIZE, y: 8.5 * TILE_SIZE,
+                x: 180, y: 490,
                 text: "A parchment reads: 'The first weapon of demagogues is to replace nuanced debate with binary outrage. Protect your attention as your sharpest blade.'"
             };
         } else if (name.includes('Apothecary') || name.includes('Herbalist')) {
             return {
                 name: "Apothecary's Distillation Bench",
-                col: 3, row: 8,
-                x: 3.5 * TILE_SIZE, y: 8.5 * TILE_SIZE,
+                x: 180, y: 490,
                 text: "Herbal vials are labeled 'Amygdala Soother'. A note explains: 'Fear shuts down logical reasoning. When emotional panic strikes, breathe before reacting.'"
             };
         } else if (name.includes('Tavern') || name.includes('Fellowship')) {
             return {
                 name: "Common Hearth & Chronicle",
-                col: 3, row: 8,
-                x: 3.5 * TILE_SIZE, y: 8.5 * TILE_SIZE,
+                x: 180, y: 490,
                 text: "A traveler's ledger: 'In this hall, all factions break bread together. Face-to-face contact dissolves the stereotypes crafted by digital echo chambers.'"
             };
         } else if (name.includes('Workshop') || name.includes('Armory')) {
             return {
                 name: "Artisan's Anvil & Blueprints",
-                col: 3, row: 8,
-                x: 3.5 * TILE_SIZE, y: 8.5 * TILE_SIZE,
+                x: 180, y: 490,
                 text: "Blueprints for epistemic shields. Note: 'Dogma fractures under pressure; dialectical inquiry grows stronger through challenge.'"
             };
         } else if (name.includes('Observatory') || name.includes('Academy') || name.includes('Nuance')) {
             return {
                 name: "Dialectic Orrery & Sky Chart",
-                col: 3, row: 8,
-                x: 3.5 * TILE_SIZE, y: 8.5 * TILE_SIZE,
+                x: 180, y: 490,
                 text: "Constellations of Logical Fallacies are mapped: Ad Hominem, Strawman, False Equivalence. Understanding them grants immunity to manipulation."
             };
         } else if (name.includes('Safehouse') || name.includes('Refuge') || name.includes('Solidarity')) {
             return {
                 name: "Underground Solidarity Roster",
-                col: 3, row: 8,
-                x: 3.5 * TILE_SIZE, y: 8.5 * TILE_SIZE,
+                x: 180, y: 490,
                 text: "A secret registry of brave neighbors hiding targeted out-groups from the Border Wardens. 'Solidarity over scapegoating.'"
             };
         } else {
             return {
                 name: "Philosopher's Reading Desk",
-                col: 3, row: 8,
-                x: 3.5 * TILE_SIZE, y: 8.5 * TILE_SIZE,
+                x: 180, y: 490,
                 text: "A well-worn volume of Socratic Dialogues: 'I know that I know nothing—and in acknowledging that, the search for true wisdom begins.'"
             };
         }
@@ -5552,205 +5618,72 @@
     }
 
     function renderInterior(ctx, w, h) {
-        ctx.fillStyle = '#0a0705';
+        ctx.fillStyle = '#0b0908';
         ctx.fillRect(0, 0, w, h);
 
-        const roomW = currentInterior.cols * TILE_SIZE;
-        const roomH = currentInterior.rows * TILE_SIZE;
+        const scale = currentInterior.scale || 3.5;
+        const roomW = currentInterior.roomW || 784;
+        const roomH = currentInterior.roomH || 616;
         const offX = Math.floor((w - roomW) / 2);
         const offY = Math.floor((h - roomH) / 2);
 
         ctx.save();
-        ctx.translate(offX, offY);
 
-        // 1. Warm Wooden Floor Planks
-        for (let r = 1; r < currentInterior.rows - 1; r++) {
-            for (let c = 1; c < currentInterior.cols - 1; c++) {
-                const px = c * TILE_SIZE;
-                const py = r * TILE_SIZE;
-                ctx.fillStyle = ((r + c) % 2 === 0) ? '#684e32' : '#5c4328';
-                ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-
-                // Horizontal plank line grooves
-                ctx.strokeStyle = 'rgba(40, 25, 12, 0.45)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(px, py + TILE_SIZE / 2);
-                ctx.lineTo(px + TILE_SIZE, py + TILE_SIZE / 2);
-                ctx.stroke();
-
-                // Subtle wood grain nails
-                if ((r * 3 + c * 7) % 5 === 0) {
-                    ctx.fillStyle = '#2e1c0c';
-                    ctx.fillRect(px + 4, py + 3, 2, 2);
-                    ctx.fillRect(px + TILE_SIZE - 6, py + TILE_SIZE / 2 + 3, 2, 2);
-                }
-            }
+        // 1. Render Authentic SNES Zelda Room Backdrop
+        if (assets.hasImage('zelda_house_interior')) {
+            ctx.imageSmoothingEnabled = false;
+            assets.drawImage(ctx, 'zelda_house_interior', offX, offY, roomW, roomH);
         }
 
-        // 2. Surrounding Timber & Stone Walls
-        for (let r = 0; r < currentInterior.rows; r++) {
-            for (let c = 0; c < currentInterior.cols; c++) {
-                if (r <= 1 || r === currentInterior.rows - 1 || c === 0 || c === currentInterior.cols - 1) {
-                    if (r === currentInterior.rows - 1 && c === 7) continue; // Doorway opening
-                    const wx = c * TILE_SIZE;
-                    const wy = r * TILE_SIZE;
-                    ctx.fillStyle = '#3a2518';
-                    ctx.fillRect(wx, wy, TILE_SIZE, TILE_SIZE);
-                    ctx.fillStyle = '#533826';
-                    ctx.fillRect(wx + 2, wy + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                    ctx.strokeStyle = '#23150c';
-                    ctx.lineWidth = 1.5;
-                    ctx.strokeRect(wx + 2, wy + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                }
-            }
-        }
-
-        // 3. Fireplace / Chimney Hearth (cols 6..8, rows 0..1)
-        const fpx = 6 * TILE_SIZE;
-        const fpy = 0 * TILE_SIZE;
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(fpx, fpy + 10, 3 * TILE_SIZE, 2 * TILE_SIZE - 10);
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(fpx + 12, fpy + 30, 3 * TILE_SIZE - 24, 45);
-
-        // Animated flickering fire flames
-        const flameOffset = Math.sin(performance.now() * 0.012) * 3;
+        // 2. Animated Hearth Fireplace Flame
+        const flameX = offX + 163 * scale;
+        const flameY = offY + 48 * scale;
+        const flameFlicker = Math.sin(performance.now() * 0.015) * 3;
         ctx.fillStyle = '#ef4444';
         ctx.beginPath();
-        ctx.arc(fpx + 1.5 * TILE_SIZE, fpy + 62, 14, 0, Math.PI * 2);
+        ctx.arc(flameX, flameY, 7 * scale * 0.45, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#f97316';
         ctx.beginPath();
-        ctx.arc(fpx + 1.5 * TILE_SIZE + flameOffset, fpy + 58, 10, 0, Math.PI * 2);
+        ctx.arc(flameX + flameFlicker, flameY - 2, 5 * scale * 0.45, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#fde047';
         ctx.beginPath();
-        ctx.arc(fpx + 1.5 * TILE_SIZE - flameOffset * 0.5, fpy + 54, 6, 0, Math.PI * 2);
+        ctx.arc(flameX - flameFlicker * 0.5, flameY - 4, 3 * scale * 0.45, 0, Math.PI * 2);
         ctx.fill();
 
-        // Hearth mantel shelf
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(fpx - 6, fpy + 26, 3 * TILE_SIZE + 12, 8);
-
-        // 4. Four-Poster Bed (cols 2..3, rows 2..3)
-        const bx = 2 * TILE_SIZE;
-        const by = 2 * TILE_SIZE;
-        ctx.fillStyle = '#451a03';
-        ctx.fillRect(bx, by, 2 * TILE_SIZE, 2 * TILE_SIZE);
-        // Quilted duvet
-        ctx.fillStyle = '#f1f5f9';
-        ctx.fillRect(bx + 4, by + 18, 2 * TILE_SIZE - 8, 2 * TILE_SIZE - 22);
-        // Quilt folds
-        ctx.strokeStyle = '#cbd5e1';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(bx + 6, by + 20, 2 * TILE_SIZE - 12, 2 * TILE_SIZE - 26);
-        // Pillow
-        ctx.fillStyle = '#059669';
-        ctx.fillRect(bx + 8, by + 4, 2 * TILE_SIZE - 16, 12);
-        ctx.fillStyle = '#34d399';
-        ctx.fillRect(bx + 12, by + 6, 2 * TILE_SIZE - 24, 8);
-
-        // 5. Large Carved Oak Dining Table (cols 8..11, rows 6..7) & Stools
-        const tx = 8 * TILE_SIZE;
-        const ty = 6 * TILE_SIZE;
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
-        ctx.fillRect(tx + 4, ty + 10, 4 * TILE_SIZE - 8, 2 * TILE_SIZE - 8);
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(tx, ty, 4 * TILE_SIZE, 2 * TILE_SIZE);
-        ctx.fillStyle = '#92400e';
-        ctx.fillRect(tx + 4, ty + 4, 4 * TILE_SIZE - 8, 2 * TILE_SIZE - 8);
-        ctx.strokeStyle = '#451a03';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(tx + 4, ty + 4, 4 * TILE_SIZE - 8, 2 * TILE_SIZE - 8);
-
-        // Plates and tankards on table
-        ctx.fillStyle = '#f8fafc';
-        ctx.beginPath();
-        ctx.arc(tx + 36, ty + 40, 10, 0, Math.PI * 2);
-        ctx.arc(tx + 4 * TILE_SIZE - 36, ty + 40, 10, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#ca8a04';
-        ctx.fillRect(tx + 75, ty + 30, 8, 12);
-        ctx.fillRect(tx + 95, ty + 30, 8, 12);
-
-        // Stools (above and below table)
-        [ [9.5 * TILE_SIZE, 5.2 * TILE_SIZE], [9.5 * TILE_SIZE, 8.2 * TILE_SIZE] ].forEach(([sx, sy]) => {
-            ctx.fillStyle = '#451a03';
-            ctx.beginPath();
-            ctx.arc(sx, sy, 12, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#b45309';
-            ctx.beginPath();
-            ctx.arc(sx, sy, 9, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // 6. Narrative Inspectable Prop (col 3, row 8)
-        const prop = currentInterior.prop;
-        if (prop) {
-            const px = 3 * TILE_SIZE;
-            const py = 8 * TILE_SIZE;
-            ctx.fillStyle = '#451a03';
-            ctx.fillRect(px, py, TILE_SIZE + 8, TILE_SIZE);
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(px + 2, py + 2, TILE_SIZE + 4, TILE_SIZE - 4);
-            // Open book / manuscript
-            ctx.fillStyle = '#fef3c7';
-            ctx.fillRect(px + 8, py + 8, 24, 16);
-            ctx.fillStyle = '#92400e';
-            ctx.fillRect(px + 19, py + 8, 2, 16);
-            // Candle with glowing flame
-            ctx.fillStyle = '#fde047';
-            ctx.beginPath();
-            ctx.arc(px + 36, py + 12, 3, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // 7. Treasure Chest in Lower-Right (col 11, row 8)
-        const ch = currentInterior.chest;
-        if (ch) {
-            const cx = 11 * TILE_SIZE + 4;
-            const cy = 8 * TILE_SIZE + 8;
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(cx, cy, 34, 26);
-            ctx.fillStyle = '#fbbf24';
-            ctx.fillRect(cx + 4, cy, 4, 26);
-            ctx.fillRect(cx + 26, cy, 4, 26);
-            ctx.fillRect(cx + 14, cy + 10, 6, 6);
-            if (ch.opened) {
-                ctx.fillStyle = '#38bdf8';
-                ctx.fillRect(cx + 8, cy + 6, 18, 4);
+        // 3. Chest (Draw opened sprite if chest opened)
+        const chestPx = offX + 176 * scale;
+        const chestPy = offY + 128 * scale;
+        if (currentInterior.chest && currentInterior.chest.opened) {
+            if (assets.hasImage('chest_small_open')) {
+                assets.drawImage(ctx, 'chest_small_open', chestPx, chestPy, 16 * scale, 16 * scale);
             }
         }
 
-        // 8. Clay Pots along Left Wall (col 2, rows 5..7)
+        // 4. Pot shelf slots: if pot lifted or broken, patch over the slot
         currentInterior.pots.forEach(pot => {
-            if (!pot.broken && !pot.lifted) {
-                drawClayPot(ctx, pot.x, pot.y, 1.0);
+            if (pot.lifted || pot.broken) {
+                const potPx = offX + (pot.x - 14);
+                const potPy = offY + (pot.y - 14);
+                ctx.fillStyle = '#5c4328';
+                ctx.fillRect(potPx, potPy, 28, 28);
+                ctx.fillStyle = '#4a3622';
+                ctx.fillRect(potPx + 2, potPy + 2, 24, 24);
             }
         });
 
-        // 9. Thrown Pot Projectiles in flight
+        // 5. Thrown Pot Projectiles in flight
         activePotProjectiles.forEach(proj => {
             ctx.save();
-            ctx.translate(proj.x, proj.y);
+            ctx.translate(offX + proj.x, offY + proj.y);
             ctx.rotate(proj.rotation);
             drawClayPot(ctx, 0, 0, 0.9);
             ctx.restore();
         });
 
-        // 10. South Doorway Entrance Rug & Threshold (cols 6..8, row 11)
-        const rx = 6 * TILE_SIZE;
-        const ry = 11 * TILE_SIZE;
-        ctx.fillStyle = '#991b1b';
-        ctx.fillRect(rx, ry + 6, 3 * TILE_SIZE, TILE_SIZE - 8);
-        ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(rx + 2, ry + 8, 3 * TILE_SIZE - 4, TILE_SIZE - 12);
-
-        // 11. Render Player inside Interior
-        drawCharacterSprite(ctx, player.x, player.y, 2.3, {
+        // 6. Player character inside room
+        drawCharacterSprite(ctx, offX + player.x, offY + player.y, 2.3, {
             role: 'player',
             dir: player.dir,
             frame: player.walkFrame || 0,
@@ -5759,14 +5692,14 @@
         });
 
         if (player.holdingPot) {
-            drawClayPot(ctx, player.x, player.y - 28, 0.85);
+            drawClayPot(ctx, offX + player.x, offY + player.y - 28, 0.85);
         }
 
-        // Particles & Floating Text inside room
+        // 7. Particles & Floating Text inside room
         particles.forEach(pt => {
             ctx.fillStyle = pt.color;
             ctx.beginPath();
-            ctx.arc(pt.x, pt.y, pt.size || 3, 0, Math.PI * 2);
+            ctx.arc(offX + pt.x, offY + pt.y, pt.size || 3, 0, Math.PI * 2);
             ctx.fill();
         });
 
@@ -5775,42 +5708,43 @@
             ctx.font = 'bold 12px "Space Grotesk", sans-serif';
             ctx.fillStyle = ft.color;
             ctx.textAlign = 'center';
-            ctx.fillText(ft.text, ft.x, ft.y);
+            ctx.fillText(ft.text, offX + ft.x, offY + ft.y);
             ctx.restore();
         });
 
-        // Overhead Building Title Plaque
+        // 8. Overhead Building Title Plaque & Controls Hint
         ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-        ctx.fillRect(roomW / 2 - 140, 10, 280, 26);
+        ctx.fillRect(w / 2 - 160, 12, 320, 26);
         ctx.strokeStyle = '#fbbf24';
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(roomW / 2 - 140, 10, 280, 26);
+        ctx.strokeRect(w / 2 - 160, 12, 320, 26);
         ctx.fillStyle = '#fde047';
         ctx.font = 'bold 11px "Space Grotesk", sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`${currentInterior.name} [INTERIOR]`, roomW / 2, 27);
+        ctx.fillText(`${currentInterior.name} [INTERIOR] (ESC to Exit)`, w / 2, 29);
 
         ctx.restore();
     }
 
     function findNearestInteractable() {
         if (currentInterior) {
-            if (player.y >= 10.4 * TILE_SIZE && player.x >= 6.5 * TILE_SIZE && player.x <= 8.5 * TILE_SIZE) {
-                return { type: 'exit_door', label: 'Exit to Overworld' };
+            // Exit doorway threshold
+            if (player.y >= 450 && player.x >= 300 && player.x <= 480) {
+                return { type: 'exit_door', obj: { name: 'Overworld' }, label: 'Exit to Overworld' };
             }
             if (player.holdingPot) {
-                return { type: 'throw_pot', label: 'Throw Clay Pot' };
+                return { type: 'throw_pot', obj: { name: 'Throw Pot' }, label: 'Throw Clay Pot' };
             }
             for (const pot of currentInterior.pots) {
-                if (!pot.broken && !pot.lifted && Math.hypot(player.x - pot.x, player.y - pot.y) < 52) {
-                    return { type: 'pot', obj: pot };
+                if (!pot.broken && !pot.lifted && Math.hypot(player.x - pot.x, player.y - pot.y) < 58) {
+                    return { type: 'pot', obj: pot, label: 'Lift Clay Pot' };
                 }
             }
-            if (currentInterior.chest && !currentInterior.chest.opened && Math.hypot(player.x - currentInterior.chest.x, player.y - currentInterior.chest.y) < 54) {
-                return { type: 'interior_chest', obj: currentInterior.chest };
+            if (currentInterior.chest && !currentInterior.chest.opened && Math.hypot(player.x - currentInterior.chest.x, player.y - currentInterior.chest.y) < 62) {
+                return { type: 'interior_chest', obj: currentInterior.chest, label: 'Open Chest' };
             }
-            if (currentInterior.prop && Math.hypot(player.x - currentInterior.prop.x, player.y - currentInterior.prop.y) < 54) {
-                return { type: 'narrative_prop', obj: currentInterior.prop };
+            if (currentInterior.prop && Math.hypot(player.x - currentInterior.prop.x, player.y - currentInterior.prop.y) < 62) {
+                return { type: 'narrative_prop', obj: currentInterior.prop, label: 'Inspect Manuscript' };
             }
             return null;
         }
@@ -5865,11 +5799,11 @@
             target.obj.opened = true;
             currentInterior.building.interiorChestOpened = true;
             audio.sfxChest();
-            player.shards += 40;
+            player.shards += 50;
             const tonic = player.inventory.find(i => i.id === 'tonic');
             if (tonic) tonic.count++;
-            addFloatText(player.x, player.y - 30, '+40💠 Shards & Tonic Found!', '#fde047');
-            spawnBurst(target.obj.x, target.obj.y, '#fbbf24', 20);
+            addFloatText(player.x, player.y - 30, '+50💠 Shards & Logic Tonic Found!', '#fde047');
+            spawnBurst(player.x, player.y, '#fbbf24', 20);
             updateAllHud();
         } else if (target.type === 'narrative_prop') {
             startNpcDialogue({ name: target.obj.name, dialogues: [target.obj.text] });
@@ -5985,12 +5919,17 @@
         const worldW = curCols * TILE_SIZE;
         const worldH = curRows * TILE_SIZE;
 
-        let camX = Math.floor(player.x - w / 2);
-        let camY = Math.floor(player.y - h / 2);
-        if (worldW > w) camX = Math.max(0, Math.min(worldW - w, camX));
-        else camX = Math.floor((worldW - w) / 2);
-        if (worldH > h) camY = Math.max(0, Math.min(worldH - h, camY));
-        else camY = Math.floor((worldH - h) / 2);
+        // Camera Zoom (1.35x zoom on player to give intimate, substantial SNES console scale)
+        const ZOOM = 1.35;
+        const viewW = w / ZOOM;
+        const viewH = h / ZOOM;
+
+        let camX = Math.floor(player.x - viewW / 2);
+        let camY = Math.floor(player.y - viewH / 2);
+        if (worldW > viewW) camX = Math.max(0, Math.min(worldW - viewW, camX));
+        else camX = Math.floor((worldW - viewW) / 2);
+        if (worldH > viewH) camY = Math.max(0, Math.min(worldH - viewH, camY));
+        else camY = Math.floor((worldH - viewH) / 2);
 
         if (screenShakeTime > 0 && document.getElementById('toggleShake').checked) {
             camX += (Math.random() - 0.5) * 10;
@@ -5998,9 +5937,10 @@
         }
 
         ctx.save();
+        ctx.scale(ZOOM, ZOOM);
         ctx.translate(-camX, -camY);
 
-        // 1. Render Tile Map (including ALTTP Sparkling River Water, Bridges & Sunlit Wildflowers)
+        // 1. Render Tile Map (including Trees, Tree Stumps, Tall Grass & Sparkling Water)
         const waterWaveShift = Math.floor(performance.now() / 260) % 2;
         for (let r = 0; r < curRows; r++) {
             for (let c = 0; c < curCols; c++) {
@@ -6008,17 +5948,18 @@
                 const ty = r * TILE_SIZE;
                 const t = mapGrid[r] ? mapGrid[r][c] : 0;
 
-                ctx.fillStyle = t === 5 ? '#162436' : mapMeta.groundColor;
+                // Base ground color: vibrant Hyrule meadow green
+                ctx.fillStyle = t === 5 ? '#162436' : (mapMeta.isBrightAlttpZone ? '#16a34a' : mapMeta.groundColor);
                 ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
 
-                if ((t === 0 || t === 9) && (r + c) % 2 === 0) {
-                    ctx.fillStyle = mapMeta.isBrightAlttpZone ? 'rgba(134, 239, 172, 0.14)' : 'rgba(255,255,255,0.04)';
-                    ctx.fillRect(tx + 8, ty + 10, 4, 8);
-                    ctx.fillRect(tx + 26, ty + 24, 4, 8);
+                // Alternating subtle green lawn stripes
+                if ((t === 0 || t === 9) && r % 2 === 0) {
+                    ctx.fillStyle = mapMeta.isBrightAlttpZone ? 'rgba(34, 197, 94, 0.16)' : 'rgba(255,255,255,0.03)';
+                    ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
                 }
 
                 if (t === 1) {
-                    // Cobblestone / ALTTP Golden-Stone Path
+                    // Cobblestone / ALTTP Golden-Stone Highway Path
                     ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#a16207' : '#334155';
                     ctx.fillRect(tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
                     ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#ca8a04' : '#334155';
@@ -6026,16 +5967,14 @@
                     ctx.strokeStyle = mapMeta.isBrightAlttpZone ? '#713f12' : '#1e293b';
                     ctx.strokeRect(tx + 5, ty + 5, TILE_SIZE - 10, TILE_SIZE - 10);
                 } else if (t === 2) {
-                    // Perimeter Stone Wall / ALTTP Cliff
+                    // Perimeter Stone Wall / ALTTP Cliff Ledge
                     ctx.fillStyle = '#0f172a';
                     ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
                     ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#14532d' : '#1e293b';
                     ctx.fillRect(tx + 4, ty + 4, TILE_SIZE - 8, TILE_SIZE - 12);
                 } else if (t === 3) {
-                    // Zelda: A Link to the Past Authentic Tree (100% transparent PNG with soft ground shadow)
-                    let drawnTree = false;
+                    // Zelda: A Link to the Past Authentic Tree with drop shadow
                     if (assets.hasImage('alttp_tree')) {
-                        // Soft ambient ground shadow under trunk & roots
                         ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
                         ctx.beginPath();
                         ctx.ellipse(tx + TILE_SIZE / 2, ty + TILE_SIZE - 4, 20, 8, 0, 0, Math.PI * 2);
@@ -6043,132 +5982,35 @@
 
                         const dw = 56;
                         const dh = 72;
-                        drawnTree = assets.drawImage(ctx, 'alttp_tree', tx + (TILE_SIZE - dw) / 2, ty + TILE_SIZE - dh, dw, dh);
-                    }
-                    if (!drawnTree) {
-                        ctx.fillStyle = '#451a03';
-                        ctx.fillRect(tx + 16, ty + 26, 12, 16);
-                        ctx.fillStyle = currentMapIndex === 8 ? '#450a0a' : (mapMeta.isBrightAlttpZone ? '#15803d' : '#065f46');
-                        ctx.fillRect(tx + 5, ty + 5, 34, 25);
-                        ctx.fillStyle = currentMapIndex === 8 ? '#7f1d1d' : (mapMeta.isBrightAlttpZone ? '#22c55e' : '#059669');
-                        ctx.fillRect(tx + 9, ty + 7, 26, 15);
-                        if (mapMeta.isBrightAlttpZone) {
-                            ctx.fillStyle = '#86efac';
-                            ctx.fillRect(tx + 13, ty + 9, 10, 6);
-                        }
+                        assets.drawImage(ctx, 'alttp_tree', tx + (TILE_SIZE - dw) / 2, ty + TILE_SIZE - dh, dw, dh);
                     }
                 } else if (t === 4) {
-                    // Sparkling ALTTP River Water with Shoreline Foam & Animated Wave Crests
+                    // River water
                     ctx.fillStyle = '#0284c7';
                     ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
-                    ctx.fillStyle = '#0ea5e9';
-                    ctx.fillRect(tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                    // Animated wave sparkles
-                    ctx.fillStyle = '#e0f2fe';
-                    const wx = waterWaveShift * 6;
-                    ctx.fillRect(tx + 6 + wx, ty + 11, 10, 3);
-                    ctx.fillRect(tx + 20 - wx, ty + 27, 12, 3);
-                    // Shoreline grassy bank trim on top/bottom edges
-                    if (r > 0 && mapGrid[r - 1] && mapGrid[r - 1][c] !== 4 && mapGrid[r - 1][c] !== 8) {
-                        ctx.fillStyle = '#fde68a';
-                        ctx.fillRect(tx, ty, TILE_SIZE, 4);
-                    }
-                    if (r < curRows - 1 && mapGrid[r + 1] && mapGrid[r + 1][c] !== 4 && mapGrid[r + 1][c] !== 8) {
-                        ctx.fillStyle = '#fde68a';
-                        ctx.fillRect(tx, ty + TILE_SIZE - 4, TILE_SIZE, 4);
-                    }
-                } else if (t === 8) {
-                    // Extended Zelda River Bridge (Wooden Planks & Handrails over Sparkling Water)
-                    ctx.fillStyle = '#0284c7';
-                    ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
-                    ctx.fillStyle = '#78350f';
-                    ctx.fillRect(tx + 2, ty, TILE_SIZE - 4, TILE_SIZE);
-                    ctx.fillStyle = '#b45309';
-                    for (let py = 2; py < TILE_SIZE; py += 9) {
-                        ctx.fillRect(tx + 4, ty + py, TILE_SIZE - 8, 6);
-                    }
-                    // Golden bridge side rails
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.fillRect(tx + 2, ty, 3, TILE_SIZE);
-                    ctx.fillRect(tx + TILE_SIZE - 5, ty, 3, TILE_SIZE);
-                } else if (t === 9) {
-                    // Sunlit ALTTP Wildflowers
-                    const fShift = waterWaveShift * 2;
-                    ctx.fillStyle = '#fde047';
-                    ctx.fillRect(tx + 10 + fShift, ty + 12, 5, 5);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(tx + 26 - fShift, ty + 24, 5, 5);
                     ctx.fillStyle = '#38bdf8';
-                    ctx.fillRect(tx + 16, ty + 30, 4, 4);
-                } else if (t === 6) {
-                    ctx.fillStyle = '#1e293b';
-                    ctx.fillRect(tx + 4, ty + 2, TILE_SIZE - 8, TILE_SIZE - 4);
-                    ctx.fillStyle = currentMapIndex === 0 ? '#f59e0b' : '#38bdf8';
-                    ctx.fillRect(tx + 8, ty + 8, TILE_SIZE - 16, 6);
-                    ctx.fillRect(tx + 8, ty + 18, TILE_SIZE - 16, 6);
-                } else if (t === 7) {
-                    // Zelda Kakariko Dense Hedge
-                    ctx.fillStyle = '#14532d';
-                    ctx.fillRect(tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                    ctx.fillStyle = '#16a34a';
-                    ctx.fillRect(tx + 5, ty + 5, TILE_SIZE - 10, TILE_SIZE - 10);
-                    ctx.fillStyle = '#4ade80';
-                    ctx.fillRect(tx + 8, ty + 8, 8, 8);
-                    ctx.fillRect(tx + 24, ty + 20, 8, 8);
-                } else if (t === 13) {
-                    // Zelda Rustic Wooden Fence Post & Rails
+                    ctx.fillRect(tx + 4 + waterWaveShift * 6, ty + 6, TILE_SIZE - 12, 6);
+                } else if (t === 8) {
+                    // Extended Wooden Bridge
                     ctx.fillStyle = '#78350f';
-                    ctx.fillRect(tx + 4, ty + 18, TILE_SIZE - 8, 6);
-                    ctx.fillRect(tx + 4, ty + 28, TILE_SIZE - 8, 6);
-                    ctx.fillStyle = '#b45309';
-                    ctx.fillRect(tx + 8, ty + 10, 6, 26);
-                    ctx.fillRect(tx + TILE_SIZE - 14, ty + 10, 6, 26);
-                    ctx.fillStyle = '#d97706';
-                    ctx.fillRect(tx + 9, ty + 11, 2, 24);
-                } else if (t === 12) {
-                    // Ground under building footprint
-                    ctx.fillStyle = '#1e293b';
                     ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
-                    ctx.fillStyle = '#334155';
+                    ctx.fillStyle = '#92400e';
                     ctx.fillRect(tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                } else if (t === 10) {
-                    // Algorithmic Outrage Vent (Swirling glitch vortex, crimson / magenta)
-                    const pulseTime = performance.now() / 200;
-                    const pulseR = 14 + Math.sin(pulseTime) * 3;
-                    ctx.fillStyle = '#450a0a';
-                    ctx.fillRect(tx + 3, ty + 3, TILE_SIZE - 6, TILE_SIZE - 6);
-                    ctx.strokeStyle = '#e11d48';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(tx + 3, ty + 3, TILE_SIZE - 6, TILE_SIZE - 6);
-                    ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
-                    ctx.beginPath();
-                    ctx.arc(tx + TILE_SIZE / 2, ty + TILE_SIZE / 2, pulseR, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = '#fda4af';
-                    ctx.fillRect(tx + 18, ty + 18, 8, 8);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(tx + 20, ty + 20, 4, 4);
-                } else if (t === 11) {
-                    // Dogmatic Stasis Rune (Shimmering purple concentric sigil)
-                    const pulseTime = performance.now() / 300;
-                    const pAlpha = 0.5 + 0.3 * Math.sin(pulseTime);
-                    ctx.fillStyle = '#3b0764';
-                    ctx.fillRect(tx + 3, ty + 3, TILE_SIZE - 6, TILE_SIZE - 6);
-                    ctx.strokeStyle = `rgba(168, 85, 247, ${pAlpha})`;
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.arc(tx + TILE_SIZE / 2, ty + TILE_SIZE / 2, 14, 0, Math.PI * 2);
-                    ctx.stroke();
-                    ctx.fillStyle = '#c084fc';
-                    ctx.beginPath();
-                    ctx.moveTo(tx + TILE_SIZE / 2, ty + 8);
-                    ctx.lineTo(tx + TILE_SIZE - 8, ty + TILE_SIZE / 2);
-                    ctx.lineTo(tx + TILE_SIZE / 2, ty + TILE_SIZE - 8);
-                    ctx.lineTo(tx + 8, ty + TILE_SIZE / 2);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(tx + 20, ty + 20, 4, 4);
+                }
+
+                // Scattered Tree Stumps & Tall Grass / Clover Tufts on open meadows
+                if ((t === 0 || t === 9) && mapMeta.isBrightAlttpZone) {
+                    // Tree stump placed organically
+                    if ((r * 7 + c * 11) % 23 === 0) {
+                        if (assets.hasImage('alttp_stump')) {
+                            assets.drawImage(ctx, 'alttp_stump', tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                        }
+                    } else if ((r * 3 + c * 5) % 4 === 0) {
+                        // 4-leaf Tall Grass & Clover Tuft
+                        if (assets.hasImage('alttp_tallgrass')) {
+                            assets.drawImage(ctx, 'alttp_tallgrass', tx + 8, ty + 8, 28, 28);
+                        }
+                    }
                 }
             }
         }
@@ -7831,7 +7673,13 @@
             else if (e.code === 'KeyC') openMenu('characterModal');
             else if (e.code === 'KeyJ') openMenu('codexModal');
             else if (e.code === 'Digit1') useQuickTonic();
-            else if (e.code === 'Escape') openMenu('pauseModal');
+            else if (e.code === 'Escape') {
+                if (currentInterior) {
+                    exitBuildingInterior();
+                    return;
+                }
+                openMenu('pauseModal');
+            }
         } else if (appState === 'PAUSED') {
             if (e.code === 'KeyM') {
                 const wm = document.getElementById('worldMapModal');
