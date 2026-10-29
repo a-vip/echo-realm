@@ -1,0 +1,101 @@
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+
+function loadGameEnvironment() {
+    const htmlPath = path.resolve(__dirname, '../index.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+    const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
+    if (!scriptMatch) {
+        throw new Error('No <script> tag found in index.html');
+    }
+
+    let scriptContent = scriptMatch[1];
+    scriptContent += `\n; window.__EXPORTED__ = {
+        CODEX_ENTRIES,
+        DIFFICULTY_PROFILES,
+        PAPER_DOLL_SLOTS,
+        RELIC_DB,
+        MAPS,
+        CUTSCENE_SCENES,
+        TILE_SIZE,
+        MAP_COLS,
+        MAP_ROWS,
+        getTotalMaxHp,
+        getTotalContextPower,
+        getTotalAxiomAttack,
+        getTotalDefense,
+        getTotalSpeed,
+        getEquipBonus,
+        isRelicOwned,
+        player,
+        loadMap,
+        unlockRiverBridgeIfReady
+    };`;
+
+    const mockElem = {
+        getContext: () => ({
+            clearRect: () => {}, fillRect: () => {}, beginPath: () => {}, arc: () => {},
+            fill: () => {}, stroke: () => {}, drawImage: () => {}, save: () => {},
+            restore: () => {}, translate: () => {}, rotate: () => {}, fillText: () => {}
+        }),
+        classList: { add: () => {}, remove: () => {}, contains: () => false },
+        style: {},
+        appendChild: () => {},
+        innerHTML: '',
+        textContent: '',
+        onclick: null,
+        oninput: null,
+        onchange: null
+    };
+
+    const sandbox = {
+        window: {
+            addEventListener: () => {},
+            innerWidth: 1920,
+            innerHeight: 1080
+        },
+        document: {
+            getElementById: () => mockElem,
+            querySelectorAll: () => [],
+            addEventListener: () => {}
+        },
+        console: console,
+        AudioContext: class {
+            createOscillator() {
+                return {
+                    type: '',
+                    frequency: { setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
+                    connect: () => {},
+                    start: () => {},
+                    stop: () => {}
+                };
+            }
+            createGain() {
+                return {
+                    gain: { setValueAtTime: () => {}, linearRampToValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} },
+                    connect: () => {}
+                };
+            }
+            get currentTime() { return 0; }
+            get destination() { return {}; }
+        },
+        webkitAudioContext: null,
+        localStorage: {
+            getItem: () => null,
+            setItem: () => {},
+            removeItem: () => {}
+        },
+        requestAnimationFrame: () => {},
+        performance: { now: () => 0 },
+        Math: Math,
+        parseInt: parseInt,
+        parseFloat: parseFloat
+    };
+    sandbox.window.localStorage = sandbox.localStorage;
+
+    vm.runInNewContext(scriptContent, sandbox);
+    return sandbox.window.__EXPORTED__;
+}
+
+module.exports = { loadGameEnvironment };

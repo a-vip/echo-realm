@@ -1,0 +1,25 @@
+{
+  "name": "echo-realm",
+  "version": "1.0.0",
+  "description": "The Echo Realm: Chronicles of the Archivist - 32-Bit Action RPG exploring echo chambers, cognitive inoculation, and critical inquiry",
+  "main": "index.html",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --test tests/**/*.test.js"
+  },
+  "keywords": [
+    "action-rpg",
+    "zelda-like",
+    "pixel-art",
+    "retro",
+    "game",
+    "educational",
+    "critical-thinking",
+    "socratic-dialogue",
+    "canvas",
+    "web-audio"
+  ],
+  "author": "Avi",
+  "license": "MIT"
+}
