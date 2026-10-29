@@ -146,5 +146,35 @@ test('World & Map Validation Test Suite', async (t) => {
         // Reset dev mode
         if (game.devMode !== initialDev) game.toggleDevMode();
     });
+
+    await t.test('Kakariko Village (Map 1) defines expansive non-square layout with 10 buildings and plaza weathervane', () => {
+        const map1 = game.MAPS[1];
+        assert.strictEqual(map1.cols, 52, 'Map 1 cols should be 52');
+        assert.strictEqual(map1.rows, 50, 'Map 1 rows should be 50');
+        assert.ok(map1.weatherVane, 'Map 1 must have weatherVane defined');
+        assert.strictEqual(map1.weatherVane.col, 25);
+        assert.strictEqual(map1.weatherVane.row, 23);
+        assert.ok(Array.isArray(map1.buildings) && map1.buildings.length >= 10, 'Map 1 must define at least 10 buildings');
+
+        game.loadMap(1);
+        const grid = game.mapGrid;
+        assert.strictEqual(grid.length, 50, 'Loaded Map 1 grid must have 50 rows');
+        assert.strictEqual(grid[0].length, 52, 'Loaded Map 1 grid must have 52 cols');
+
+        // Verify each building footprint is marked solid (12)
+        map1.buildings.forEach(b => {
+            assert.ok(b.wCols >= 3 && b.hRows >= 2, `Building ${b.id} must have scale >= 3x2`);
+            assert.ok(b.spriteKey, `Building ${b.id} must define spriteKey`);
+            assert.ok(b.name, `Building ${b.id} must have a name`);
+            for (let r = b.row; r < b.row + b.hRows; r++) {
+                for (let c = b.col; c < b.col + b.wCols; c++) {
+                    assert.strictEqual(grid[r][c], 12, `Tile (${c}, ${r}) for building ${b.id} should be solid 12`);
+                }
+            }
+        });
+
+        // Verify official ALttP spritesheet is registered in AssetManager
+        assert.ok(game.assets.spritesheets.get('alttp_overworld'), 'alttp_overworld spritesheet must be registered');
+    });
 });
 

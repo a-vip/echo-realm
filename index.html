@@ -1368,23 +1368,27 @@
             this.enabled = true;
         }
         registerSpriteSheet(id, src, frameW = 16, frameH = 20) {
-            if (typeof Image === 'undefined') return { id, src, frameW, frameH, loaded: false };
-            const img = new Image();
-            img.src = src;
-            const entry = { id, img, frameW, frameH, loaded: false };
-            img.onload = () => { entry.loaded = true; };
-            img.onerror = () => { entry.loaded = false; };
+            const entry = { id, src, frameW, frameH, loaded: false, img: null };
             this.spritesheets.set(id, entry);
+            if (typeof Image !== 'undefined') {
+                const img = new Image();
+                img.src = src;
+                entry.img = img;
+                img.onload = () => { entry.loaded = true; };
+                img.onerror = () => { entry.loaded = false; };
+            }
             return entry;
         }
         registerTileSet(id, src, tileSize = 44) {
-            if (typeof Image === 'undefined') return { id, src, tileSize, loaded: false };
-            const img = new Image();
-            img.src = src;
-            const entry = { id, img, tileSize, loaded: false };
-            img.onload = () => { entry.loaded = true; };
-            img.onerror = () => { entry.loaded = false; };
+            const entry = { id, src, tileSize, loaded: false, img: null };
             this.tilesets.set(id, entry);
+            if (typeof Image !== 'undefined') {
+                const img = new Image();
+                img.src = src;
+                entry.img = img;
+                img.onload = () => { entry.loaded = true; };
+                img.onerror = () => { entry.loaded = false; };
+            }
             return entry;
         }
         hasSpriteSheet(id) {
@@ -1418,8 +1422,32 @@
                 return false;
             }
         }
+        drawSubRect(ctx, id, sx, sy, sw, sh, dx, dy, dw, dh) {
+            const s = this.spritesheets.get(id);
+            if (!s || !s.loaded || !ctx.drawImage) return false;
+            try {
+                ctx.drawImage(s.img, sx, sy, sw, sh, dx, dy, dw, dh);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
     }
     const assets = new AssetManager();
+    assets.registerSpriteSheet('alttp_overworld', 'assets/sprites/alttp_overworld_spritesheet.jpg', 16, 16);
+
+    const ALTTP_SPRITE_RECTS = {
+        red_cottage_1:  { sx: 0,   sy: 190, sw: 66,  sh: 66 },
+        red_cottage_2:  { sx: 65,  sy: 190, sw: 70,  sh: 58 },
+        blue_cottage_1: { sx: 0,   sy: 256, sw: 66,  sh: 60 },
+        blue_cottage_2: { sx: 65,  sy: 256, sw: 66,  sh: 60 },
+        cyan_house:     { sx: 130, sy: 256, sw: 66,  sh: 60 },
+        long_tavern:    { sx: 0,   sy: 316, sw: 130, sh: 60 },
+        shed:           { sx: 140, sy: 190, sw: 66,  sh: 66 },
+        weathervane:    { sx: 20,  sy: 80,  sw: 61,  sh: 56 },
+        tree_round:     { sx: 0,   sy: 0,   sw: 51,  sh: 51 },
+        pond_basin:     { sx: 160, sy: 0,   sw: 101, sh: 101 }
+    };
 
     // =========================================================================
     // 5. 32-BIT ZELDA-STYLE 16x20 PIXEL SPRITE RENDERER
@@ -1816,12 +1844,219 @@
         }
     }
 
+    function drawProceduralBuilding(ctx, b, x, y, w, h) {
+        ctx.save();
+        // 1. Drop shadow behind the building
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.fillRect(x + 4, y + 8, w, h);
+
+        // 2. Stone Foundation & Walls
+        const wallH = Math.floor(h * 0.45);
+        const wallY = y + h - wallH;
+        ctx.fillStyle = '#64748b'; // stone base foundation
+        ctx.fillRect(x + 4, wallY, w - 8, wallH);
+        ctx.fillStyle = '#94a3b8'; // light stone masonry
+        ctx.fillRect(x + 6, wallY + 2, w - 12, wallH - 4);
+
+        // Masonry stone lines
+        ctx.fillStyle = '#475569';
+        for (let sy = wallY + 6; sy < y + h - 6; sy += 10) {
+            ctx.fillRect(x + 6, sy, w - 12, 1);
+        }
+        for (let sx = x + 14; sx < x + w - 14; sx += 18) {
+            ctx.fillRect(sx, wallY + 4, 1, wallH - 8);
+        }
+
+        // 3. Roof (Terracotta, Blue, Slate, or Wood)
+        const roofH = h - wallH + 6;
+        let rMain = '#991b1b', rHi = '#dc2626', rSh = '#7f1d1d', rEdge = '#450a0a';
+        if (b.roofColor === 'blue') {
+            rMain = '#1d4ed8'; rHi = '#3b82f6'; rSh = '#1e3a8a'; rEdge = '#0f172a';
+        } else if (b.roofColor === 'slate') {
+            rMain = '#334155'; rHi = '#64748b'; rSh = '#1e293b'; rEdge = '#020617';
+        } else if (b.roofColor === 'wood') {
+            rMain = '#78350f'; rHi = '#b45309'; rSh = '#451a03'; rEdge = '#291203';
+        }
+
+        // Hip/Gabled Roof trapezoid
+        ctx.fillStyle = rEdge;
+        ctx.fillRect(x + 2, y, w - 4, roofH);
+        ctx.fillStyle = rSh;
+        ctx.fillRect(x + 4, y + 2, w - 8, roofH - 4);
+        ctx.fillStyle = rMain;
+        ctx.fillRect(x + 8, y + 4, w - 16, roofH - 8);
+
+        // Roof ridge & tiles
+        ctx.fillStyle = rHi;
+        ctx.fillRect(x + 12, y + 4, w - 24, 4);
+        for (let ry = y + 8; ry < y + roofH - 6; ry += 8) {
+            ctx.fillStyle = rHi;
+            ctx.fillRect(x + 10, ry, w - 20, 2);
+        }
+
+        // Chimney with soft puff of smoke
+        const chimX = x + w - 22;
+        const chimY = y - 8;
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(chimX, chimY, 12, 14);
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(chimX + 2, chimY + 2, 8, 10);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(chimX - 1, chimY, 14, 3);
+        const smokeOffset = (performance.now() / 400) % 20;
+        ctx.fillStyle = 'rgba(241, 245, 249, 0.4)';
+        ctx.beginPath();
+        ctx.arc(chimX + 6 + Math.sin(smokeOffset) * 3, chimY - smokeOffset, 4 + smokeOffset * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 4. Central Arched Wooden Doorway
+        const doorW = 20;
+        const doorH = 26;
+        const doorX = x + Math.floor(w / 2) - doorW / 2;
+        const doorY = y + h - doorH;
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(doorX - 2, doorY - 3, doorW + 4, doorH + 3);
+        ctx.fillStyle = '#291203';
+        ctx.fillRect(doorX, doorY, doorW, doorH);
+        ctx.fillStyle = '#5c2b09';
+        ctx.fillRect(doorX + 2, doorY + 2, doorW - 4, doorH - 2);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(doorX + Math.floor(doorW / 2) - 2, doorY - 3, 4, 3);
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(doorX + doorW - 6, doorY + 13, 2, 3);
+
+        // 5. Flanking Windows with Panes & Flower Planter Boxes
+        const winW = 16;
+        const winH = 14;
+        const winLeftX = x + 12;
+        const winRightX = x + w - 12 - winW;
+        const winY = wallY + 6;
+
+        [winLeftX, winRightX].forEach(wx => {
+            if (wx > doorX - winW - 4 && wx < doorX + doorW + 4) return;
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(wx - 2, winY - 2, winW + 4, winH + 4);
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(wx, winY, winW, winH);
+            ctx.fillStyle = '#7dd3fc';
+            ctx.fillRect(wx + 2, winY + 2, 4, 4);
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(wx + Math.floor(winW / 2) - 1, winY, 2, winH);
+            ctx.fillRect(wx, winY + Math.floor(winH / 2) - 1, winW, 2);
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(wx - 2, winY + winH, winW + 4, 5);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(wx, winY + winH - 2, 3, 3);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(wx + 5, winY + winH - 2, 3, 3);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(wx + 10, winY + winH - 2, 3, 3);
+        });
+
+        ctx.restore();
+    }
+
+    function drawBuilding(ctx, b) {
+        const x = b.col * TILE_SIZE;
+        const y = b.row * TILE_SIZE;
+        const w = b.wCols * TILE_SIZE;
+        const h = b.hRows * TILE_SIZE;
+
+        const rect = ALTTP_SPRITE_RECTS[b.spriteKey];
+        let drawnFromSheet = false;
+        if (rect && assets.hasSpriteSheet('alttp_overworld')) {
+            drawnFromSheet = assets.drawSubRect(ctx, 'alttp_overworld', rect.sx, rect.sy, rect.sw, rect.sh, x, y, w, h);
+        }
+
+        if (!drawnFromSheet) {
+            drawProceduralBuilding(ctx, b, x, y, w, h);
+        }
+
+        // Overhead Building Name Plaque / Signboard on proximity
+        if (b.name && typeof player !== 'undefined' && Number.isFinite(player.x)) {
+            const distToPlayer = Math.hypot(player.x - (x + w / 2), player.y - (y + h / 2));
+            if (distToPlayer < 180) {
+                ctx.save();
+                ctx.font = 'bold 11px "Space Grotesk", sans-serif';
+                const textWidth = (ctx.measureText && ctx.measureText(b.name)) ? ctx.measureText(b.name).width : 70;
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+                ctx.fillRect(x + w / 2 - textWidth / 2 - 8, y - 22, textWidth + 16, 20);
+                ctx.strokeStyle = '#fbbf24';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(x + w / 2 - textWidth / 2 - 8, y - 22, textWidth + 16, 20);
+                ctx.fillStyle = '#fde047';
+                ctx.textAlign = 'center';
+                ctx.fillText(b.name, x + w / 2, y - 8);
+                ctx.restore();
+            }
+        }
+    }
+
+    function drawWeatherVaneMonument(ctx, col, row) {
+        const cx = (col + 0.5) * TILE_SIZE;
+        const cy = (row + 0.5) * TILE_SIZE;
+
+        const rect = ALTTP_SPRITE_RECTS['weathervane'];
+        let drawn = false;
+        if (rect && assets.hasSpriteSheet('alttp_overworld')) {
+            const dw = 70;
+            const dh = 64;
+            drawn = assets.drawSubRect(ctx, 'alttp_overworld', rect.sx, rect.sy, rect.sw, rect.sh, cx - dw / 2, cy - dh / 2 - 8, dw, dh);
+        }
+        if (!drawn) {
+            ctx.save();
+            // Stepped stone base
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(cx - 26, cy + 8, 52, 16);
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(cx - 24, cy + 10, 48, 12);
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillRect(cx - 18, cy - 2, 36, 12);
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillRect(cx - 14, cy - 12, 28, 10);
+
+            // Iron shaft
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(cx - 2, cy - 36, 4, 26);
+
+            // Weathercock bird
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(cx, cy - 40, 9, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.moveTo(cx + 6, cy - 41);
+            ctx.lineTo(cx + 14, cy - 39);
+            ctx.lineTo(cx + 6, cy - 37);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(cx - 6, cy - 43);
+            ctx.lineTo(cx - 14, cy - 47);
+            ctx.lineTo(cx - 8, cy - 38);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+    }
+
     // =========================================================================
     // 6. PROGRESSIVE 9-MAP WORLD DEFINITIONS, ALTTP ZONES & PUZZLES
     // =========================================================================
     const TILE_SIZE = 44;
     const MAP_COLS = 34;
     const MAP_ROWS = 24;
+
+    function getMapCols(mapIdx = currentMapIndex) {
+        if (typeof MAPS !== 'undefined' && MAPS[mapIdx] && MAPS[mapIdx].cols) return MAPS[mapIdx].cols;
+        return MAP_COLS;
+    }
+    function getMapRows(mapIdx = currentMapIndex) {
+        if (typeof MAPS !== 'undefined' && MAPS[mapIdx] && MAPS[mapIdx].rows) return MAPS[mapIdx].rows;
+        return MAP_ROWS;
+    }
 
     const MAPS = [
         {
@@ -1835,6 +2070,11 @@
             questTitle: 'Cure 2 Training Dummies & Return to Professor Avi',
             portalTarget: 1,
             chest: { col: 11, row: 7, itemId: 'circlet_nuance' },
+            cols: 34,
+            rows: 24,
+            buildings: [
+                { id: 'archive_sanctuary', col: 15, row: 7, wCols: 4, hRows: 3, spriteKey: 'red_cottage_1', roofColor: 'wood', name: 'The Quiet Archive' }
+            ],
             aviPreDialogues: [
                 'Welcome to the Quiet Archive, initiate. Beyond our sanctuary walls, predatory algorithms have fractured the realm into warring echo chambers.',
                 'Hold [Q] PRISM BEAM to expose cognitive distortions until a target’s Clarity Bar reaches 100%, then press [E] AXIOM STRIKE to dispel their delusion!',
@@ -1858,6 +2098,21 @@
             questTitle: 'Liberate 5 Masked Citizens in Performative Valley',
             portalTarget: 2,
             chest: { col: 6, row: 5, itemId: 'cloak_grounding' },
+            cols: 52,
+            rows: 50,
+            weatherVane: { col: 25, row: 23 },
+            buildings: [
+                { id: 'cottage_nw', col: 8, row: 8, wCols: 4, hRows: 3, spriteKey: 'red_cottage_1', roofColor: 'terracotta', name: 'Nuance Sanctuary' },
+                { id: 'cottage_n_plateau', col: 29, row: 5, wCols: 5, hRows: 3, spriteKey: 'red_cottage_2', roofColor: 'terracotta', name: "Elder's Hermitage" },
+                { id: 'cottage_ne', col: 37, row: 10, wCols: 4, hRows: 3, spriteKey: 'red_cottage_1', roofColor: 'terracotta', name: 'Apothecary of Clear Thought' },
+                { id: 'cottage_w_mid', col: 15, row: 24, wCols: 4, hRows: 3, spriteKey: 'blue_cottage_1', roofColor: 'blue', name: 'House of Dialogue' },
+                { id: 'cottage_s_mid', col: 29, row: 24, wCols: 4, hRows: 3, spriteKey: 'blue_cottage_2', roofColor: 'blue', name: 'Kakariko Clout Tavern' },
+                { id: 'cottage_e_mid', col: 37, row: 22, wCols: 4, hRows: 3, spriteKey: 'red_cottage_1', roofColor: 'terracotta', name: "Storyteller's Cottage" },
+                { id: 'shed_sw', col: 14, row: 34, wCols: 3, hRows: 2, spriteKey: 'shed', roofColor: 'wood', name: "Archivist's Workshop" },
+                { id: 'lodge_s', col: 29, row: 33, wCols: 5, hRows: 4, spriteKey: 'long_tavern', roofColor: 'terracotta', name: 'Grand Fellowship Hall' },
+                { id: 'cottage_sw', col: 7, row: 33, wCols: 4, hRows: 3, spriteKey: 'red_cottage_1', roofColor: 'terracotta', name: 'Southwest Cottage' },
+                { id: 'cottage_se', col: 37, row: 33, wCols: 4, hRows: 3, spriteKey: 'cyan_house', roofColor: 'slate', name: 'East Guardhouse' }
+            ],
             aviPreDialogues: [
                 'Behold Performative Valley. Citizens here wear golden validation masks, performing hollow rituals for invisible clout metrics.',
                 'Use your [Q] Prism Beam and [E] Axiom Strike to free 5 Masked Citizens, then return to me to unlock the northern passage.'
@@ -2330,6 +2585,8 @@
 
     function revealFogAround(worldX, worldY, radiusTiles = 6) {
         if (!fogGrid || fogGrid.length === 0) return;
+        const curCols = getMapCols(currentMapIndex);
+        const curRows = getMapRows(currentMapIndex);
         const centerCol = Math.floor(worldX / TILE_SIZE);
         const centerRow = Math.floor(worldY / TILE_SIZE);
         const radSq = radiusTiles * radiusTiles;
@@ -2337,7 +2594,7 @@
             for (let dc = -radiusTiles; dc <= radiusTiles; dc++) {
                 const r = centerRow + dr;
                 const c = centerCol + dc;
-                if (r >= 0 && r < MAP_ROWS && c >= 0 && c < MAP_COLS) {
+                if (r >= 0 && r < curRows && c >= 0 && c < curCols) {
                     if (dr * dr + dc * dc <= radSq) {
                         if (fogGrid[r]) fogGrid[r][c] = true;
                     }
@@ -3367,6 +3624,329 @@
     // =========================================================================
     // 9. MAP GENERATION, CHESTS, PROFESSOR AVI & ALTTP RIVER PUZZLES
     // =========================================================================
+    function generateKakarikoVillageTerrain(cols, rows) {
+        const grid = [];
+        for (let r = 0; r < rows; r++) {
+            grid[r] = [];
+            for (let c = 0; c < cols; c++) {
+                grid[r][c] = 0; // Default: Lush Grass
+            }
+        }
+
+        // 1. Dense Perimeter Forest Canopy & Cliff Boundaries
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                if (r < 2 || r >= rows - 2 || c < 2 || c >= cols - 2) {
+                    grid[r][c] = 3; // Dense ALttP Tree Border
+                }
+            }
+        }
+
+        // 2. Eastern Water Basin / Canal with Stone Banks
+        for (let r = 9; r <= 36; r++) {
+            for (let c = 46; c <= 48; c++) {
+                grid[r][c] = 4; // River Water
+            }
+        }
+        // Wooden bridge crossing eastern canal to Hyrule Castle
+        for (let c = 46; c <= 48; c++) {
+            grid[21][c] = 8;
+            grid[22][c] = 8;
+        }
+
+        // 3. Northern Cliff Terrace
+        for (let c = 20; c <= 45; c++) {
+            grid[9][c] = 2; // Cliff Wall
+        }
+        // Stairs cut into northern cliff
+        for (let c = 24; c <= 27; c++) {
+            grid[9][c] = 1; // Open Stone Stairs
+        }
+
+        // 4. Cobblestone Village Roads & Plaza
+        // Grand Central Village Plaza (cols 19..32, rows 17..29)
+        for (let r = 17; r <= 29; r++) {
+            for (let c = 19; c <= 32; c++) {
+                grid[r][c] = 1;
+            }
+        }
+
+        // Main North-South Village Avenue (cols 24..27)
+        for (let r = 2; r < rows - 2; r++) {
+            for (let c = 24; c <= 27; c++) {
+                grid[r][c] = 1;
+            }
+        }
+
+        // West Village Lane (cols 5..7, rows 6..44)
+        for (let r = 6; r <= 44; r++) {
+            for (let c = 5; c <= 7; c++) {
+                grid[r][c] = 1;
+            }
+        }
+
+        // East Village Lane (cols 42..44, rows 8..36)
+        for (let r = 8; r <= 36; r++) {
+            for (let c = 42; c <= 44; c++) {
+                grid[r][c] = 1;
+            }
+        }
+
+        // Cross Street 1: North Lane (row 12, cols 7..43)
+        for (let c = 7; c <= 43; c++) {
+            grid[12][c] = 1;
+        }
+
+        // Cross Street 2: Central Avenue to Canal Bridge (row 21, cols 7..49)
+        for (let c = 7; c <= 49; c++) {
+            grid[21][c] = 1;
+        }
+
+        // Cross Street 3: South Lane (row 31, cols 7..43)
+        for (let c = 7; c <= 43; c++) {
+            grid[31][c] = 1;
+        }
+
+        // Cross Street 4: Southern Perimeter Road (row 44, cols 5..30)
+        for (let c = 5; c <= 30; c++) {
+            grid[44][c] = 1;
+        }
+
+        // 5. Hedges (Tile 7) & Fences (Tile 13)
+        // Northwest hermitage hedge courtyard
+        for (let c = 7; c <= 13; c++) {
+            grid[7][c] = 7;
+            grid[11][c] = 7;
+        }
+        for (let r = 7; r <= 11; r++) {
+            grid[r][7] = 7;
+            grid[r][13] = 7;
+        }
+        grid[11][10] = 1; // Southern gate into garden
+
+        // West Long Garden Plot (cols 8..12, rows 15..21)
+        for (let r = 15; r <= 21; r++) {
+            grid[r][8] = 7;
+            grid[r][12] = 7;
+            for (let c = 9; c <= 11; c++) {
+                grid[r][c] = (r % 2 === 0) ? 9 : 0;
+            }
+        }
+
+        // Plaza decorative corner hedges
+        grid[18][20] = 7; grid[18][31] = 7;
+        grid[28][20] = 7; grid[28][31] = 7;
+
+        // Cucco Pen with Wooden Fences (Tile 13)
+        for (let c = 14; c <= 18; c++) {
+            grid[13][c] = 13;
+            grid[16][c] = 13;
+        }
+        for (let r = 13; r <= 16; r++) {
+            grid[r][14] = 13;
+            grid[r][18] = 13;
+        }
+        grid[16][16] = 1; // Open gate
+
+        // 6. Buildings Footprint (Tile 12 = Solid)
+        if (MAPS[1].buildings) {
+            MAPS[1].buildings.forEach(b => {
+                for (let r = b.row; r < b.row + b.hRows; r++) {
+                    for (let c = b.col; c < b.col + b.wCols; c++) {
+                        if (r < rows && c < cols) {
+                            grid[r][c] = 12;
+                        }
+                    }
+                }
+            });
+        }
+
+        // 7. Weathervane Monument Footprint
+        if (MAPS[1].weatherVane) {
+            const vc = MAPS[1].weatherVane.col;
+            const vr = MAPS[1].weatherVane.row;
+            grid[vr][vc] = 12;
+        }
+
+        // 8. Place Scattered ALttP Trees (Tile 3) & Wildflowers (Tile 9)
+        const treeSpots = [
+            [4, 4], [15, 5], [35, 4], [44, 4],
+            [4, 25], [16, 18], [35, 18], [44, 25],
+            [4, 38], [24, 37], [35, 38], [44, 40]
+        ];
+        treeSpots.forEach(([tc, tr]) => {
+            if (grid[tr] && grid[tr][tc] === 0) grid[tr][tc] = 3;
+        });
+
+        // 9. Mandatory Outrage Vents on Map 1 (Tile 10)
+        [[13, 7], [25, 8], [12, 18], [22, 18]].forEach(([vc, vr]) => {
+            if (grid[vr]) grid[vr][vc] = 10;
+        });
+
+        // 10. Chest location (col: 6, row: 5)
+        if (MAPS[1].chest) {
+            grid[MAPS[1].chest.row][MAPS[1].chest.col] = 1;
+        }
+
+        // Teleport developer test landing at col: 10, row: 12 must be open!
+        grid[12][10] = 1;
+
+        return grid;
+    }
+
+    function generateQuietArchiveTerrain(cols, rows) {
+        const grid = [];
+        for (let r = 0; r < rows; r++) {
+            grid[r] = [];
+            for (let c = 0; c < cols; c++) {
+                if (r === 0 || r === rows - 1 || c === 0 || c === cols - 1) {
+                    grid[r][c] = 2; // Outer Stone Wall
+                } else if (r < 6 && (c < 9 || c > 24)) {
+                    grid[r][c] = 6; // Monolith Pillars
+                } else {
+                    grid[r][c] = 5; // Sanctuary Stone Tiles
+                }
+            }
+        }
+        if (MAPS[0].buildings) {
+            MAPS[0].buildings.forEach(b => {
+                for (let r = b.row; r < b.row + b.hRows; r++) {
+                    for (let c = b.col; c < b.col + b.wCols; c++) {
+                        if (r < rows && c < cols) grid[r][c] = 12;
+                    }
+                }
+            });
+        }
+        if (MAPS[0].chest) {
+            grid[MAPS[0].chest.row][MAPS[0].chest.col] = 5;
+        }
+        return grid;
+    }
+
+    function generateStandardSectorTerrain(mapIndex, cols, rows) {
+        const mapMeta = MAPS[mapIndex];
+        const hasRiver = Array.isArray(mapMeta.riverRows) && mapMeta.riverRows.length > 0;
+        const grid = [];
+
+        for (let r = 0; r < rows; r++) {
+            grid[r] = [];
+            for (let c = 0; c < cols; c++) {
+                if (r === 0 || r === rows - 1 || c === 0 || c === cols - 1) {
+                    grid[r][c] = 2;
+                    continue;
+                }
+                if (hasRiver && mapMeta.riverRows.includes(r)) {
+                    grid[r][c] = 4;
+                    continue;
+                }
+                const midC = Math.floor(cols / 2);
+                const midR = Math.floor(rows / 2);
+                if (Math.abs(c - midC) <= 1 && r > 2 && r < rows - 2) {
+                    grid[r][c] = 1;
+                    continue;
+                }
+                if (Math.abs(r - midR) <= 1 && c > 3 && c < cols - 4) {
+                    grid[r][c] = 1;
+                    continue;
+                }
+                if (mapMeta.chest && Math.hypot(c - mapMeta.chest.col, r - mapMeta.chest.row) <= 2) {
+                    grid[r][c] = 0;
+                    continue;
+                }
+                const hash = Math.sin((r + mapIndex * 17) * 12.9898 + c * 78.233) * 43758.5453;
+                const rand = hash - Math.floor(hash);
+                if (mapMeta.isBrightAlttpZone) {
+                    if (rand < 0.06 && c > 3 && c < cols - 4 && r > 3 && r < rows - 4 && Math.abs(c - midC) > 4 && Math.abs(r - midR) > 2) {
+                        grid[r][c] = 3;
+                    } else if (rand > 0.78) {
+                        grid[r][c] = 9;
+                    } else {
+                        grid[r][c] = 0;
+                    }
+                } else {
+                    if (rand < 0.07 && c > 3 && c < cols - 4 && r > 4 && r < rows - 4 && Math.abs(c - midC) > 3 && Math.abs(r - midR) > 2) {
+                        grid[r][c] = 3;
+                    } else if (rand < 0.095 && c > 4 && c < cols - 5 && r > 4 && r < rows - 5 && Math.abs(c - midC) > 4) {
+                        grid[r][c] = 6;
+                    } else {
+                        grid[r][c] = 0;
+                    }
+                }
+            }
+        }
+        return grid;
+    }
+
+    function openPerimeterExits(cols, rows, mapIndex) {
+        const overPos = MAP_OVERWORLD_POS[mapIndex];
+        if (!overPos) return;
+
+        const hasNorth = overPos.row > 0;
+        const hasSouth = overPos.row < 2;
+        const hasWest = overPos.col > 0;
+        const hasEast = overPos.col < 2;
+
+        const midC = Math.floor(cols / 2);
+        const midR = Math.floor(rows / 2);
+
+        if (hasNorth) {
+            const startC = cols === MAP_COLS ? 14 : midC - 3;
+            const endC = cols === MAP_COLS ? 20 : midC + 3;
+            for (let c = startC; c <= endC; c++) {
+                if (mapGrid[0]) mapGrid[0][c] = 1;
+                if (mapGrid[1]) mapGrid[1][c] = 1;
+            }
+            if (cols === MAP_COLS) {
+                for (let c = 14; c <= 20; c++) {
+                    if (mapGrid[0]) mapGrid[0][c] = 1;
+                    if (mapGrid[1]) mapGrid[1][c] = 1;
+                }
+            }
+        }
+        if (hasSouth) {
+            const startC = cols === MAP_COLS ? 14 : midC - 3;
+            const endC = cols === MAP_COLS ? 20 : midC + 3;
+            for (let c = startC; c <= endC; c++) {
+                if (mapGrid[rows - 1]) mapGrid[rows - 1][c] = 1;
+                if (mapGrid[rows - 2]) mapGrid[rows - 2][c] = 1;
+            }
+            if (cols === MAP_COLS) {
+                for (let c = 14; c <= 20; c++) {
+                    if (mapGrid[rows - 1]) mapGrid[rows - 1][c] = 1;
+                    if (mapGrid[rows - 2]) mapGrid[rows - 2][c] = 1;
+                }
+            }
+        }
+        if (hasWest) {
+            const startR = rows === MAP_ROWS ? 10 : midR - 3;
+            const endR = rows === MAP_ROWS ? 16 : midR + 3;
+            for (let r = startR; r <= endR; r++) {
+                if (mapGrid[r]) mapGrid[r][0] = 1;
+                if (mapGrid[r]) mapGrid[r][1] = 1;
+            }
+            if (rows === MAP_ROWS) {
+                for (let r = 10; r <= 16; r++) {
+                    if (mapGrid[r]) mapGrid[r][0] = 1;
+                    if (mapGrid[r]) mapGrid[r][1] = 1;
+                }
+            }
+        }
+        if (hasEast) {
+            const startR = rows === MAP_ROWS ? 10 : midR - 3;
+            const endR = rows === MAP_ROWS ? 16 : midR + 3;
+            for (let r = startR; r <= endR; r++) {
+                if (mapGrid[r]) mapGrid[r][cols - 1] = 1;
+                if (mapGrid[r]) mapGrid[r][cols - 2] = 1;
+            }
+            if (rows === MAP_ROWS) {
+                for (let r = 10; r <= 16; r++) {
+                    if (mapGrid[r]) mapGrid[r][cols - 1] = 1;
+                    if (mapGrid[r]) mapGrid[r][cols - 2] = 1;
+                }
+            }
+        }
+    }
+
     function loadMap(mapIndex, spawnX = null, spawnY = null) {
         currentMapIndex = mapIndex;
         if (mapIndex > highestMapReached) highestMapReached = mapIndex;
@@ -3386,106 +3966,22 @@
         player.questReadyToTurnIn = false;
         player.questTurnedIn = false;
 
-        const hasRiver = Array.isArray(mapMeta.riverRows) && mapMeta.riverRows.length > 0;
+        const cols = getMapCols(mapIndex);
+        const rows = getMapRows(mapIndex);
 
-        // Build tile layout (0: Grass, 1: Path, 2: Wall, 3: Tree, 4: River Water, 5: Sanctuary, 6: Monolith, 8: Bridge, 9: Wildflowers)
-        for (let r = 0; r < MAP_ROWS; r++) {
-            mapGrid[r] = [];
-            for (let c = 0; c < MAP_COLS; c++) {
-                if (r === 0 || r === MAP_ROWS - 1 || c === 0 || c === MAP_COLS - 1) {
-                    mapGrid[r][c] = 2; // Outer Stone Wall / Cliff
-                    continue;
-                }
-
-                // Sparkling River Band across ALTTP Bright Interlude Zones!
-                if (hasRiver && mapMeta.riverRows.includes(r)) {
-                    mapGrid[r][c] = 4; // Sparkling River Water (Bridges extend across c=16..18 when puzzle solved!)
-                    continue;
-                }
-
-                // Central vertical road & horizontal avenue kept clear
-                if (Math.abs(c - 17) <= 1 && r > 2 && r < MAP_ROWS - 2) {
-                    mapGrid[r][c] = 1;
-                    continue;
-                }
-                if (Math.abs(r - 14) <= 1 && c > 3 && c < MAP_COLS - 4) {
-                    mapGrid[r][c] = 1;
-                    continue;
-                }
-
-                // Keep chest area clear
-                if (mapMeta.chest && Math.hypot(c - mapMeta.chest.col, r - mapMeta.chest.row) <= 2) {
-                    mapGrid[r][c] = mapIndex === 0 ? 5 : 0;
-                    continue;
-                }
-
-                const hash = Math.sin((r + mapIndex * 17) * 12.9898 + c * 78.233) * 43758.5453;
-                const rand = hash - Math.floor(hash);
-
-                if (mapIndex === 0) {
-                    if (r < 6 && (c < 9 || c > 24)) mapGrid[r][c] = 6;
-                    else if (rand < 0.05 && c > 5 && c < 28 && r > 6 && r < 18) mapGrid[r][c] = 3;
-                    else mapGrid[r][c] = 5;
-                } else if (mapMeta.isBrightAlttpZone) {
-                    // Lush Link to the Past style overworld with wildflowers and groves
-                    if (rand < 0.06 && c > 3 && c < MAP_COLS - 4 && r > 3 && r < MAP_ROWS - 4 && Math.abs(c - 17) > 4 && Math.abs(r - 13) > 2) {
-                        mapGrid[r][c] = 3; // Lush ALTTP Canopy Tree
-                    } else if (rand > 0.78) {
-                        mapGrid[r][c] = 9; // Sunlit Wildflowers
-                    } else {
-                        mapGrid[r][c] = 0;
-                    }
-                } else {
-                    if (rand < 0.07 && c > 3 && c < MAP_COLS - 4 && r > 4 && r < MAP_ROWS - 4 && Math.abs(c - 17) > 3 && Math.abs(r - 14) > 2) {
-                        mapGrid[r][c] = 3;
-                    } else if (rand < 0.095 && c > 4 && c < MAP_COLS - 5 && r > 4 && r < MAP_ROWS - 5 && Math.abs(c - 17) > 4) {
-                        mapGrid[r][c] = 6;
-                    } else {
-                        mapGrid[r][c] = 0;
-                    }
-                }
-            }
+        if (mapIndex === 1) {
+            mapGrid = generateKakarikoVillageTerrain(cols, rows);
+        } else if (mapIndex === 0) {
+            mapGrid = generateQuietArchiveTerrain(cols, rows);
+        } else {
+            mapGrid = generateStandardSectorTerrain(mapIndex, cols, rows);
         }
 
         // Open seamless perimeter pathways connecting to adjacent ALttP overworld sectors
-        const overPos = MAP_OVERWORLD_POS[mapIndex];
-        if (overPos) {
-            const hasNorth = overPos.row > 0;
-            const hasSouth = overPos.row < 2;
-            const hasWest = overPos.col > 0;
-            const hasEast = overPos.col < 2;
-
-            if (hasNorth) {
-                for (let c = 14; c <= 20; c++) {
-                    mapGrid[0][c] = 1;
-                    mapGrid[1][c] = 1;
-                }
-            }
-            if (hasSouth) {
-                for (let c = 14; c <= 20; c++) {
-                    mapGrid[MAP_ROWS - 1][c] = 1;
-                    mapGrid[MAP_ROWS - 2][c] = 1;
-                }
-            }
-            if (hasWest) {
-                for (let r = 10; r <= 16; r++) {
-                    mapGrid[r][0] = 1;
-                    mapGrid[r][1] = 1;
-                }
-            }
-            if (hasEast) {
-                for (let r = 10; r <= 16; r++) {
-                    mapGrid[r][MAP_COLS - 1] = 1;
-                    mapGrid[r][MAP_COLS - 2] = 1;
-                }
-            }
-        }
+        openPerimeterExits(cols, rows, mapIndex);
 
         // Spawn thematic environmental hazard & trap tiles on contested maps
-        if (mapIndex === 1) {
-            // Performative Valley: Outrage Vents near clout hotspots
-            [[8, 8], [25, 8], [12, 18], [22, 18]].forEach(([c, r]) => { if (mapGrid[r] && mapGrid[r][c] <= 1) mapGrid[r][c] = 10; });
-        } else if (mapIndex === 3) {
+        if (mapIndex === 3) {
             // Iron & Velvet Divide: Outrage vents & stasis runes flanking the avenue
             [[10, 8], [24, 8], [17, 7]].forEach(([c, r]) => { if (mapGrid[r] && mapGrid[r][c] <= 1) mapGrid[r][c] = 10; });
             [[12, 11], [22, 11]].forEach(([c, r]) => { if (mapGrid[r] && mapGrid[r][c] <= 1) mapGrid[r][c] = 11; });
@@ -3506,14 +4002,19 @@
             player.x = spawnX;
             player.y = spawnY;
         } else {
-            player.x = 17 * TILE_SIZE + TILE_SIZE / 2;
-            player.y = 20 * TILE_SIZE;
+            if (mapIndex === 1) {
+                player.x = 25.5 * TILE_SIZE;
+                player.y = 44 * TILE_SIZE;
+            } else {
+                player.x = (Math.floor(cols / 2) + 0.5) * TILE_SIZE;
+                player.y = (rows - 4) * TILE_SIZE;
+            }
         }
         player.dir = 1;
 
         // North Portal
         portals.push({
-            x: 17 * TILE_SIZE + TILE_SIZE / 2,
+            x: (Math.floor(cols / 2) + 0.5) * TILE_SIZE,
             y: 2.5 * TILE_SIZE,
             targetMap: mapMeta.portalTarget,
             label: mapIndex === MAPS.length - 1 ? 'Return to Sanctuary' : `To ${MAPS[mapMeta.portalTarget].name}`
@@ -3522,8 +4023,8 @@
         // Back Portal at bottom if mapIndex > 0
         if (mapIndex > 0) {
             portals.push({
-                x: 17 * TILE_SIZE + TILE_SIZE / 2,
-                y: 22.2 * TILE_SIZE,
+                x: (Math.floor(cols / 2) + 0.5) * TILE_SIZE,
+                y: (rows - 2.2) * TILE_SIZE,
                 targetMap: mapIndex - 1,
                 label: `Back to ${MAPS[mapIndex - 1].name}`
             });
@@ -3641,9 +4142,11 @@
         }
 
         // Spawn Professor Avi (Main Mentor & Quest Giver on every map)
+        const aviX = mapIndex === 0 ? 17.5 * TILE_SIZE : (mapIndex === 1 ? 22.5 * TILE_SIZE : (Math.floor(cols / 2) - 2.5) * TILE_SIZE);
+        const aviY = mapIndex === 0 ? 14.5 * TILE_SIZE : (mapIndex === 1 ? 21.5 * TILE_SIZE : (rows - 5.5) * TILE_SIZE);
         npcs.push({
-            x: (mapIndex === 0 ? 17.5 : 14.5) * TILE_SIZE,
-            y: (mapIndex === 0 ? 14.5 : 18.5) * TILE_SIZE,
+            x: aviX,
+            y: aviY,
             name: 'Professor Avi',
             role: 'avi',
             isQuestGiver: true,
@@ -3668,6 +4171,15 @@
         if (mapIndex === 0) {
             enemies.push(createEnemy(11.5 * TILE_SIZE, 12.5 * TILE_SIZE, 'masked', 'Training Dummy Alpha', true));
             enemies.push(createEnemy(23.5 * TILE_SIZE, 12.5 * TILE_SIZE, 'masked', 'Training Dummy Beta', true));
+        } else if (mapIndex === 1) {
+            // Performative Valley: 8 Masked Citizens wandering around village plazas & gardens
+            const villagerSpawns = [
+                [11, 10], [38, 12], [16, 26], [34, 26], [10, 36], [22, 36], [38, 36], [25, 14]
+            ];
+            villagerSpawns.forEach(([sc, sr]) => {
+                const spot = findOpenTileSpot(sc, sr);
+                enemies.push(createEnemy(spot.x, spot.y, 'masked', 'Masked Citizen', false));
+            });
         } else if (mapMeta.isBrightAlttpZone) {
             // Spawn citizens on the northern shore across the river!
             const count = mapMeta.curedGoal + 1;
@@ -3677,7 +4189,7 @@
                 enemies.push(createEnemy(spot.x, spot.y, roles[(mapIndex + i) % roles.length], ' isolated Citizen', false));
             }
         } else {
-            const roleByMap = { 1: 'masked', 3: 'iron', 4: 'inquisitor', 6: 'border', 8: 'blackshirt' };
+            const roleByMap = { 3: 'iron', 4: 'inquisitor', 6: 'border', 8: 'blackshirt' };
             const secRole = roleByMap[mapIndex] || 'masked';
 
             for (let i = 0; i < 7; i++) {
@@ -3688,7 +4200,7 @@
 
             if (mapMeta.boss) {
                 enemies.push({
-                    x: 17.5 * TILE_SIZE,
+                    x: (Math.floor(cols / 2) + 0.5) * TILE_SIZE,
                     y: 6.5 * TILE_SIZE,
                     radius: 24,
                     name: mapMeta.boss.name,
@@ -3717,9 +4229,9 @@
 
         // Reset & Initialize Dynamic Minimap Fog of War
         fogGrid = [];
-        for (let r = 0; r < MAP_ROWS; r++) {
+        for (let r = 0; r < rows; r++) {
             fogGrid[r] = [];
-            for (let c = 0; c < MAP_COLS; c++) {
+            for (let c = 0; c < cols; c++) {
                 fogGrid[r][c] = false;
             }
         }
@@ -3757,18 +4269,20 @@
     }
 
     function findOpenTileSpot(prefCol, prefRow) {
-        for (let rad = 0; rad < 8; rad++) {
+        const curCols = getMapCols(currentMapIndex);
+        const curRows = getMapRows(currentMapIndex);
+        for (let rad = 0; rad < 10; rad++) {
             for (let dr = -rad; dr <= rad; dr++) {
                 for (let dc = -rad; dc <= rad; dc++) {
-                    const c = Math.max(2, Math.min(MAP_COLS - 3, prefCol + dc));
-                    const r = Math.max(3, Math.min(MAP_ROWS - 4, prefRow + dr));
+                    const c = Math.max(2, Math.min(curCols - 3, prefCol + dc));
+                    const r = Math.max(3, Math.min(curRows - 4, prefRow + dr));
                     if (!isTileBlocked(c, r)) {
                         return { x: (c + 0.5) * TILE_SIZE, y: (r + 0.5) * TILE_SIZE };
                     }
                 }
             }
         }
-        return { x: 17.5 * TILE_SIZE, y: 12.5 * TILE_SIZE };
+        return { x: (Math.floor(curCols / 2) + 0.5) * TILE_SIZE, y: (Math.floor(curRows / 2) + 0.5) * TILE_SIZE };
     }
 
     function isRelicOwned(itemId) {
@@ -3807,27 +4321,33 @@
     }
 
     function isTileBlocked(col, row) {
+        const curCols = getMapCols(currentMapIndex);
+        const curRows = getMapRows(currentMapIndex);
         if (!Number.isFinite(col) || !Number.isFinite(row)) return true;
-        if (row < 0 || row >= MAP_ROWS || col < 0 || col >= MAP_COLS) {
+        if (row < 0 || row >= curRows || col < 0 || col >= curCols) {
             const overPos = MAP_OVERWORLD_POS[currentMapIndex];
             if (overPos) {
-                if (row < 0 && overPos.row > 0 && col >= 13 && col <= 21) return false;
-                if (row >= MAP_ROWS && overPos.row < 2 && col >= 13 && col <= 21) return false;
-                if (col < 0 && overPos.col > 0 && row >= 10 && row <= 17) return false;
-                if (col >= MAP_COLS && overPos.col < 2 && row >= 10 && row <= 17) return false;
+                const midC = Math.floor(curCols / 2);
+                const midR = Math.floor(curRows / 2);
+                if (row < 0 && overPos.row > 0 && col >= midC - 4 && col <= midC + 4) return false;
+                if (row >= curRows && overPos.row < 2 && col >= midC - 4 && col <= midC + 4) return false;
+                if (col < 0 && overPos.col > 0 && row >= midR - 4 && row <= midR + 4) return false;
+                if (col >= curCols && overPos.col < 2 && row >= midR - 4 && row <= midR + 4) return false;
             }
             return true;
         }
         if (!mapGrid[row]) return true;
         const t = mapGrid[row][col];
-        return t === 2 || t === 3 || t === 4 || t === 6;
+        return t === 2 || t === 3 || t === 4 || t === 6 || t === 7 || t === 12 || t === 13;
     }
 
     function moveEntityWithCollision(ent, dx, dy) {
         if (!Number.isFinite(dx)) dx = 0;
         if (!Number.isFinite(dy)) dy = 0;
-        if (!Number.isFinite(ent.x)) ent.x = 17.5 * TILE_SIZE;
-        if (!Number.isFinite(ent.y)) ent.y = 12.5 * TILE_SIZE;
+        const curCols = getMapCols(currentMapIndex);
+        const curRows = getMapRows(currentMapIndex);
+        if (!Number.isFinite(ent.x)) ent.x = (Math.floor(curCols / 2) + 0.5) * TILE_SIZE;
+        if (!Number.isFinite(ent.y)) ent.y = (Math.floor(curRows / 2) + 0.5) * TILE_SIZE;
 
         const r = ent.radius || 14;
         ent.x += dx;
@@ -3858,11 +4378,11 @@
             }
         }
 
-        // Strict anti-stuck boundary clamping so no entity ever leaves map walls
+        // Strict anti-stuck boundary clamping
         const minBoundX = TILE_SIZE + r + 2;
-        const maxBoundX = (MAP_COLS - 1) * TILE_SIZE - r - 2;
+        const maxBoundX = (curCols - 1) * TILE_SIZE - r - 2;
         const minBoundY = TILE_SIZE + r + 2;
-        const maxBoundY = (MAP_ROWS - 1) * TILE_SIZE - r - 2;
+        const maxBoundY = (curRows - 1) * TILE_SIZE - r - 2;
         ent.x = Math.max(minBoundX, Math.min(maxBoundX, ent.x));
         ent.y = Math.max(minBoundY, Math.min(maxBoundY, ent.y));
 
@@ -3870,8 +4390,8 @@
         const curCol = Math.floor(ent.x / TILE_SIZE);
         const curRow = Math.floor(ent.y / TILE_SIZE);
         if (isTileBlocked(curCol, curRow)) {
-            const safeX = 17.5 * TILE_SIZE;
-            const safeY = 12.5 * TILE_SIZE;
+            const safeX = (Math.floor(curCols / 2) + 0.5) * TILE_SIZE;
+            const safeY = (Math.floor(curRows / 2) + 0.5) * TILE_SIZE;
             ent.x += (safeX - ent.x) * 0.25;
             ent.y += (safeY - ent.y) * 0.25;
         }
@@ -4111,8 +4631,10 @@
     }
 
     function teleportPlayerTo(targetMapIndex, targetCol, targetRow) {
-        const clampedCol = Math.max(2, Math.min(MAP_COLS - 3, targetCol));
-        const clampedRow = Math.max(2, Math.min(MAP_ROWS - 3, targetRow));
+        const tCols = getMapCols(targetMapIndex);
+        const tRows = getMapRows(targetMapIndex);
+        const clampedCol = Math.max(2, Math.min(tCols - 3, targetCol));
+        const clampedRow = Math.max(2, Math.min(tRows - 3, targetRow));
         const targetX = (clampedCol + 0.5) * TILE_SIZE;
         const targetY = (clampedRow + 0.5) * TILE_SIZE;
 
@@ -4147,6 +4669,11 @@
         const curCol = Math.floor(player.x / TILE_SIZE);
         const curRow = Math.floor(player.y / TILE_SIZE);
 
+        const curCols = getMapCols(currentMapIndex);
+        const curRows = getMapRows(currentMapIndex);
+        const midC = Math.floor(curCols / 2);
+        const midR = Math.floor(curRows / 2);
+
         // Screen boundary edge transitions between ALttP overworld sectors
         const overPos = MAP_OVERWORLD_POS[currentMapIndex];
         if (overPos) {
@@ -4155,17 +4682,27 @@
             const westMap = overPos.col > 0 ? OVERWORLD_GRID[overPos.row][overPos.col - 1] : null;
             const eastMap = overPos.col < 2 ? OVERWORLD_GRID[overPos.row][overPos.col + 1] : null;
 
-            if (northMap !== null && player.y <= 0.8 * TILE_SIZE && curCol >= 13 && curCol <= 21) {
-                transitionToNeighborMap(northMap, player.x, (MAP_ROWS - 2) * TILE_SIZE, 'North');
+            if (northMap !== null && player.y <= 0.8 * TILE_SIZE && curCol >= midC - 4 && curCol <= midC + 4) {
+                const targetRows = getMapRows(northMap);
+                const targetCols = getMapCols(northMap);
+                const targetMidC = Math.floor(targetCols / 2);
+                transitionToNeighborMap(northMap, (targetMidC + 0.5) * TILE_SIZE, (targetRows - 2) * TILE_SIZE, 'North');
                 return;
-            } else if (southMap !== null && player.y >= (MAP_ROWS - 1.8) * TILE_SIZE && curCol >= 13 && curCol <= 21) {
-                transitionToNeighborMap(southMap, player.x, 1.8 * TILE_SIZE, 'South');
+            } else if (southMap !== null && player.y >= (curRows - 1.8) * TILE_SIZE && curCol >= midC - 4 && curCol <= midC + 4) {
+                const targetCols = getMapCols(southMap);
+                const targetMidC = Math.floor(targetCols / 2);
+                transitionToNeighborMap(southMap, (targetMidC + 0.5) * TILE_SIZE, 1.8 * TILE_SIZE, 'South');
                 return;
-            } else if (westMap !== null && player.x <= 0.8 * TILE_SIZE && curRow >= 10 && curRow <= 17) {
-                transitionToNeighborMap(westMap, (MAP_COLS - 2) * TILE_SIZE, player.y, 'West');
+            } else if (westMap !== null && player.x <= 0.8 * TILE_SIZE && curRow >= midR - 4 && curRow <= midR + 4) {
+                const targetCols = getMapCols(westMap);
+                const targetRows = getMapRows(westMap);
+                const targetMidR = Math.floor(targetRows / 2);
+                transitionToNeighborMap(westMap, (targetCols - 2) * TILE_SIZE, (targetMidR + 0.5) * TILE_SIZE, 'West');
                 return;
-            } else if (eastMap !== null && player.x >= (MAP_COLS - 1.8) * TILE_SIZE && curRow >= 10 && curRow <= 17) {
-                transitionToNeighborMap(eastMap, 1.8 * TILE_SIZE, player.y, 'East');
+            } else if (eastMap !== null && player.x >= (curCols - 1.8) * TILE_SIZE && curRow >= midR - 4 && curRow <= midR + 4) {
+                const targetRows = getMapRows(eastMap);
+                const targetMidR = Math.floor(targetRows / 2);
+                transitionToNeighborMap(eastMap, 1.8 * TILE_SIZE, (targetMidR + 0.5) * TILE_SIZE, 'East');
                 return;
             }
         }
@@ -4317,8 +4854,8 @@
             });
 
             // Channeling [Q] Prism Beam dispels environmental hazard vents within beam cone!
-            for (let r = 0; r < MAP_ROWS; r++) {
-                for (let c = 0; c < MAP_COLS; c++) {
+            for (let r = 0; r < curRows; r++) {
+                for (let c = 0; c < curCols; c++) {
                     const t = mapGrid[r][c];
                     if (t === 10 || t === 11) {
                         const hx = (c + 0.5) * TILE_SIZE;
@@ -4639,8 +5176,18 @@
         ctx.fillStyle = mapMeta.themeColor;
         ctx.fillRect(0, 0, w, h);
 
+        const curCols = getMapCols(currentMapIndex);
+        const curRows = getMapRows(currentMapIndex);
+        const worldW = curCols * TILE_SIZE;
+        const worldH = curRows * TILE_SIZE;
+
         let camX = Math.floor(player.x - w / 2);
         let camY = Math.floor(player.y - h / 2);
+        if (worldW > w) camX = Math.max(0, Math.min(worldW - w, camX));
+        else camX = Math.floor((worldW - w) / 2);
+        if (worldH > h) camY = Math.max(0, Math.min(worldH - h, camY));
+        else camY = Math.floor((worldH - h) / 2);
+
         if (screenShakeTime > 0 && document.getElementById('toggleShake').checked) {
             camX += (Math.random() - 0.5) * 10;
             camY += (Math.random() - 0.5) * 10;
@@ -4651,11 +5198,11 @@
 
         // 1. Render Tile Map (including ALTTP Sparkling River Water, Bridges & Sunlit Wildflowers)
         const waterWaveShift = Math.floor(performance.now() / 260) % 2;
-        for (let r = 0; r < MAP_ROWS; r++) {
-            for (let c = 0; c < MAP_COLS; c++) {
+        for (let r = 0; r < curRows; r++) {
+            for (let c = 0; c < curCols; c++) {
                 const tx = c * TILE_SIZE;
                 const ty = r * TILE_SIZE;
-                const t = mapGrid[r][c];
+                const t = mapGrid[r] ? mapGrid[r][c] : 0;
 
                 ctx.fillStyle = t === 5 ? '#162436' : mapMeta.groundColor;
                 ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
@@ -4704,11 +5251,11 @@
                     ctx.fillRect(tx + 6 + wx, ty + 11, 10, 3);
                     ctx.fillRect(tx + 20 - wx, ty + 27, 12, 3);
                     // Shoreline grassy bank trim on top/bottom edges
-                    if (r > 0 && mapGrid[r - 1][c] !== 4 && mapGrid[r - 1][c] !== 8) {
+                    if (r > 0 && mapGrid[r - 1] && mapGrid[r - 1][c] !== 4 && mapGrid[r - 1][c] !== 8) {
                         ctx.fillStyle = '#fde68a';
                         ctx.fillRect(tx, ty, TILE_SIZE, 4);
                     }
-                    if (r < MAP_ROWS - 1 && mapGrid[r + 1][c] !== 4 && mapGrid[r + 1][c] !== 8) {
+                    if (r < curRows - 1 && mapGrid[r + 1] && mapGrid[r + 1][c] !== 4 && mapGrid[r + 1][c] !== 8) {
                         ctx.fillStyle = '#fde68a';
                         ctx.fillRect(tx, ty + TILE_SIZE - 4, TILE_SIZE, 4);
                     }
@@ -4741,6 +5288,31 @@
                     ctx.fillStyle = currentMapIndex === 0 ? '#f59e0b' : '#38bdf8';
                     ctx.fillRect(tx + 8, ty + 8, TILE_SIZE - 16, 6);
                     ctx.fillRect(tx + 8, ty + 18, TILE_SIZE - 16, 6);
+                } else if (t === 7) {
+                    // Zelda Kakariko Dense Hedge
+                    ctx.fillStyle = '#14532d';
+                    ctx.fillRect(tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                    ctx.fillStyle = '#16a34a';
+                    ctx.fillRect(tx + 5, ty + 5, TILE_SIZE - 10, TILE_SIZE - 10);
+                    ctx.fillStyle = '#4ade80';
+                    ctx.fillRect(tx + 8, ty + 8, 8, 8);
+                    ctx.fillRect(tx + 24, ty + 20, 8, 8);
+                } else if (t === 13) {
+                    // Zelda Rustic Wooden Fence Post & Rails
+                    ctx.fillStyle = '#78350f';
+                    ctx.fillRect(tx + 4, ty + 18, TILE_SIZE - 8, 6);
+                    ctx.fillRect(tx + 4, ty + 28, TILE_SIZE - 8, 6);
+                    ctx.fillStyle = '#b45309';
+                    ctx.fillRect(tx + 8, ty + 10, 6, 26);
+                    ctx.fillRect(tx + TILE_SIZE - 14, ty + 10, 6, 26);
+                    ctx.fillStyle = '#d97706';
+                    ctx.fillRect(tx + 9, ty + 11, 2, 24);
+                } else if (t === 12) {
+                    // Ground under building footprint
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = '#334155';
+                    ctx.fillRect(tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
                 } else if (t === 10) {
                     // Algorithmic Outrage Vent (Swirling glitch vortex, crimson / magenta)
                     const pulseTime = performance.now() / 200;
@@ -4781,6 +5353,14 @@
                     ctx.fillRect(tx + 20, ty + 20, 4, 4);
                 }
             }
+        }
+
+        // Render Buildings & Landmarks
+        if (mapMeta.buildings && Array.isArray(mapMeta.buildings)) {
+            mapMeta.buildings.forEach(b => drawBuilding(ctx, b));
+        }
+        if (mapMeta.weatherVane) {
+            drawWeatherVaneMonument(ctx, mapMeta.weatherVane.col, mapMeta.weatherVane.row);
         }
 
         // 2. Render Portals
@@ -5059,26 +5639,32 @@
         mmCtx.fillStyle = '#050811';
         mmCtx.fillRect(0, 0, mw, mh);
 
-        const sx = mw / (MAP_COLS * TILE_SIZE);
-        const sy = mh / (MAP_ROWS * TILE_SIZE);
-        const tw = mw / MAP_COLS;
-        const th = mh / MAP_ROWS;
+        const curCols = getMapCols(currentMapIndex);
+        const curRows = getMapRows(currentMapIndex);
+
+        const sx = mw / (curCols * TILE_SIZE);
+        const sy = mh / (curRows * TILE_SIZE);
+        const tw = mw / curCols;
+        const th = mh / curRows;
 
         // Draw explored tiles from fogGrid
-        for (let r = 0; r < MAP_ROWS; r++) {
-            for (let c = 0; c < MAP_COLS; c++) {
+        for (let r = 0; r < curRows; r++) {
+            for (let c = 0; c < curCols; c++) {
                 if (fogGrid[r] && fogGrid[r][c]) {
-                    const t = mapGrid[r][c];
+                    const t = mapGrid[r] ? mapGrid[r][c] : 0;
                     let color = '#0f172a'; // standard ground
                     if (t === 1) color = '#475569'; // path
                     else if (t === 2) color = '#1e293b'; // perimeter wall
                     else if (t === 3) color = '#065f46'; // tree
                     else if (t === 4) color = '#0284c7'; // river
                     else if (t === 5) color = '#1e293b'; // sanctuary
+                    else if (t === 7) color = '#16a34a'; // hedge
                     else if (t === 8) color = '#d97706'; // bridge
                     else if (t === 9) color = '#15803d'; // meadow wildflowers
                     else if (t === 10) color = '#e11d48'; // outrage vent
                     else if (t === 11) color = '#9333ea'; // stasis rune
+                    else if (t === 12) color = '#b45309'; // village building
+                    else if (t === 13) color = '#78350f'; // fence
                     mmCtx.fillStyle = color;
                     mmCtx.fillRect(c * tw, r * th, tw + 0.5, th + 0.5);
                 } else {
@@ -5581,8 +6167,10 @@
 
         const curMeta = MAP_OVERWORLD_POS[currentMapIndex];
         if (curMeta) {
-            const px = innerX + curMeta.col * secW + (player.x / (MAP_COLS * TILE_SIZE)) * secW;
-            const py = innerY + curMeta.row * secH + (player.y / (MAP_ROWS * TILE_SIZE)) * secH;
+            const mCols = getMapCols(currentMapIndex);
+            const mRows = getMapRows(currentMapIndex);
+            const px = innerX + curMeta.col * secW + (player.x / (mCols * TILE_SIZE)) * secW;
+            const py = innerY + curMeta.row * secH + (player.y / (mRows * TILE_SIZE)) * secH;
             const pulse = 1 + 0.25 * Math.sin(performance.now() / 150);
 
             ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
@@ -5697,8 +6285,10 @@
 
                 const secRelX = mapHoverGridPos.mx - (innerX + mapHoverGridPos.col * secW);
                 const secRelY = mapHoverGridPos.my - (innerY + mapHoverGridPos.row * secH);
-                const targetCol = Math.floor((secRelX / secW) * MAP_COLS);
-                const targetRow = Math.floor((secRelY / secH) * MAP_ROWS);
+                const tCols = getMapCols(targetMapIdx);
+                const tRows = getMapRows(targetMapIdx);
+                const targetCol = Math.floor((secRelX / secW) * tCols);
+                const targetRow = Math.floor((secRelY / secH) * tRows);
 
                 teleportPlayerTo(targetMapIdx, targetCol, targetRow);
             } else {

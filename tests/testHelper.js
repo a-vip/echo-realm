@@ -53,6 +53,7 @@ function loadGameEnvironment() {
             restore: () => {}, translate: () => {}, rotate: () => {}, fillText: () => {},
             moveTo: () => {}, lineTo: () => {}, closePath: () => {}, ellipse: () => {},
             rect: () => {}, clip: () => {}, setLineDash: () => {}, bezierCurveTo: () => {},
+            measureText: () => ({ width: 50 }),
             createLinearGradient: () => ({ addColorStop: () => {} }),
             createRadialGradient: () => ({ addColorStop: () => {} })
         }),
@@ -80,6 +81,14 @@ function loadGameEnvironment() {
             addEventListener: () => {}
         },
         console: console,
+        Image: class {
+            constructor() {
+                this.src = '';
+                this.width = 1024;
+                this.height = 545;
+                setTimeout(() => { if (this.onload) this.onload(); }, 0);
+            }
+        },
         AudioContext: class {
             createOscillator() {
                 return {
