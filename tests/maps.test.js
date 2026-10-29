@@ -246,15 +246,12 @@ test('World & Map Validation Test Suite', async (t) => {
         assert.strictEqual(qg8.name, 'Professor Avi');
     });
 
-    await t.test('Quest giver immediately teleports adjacent to the exit portal when chapter objectives are completed', () => {
+    await t.test('Portals are removed for open-world freedom, and quests track in stacked quest log', () => {
         game.loadMap(1); // Performative Valley (5 cured goal, Commander Maya)
         const qg = game.npcs.find(n => n.isQuestGiver);
-        const exitPortal = game.portals.find(p => p.targetMap > 1) || game.portals[0];
         assert.ok(qg, 'Must have active quest giver');
-        assert.ok(exitPortal, 'Must have exit portal');
+        assert.strictEqual(game.portals.length, 0, 'Portals must be completely removed for open-world freedom');
 
-        const initialQgX = qg.x;
-        const initialQgY = qg.y;
         assert.strictEqual(game.player.questReadyToTurnIn, false);
 
         // Fulfill chapter objective
@@ -262,9 +259,8 @@ test('World & Map Validation Test Suite', async (t) => {
         game.checkQuestProgressState();
 
         assert.strictEqual(game.player.questReadyToTurnIn, true, 'Quest must be marked ready to turn in');
-        assert.strictEqual(qg.x, exitPortal.x - 38, 'Quest giver X must be teleported adjacent to exit portal');
-        assert.strictEqual(qg.y, exitPortal.y + 14, 'Quest giver Y must be teleported adjacent to exit portal');
-        assert.notStrictEqual(qg.x, initialQgX, 'Quest giver X must have moved from original village position');
+        assert.ok(game.player.zoneQuests[1], 'Zone quest 1 must be registered in stacked quest tracker');
+        assert.strictEqual(game.player.zoneQuests[1].readyToTurnIn, true, 'Stacked quest must be marked ready to turn in');
     });
 
     await t.test('Items feature color-coded rarity metadata, distinct visual colors, and glowing text styles', () => {
@@ -287,6 +283,92 @@ test('World & Map Validation Test Suite', async (t) => {
         const consumable = game.getItemRarity({ id: 'tonic', type: 'consumable' });
         assert.strictEqual(consumable.name, 'Uncommon');
         assert.strictEqual(consumable.color, '#34d399');
+    });
+
+    await t.test('All open-world exploration zones (Maps 1-8) feature expansive grand scale dimensions (50+ cols / 48+ rows) and outdoor buildings', () => {
+        for (let i = 1; i < game.MAPS.length; i++) {
+            const map = game.MAPS[i];
+            assert.ok(map.cols >= 50, `Map ${i} (${map.name}) cols (${map.cols}) must be >= 50`);
+            assert.ok(map.rows >= 48, `Map ${i} (${map.name}) rows (${map.rows}) must be >= 48`);
+            assert.ok(Array.isArray(map.buildings) && map.buildings.length >= 3,
+                `Map ${i} (${map.name}) must have at least 3 outdoor buildings with interactive doors`);
+        }
+    });
+
+    await t.test('Interactive building doors open Link’s house style furnished interior with authentic props and exits', () => {
+        game.loadMap(1);
+        const cottage = game.MAPS[1].buildings[0];
+        assert.ok(cottage, 'Map 1 must have cottages');
+
+        game.enterBuildingInterior(cottage);
+        assert.ok(game.currentInterior, 'Current interior must be active');
+        assert.strictEqual(game.currentInterior.name, cottage.name);
+        assert.strictEqual(game.currentInterior.cols, 15);
+        assert.strictEqual(game.currentInterior.rows, 13);
+        assert.strictEqual(game.currentInterior.pots.length, 3, 'Must have 3 clay pots along the wall');
+        assert.ok(game.currentInterior.prop, 'Must have narrative inspectable prop');
+        assert.ok(game.currentInterior.chest, 'Must have interior chest');
+
+        // Test exiting back to overworld
+        game.exitBuildingInterior();
+        assert.strictEqual(game.currentInterior, null, 'Current interior must be cleared after exiting');
+    });
+
+    await t.test('Clay pots can be picked up, carried overhead, and thrown to shatter into loot', () => {
+        game.loadMap(1);
+        const cottage = game.MAPS[1].buildings[0];
+        game.enterBuildingInterior(cottage);
+
+        const pot = game.currentInterior.pots[0];
+        assert.strictEqual(pot.lifted, false);
+        assert.strictEqual(game.player.holdingPot, null);
+
+        // Pick up pot
+        game.player.holdingPot = pot;
+        pot.lifted = true;
+        assert.strictEqual(game.player.holdingPot, pot);
+
+        // Throw pot
+        const prevProjs = game.activePotProjectiles.length;
+        game.throwHeldPot();
+        assert.strictEqual(game.player.holdingPot, null, 'Holding pot must be cleared after throwing');
+        assert.strictEqual(game.activePotProjectiles.length, prevProjs + 1, 'Active pot projectile must be spawned');
+        assert.strictEqual(pot.broken, true, 'Pot must be marked broken');
+
+        game.exitBuildingInterior();
+    });
+
+    await t.test('Centered 32-bit Epistemic Revelation modal pauses gameplay and stays until dismissed', () => {
+        game.appState = 'PLAYING';
+        game.showDeconstructToast('foundations');
+
+        assert.strictEqual(game.appState, 'REVELATION_POPUP', 'appState must be paused in REVELATION_POPUP');
+
+        // Dismiss modal
+        game.dismissEpistemicRevelation();
+        assert.strictEqual(game.appState, 'PLAYING', 'appState must resume to PLAYING after dismissal');
+    });
+
+    await t.test('Active Quest Log stacks and tracks multiple zone quests simultaneously across realms', () => {
+        game.loadMap(1);
+        game.player.mapCitizensFreed = 2;
+        game.checkQuestProgressState();
+
+        assert.ok(game.player.zoneQuests[1], 'Zone quest 1 must exist');
+        assert.strictEqual(game.player.zoneQuests[1].cured, 2);
+
+        // Transition to Map 2
+        game.transitionToNeighborMap(2, 500, 500);
+        assert.ok(game.player.zoneQuests[2], 'Zone quest 2 must exist upon entering');
+
+        // Verify Map 1 progress was persisted in stacked quest log
+        assert.strictEqual(game.player.zoneQuests[1].cured, 2, 'Map 1 progress must persist while on Map 2');
+
+        // Advance Map 2
+        game.player.mapCitizensFreed = 3;
+        game.checkQuestProgressState();
+        assert.strictEqual(game.player.zoneQuests[2].cured, 3);
+        assert.strictEqual(game.player.zoneQuests[1].cured, 2);
     });
 });
 

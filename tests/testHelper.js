@@ -47,7 +47,19 @@ function loadGameEnvironment() {
         getItemRarity,
         checkQuestProgressState,
         get npcs() { return npcs; },
-        get portals() { return portals; }
+        get portals() { return portals; },
+        get currentInterior() { return currentInterior; },
+        enterBuildingInterior,
+        exitBuildingInterior,
+        throwHeldPot,
+        get activePotProjectiles() { return activePotProjectiles; },
+        showDeconstructToast,
+        dismissEpistemicRevelation,
+        get appState() { return appState; },
+        set appState(val) { appState = val; },
+        updateStackedQuestHud,
+        triggerInteraction,
+        findNearestInteractable
     };`;
 
     const mockElem = {
@@ -81,6 +93,7 @@ function loadGameEnvironment() {
         },
         document: {
             getElementById: () => mockElem,
+            createElement: () => mockElem,
             querySelectorAll: () => [],
             addEventListener: () => {}
         },
