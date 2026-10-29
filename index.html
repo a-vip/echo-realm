@@ -123,24 +123,15 @@
     <!-- =================================================================== -->
     <!-- 7-SCENE OPENING CUTSCENE OVERLAY                                    -->
     <!-- =================================================================== -->
-    <div id="cutsceneOverlay" class="fixed inset-0 z-20 pointer-events-none flex flex-col justify-between">
-        <div class="h-16 bg-black/95 border-b border-slate-800 flex items-center justify-between px-6 pointer-events-auto">
-            <div class="flex items-center gap-3">
-                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                <span id="cutsceneHeaderTag" class="pixel-font text-[10px] text-cyan-400 tracking-widest">PROLOGUE SCENE 1 / 7 // THE OPEN AGORA</span>
+    <div id="cutsceneOverlay" class="fixed inset-0 z-20 pointer-events-auto flex flex-col justify-end cursor-pointer">
+        <div class="bg-black/90 backdrop-blur-sm border-t-2 border-cyan-500/40 flex flex-col items-center justify-center px-8 py-5 pointer-events-auto">
+            <p id="cutsceneSubtitle" class="pixel-font text-xs md:text-sm text-center text-slate-100 leading-relaxed max-w-4xl mb-4 select-none"></p>
+            <div class="flex items-center justify-between w-full max-w-4xl px-2">
+                <div id="cutsceneProgressDots" class="flex items-center gap-2"></div>
+                <div class="pixel-font text-[10px] text-cyan-400 animate-pulse tracking-wider select-none">
+                    [ CLICK OR SPACE TO CONTINUE &raquo; ]
+                </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button id="btnNextCutsceneScene" class="px-3 py-1.5 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-xs font-bold text-cyan-300 border border-cyan-400/50">
-                    [SPACE] Next Scene &rsaquo;
-                </button>
-                <button id="btnSkipIntro" class="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-bold text-amber-300 border border-amber-500/40">
-                    [ESC] Skip Intro &raquo;
-                </button>
-            </div>
-        </div>
-        <div class="h-28 bg-black/95 border-t border-slate-800 flex flex-col items-center justify-center px-8 pointer-events-auto">
-            <p id="cutsceneSubtitle" class="pixel-font text-xs md:text-sm text-center text-slate-100 leading-relaxed max-w-4xl mb-3"></p>
-            <div id="cutsceneProgressDots" class="flex items-center gap-2"></div>
         </div>
     </div>
 
@@ -2289,23 +2280,14 @@
     }
 
     function updateAndRenderIntro(dt) {
+        // Cutscene text & canvas remain static until player manually advances via Space or Click
         introSceneTimer += dt;
-        if (introSceneTimer > 6.0) {
-            if (introSceneIndex < CUTSCENE_SCENES.length - 1) {
-                introSceneIndex++;
-                introSceneTimer = 0;
-                renderCutsceneDots();
-            } else {
-                finishIntroCutscene();
-                return;
-            }
-        }
 
         const w = canvas.width;
         const h = canvas.height;
         const sc = CUTSCENE_SCENES[introSceneIndex];
-        document.getElementById('cutsceneHeaderTag').textContent = sc.tag;
-        document.getElementById('cutsceneSubtitle').textContent = sc.text;
+        const sub = document.getElementById('cutsceneSubtitle');
+        if (sub) sub.textContent = sc.text;
 
         const grad = ctx.createLinearGradient(0, 0, 0, h);
         if (introSceneIndex <= 1) {
@@ -2421,6 +2403,127 @@
             });
             ctx.restore();
         }
+    }
+
+    // =========================================================================
+    // 8B. ANIMATED TITLE SCREEN BACKGROUND ENGINE
+    // =========================================================================
+    const titleParticles = [];
+    for (let i = 0; i < 55; i++) {
+        titleParticles.push({
+            x: Math.random(),
+            y: Math.random(),
+            speed: 0.035 + Math.random() * 0.065,
+            size: 1.5 + Math.random() * 2.5,
+            sway: Math.random() * Math.PI * 2,
+            color: ['#38bdf8', '#34d399', '#fbbf24', '#818cf8', '#f43f5e'][Math.floor(Math.random() * 5)]
+        });
+    }
+
+    function renderTitleBackground(now, dt) {
+        const w = canvas.width;
+        const h = canvas.height;
+        const t = now / 1000;
+
+        // 1. Deep Atmospheric Gradient Sky
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+        skyGrad.addColorStop(0, '#020617');
+        skyGrad.addColorStop(0.42, '#09152e');
+        skyGrad.addColorStop(0.70, '#0e3a54');
+        skyGrad.addColorStop(1, '#021a24');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // 2. Horizon Glow / Luminous Archive Resonance
+        const horizY = h * 0.72;
+        const sunGrad = ctx.createRadialGradient(w / 2, horizY, 15, w / 2, horizY, Math.min(w * 0.5, 420));
+        sunGrad.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
+        sunGrad.addColorStop(0.35, 'rgba(14, 165, 233, 0.22)');
+        sunGrad.addColorStop(0.75, 'rgba(16, 185, 129, 0.08)');
+        sunGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = sunGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // 3. Parallax Mountain Ridges & Spire Silhouettes
+        ctx.fillStyle = '#061528';
+        ctx.beginPath();
+        ctx.moveTo(0, horizY);
+        for (let x = 0; x <= w; x += 25) {
+            const my = horizY - 38 - Math.sin(x * 0.005 + 1.2) * 26 - Math.sin(x * 0.015) * 14;
+            ctx.lineTo(x, my);
+        }
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#030b18';
+        ctx.beginPath();
+        ctx.moveTo(0, horizY);
+        for (let x = 0; x <= w; x += 18) {
+            const my = horizY - 20 - Math.sin(x * 0.008 + 2.5) * 18 - Math.cos(x * 0.02) * 9;
+            ctx.lineTo(x, my);
+        }
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fill();
+
+        // 4. Synthwave Algorithmic Perspective Grid
+        const gridSpeed = (t * 36) % 32;
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.18)';
+        ctx.lineWidth = 1;
+        // Horizontal lines with perspective compression
+        for (let y = horizY; y <= h; y += 10) {
+            const progress = (y - horizY) / (h - horizY);
+            const lineY = horizY + Math.pow(progress, 1.85) * (h - horizY);
+            const offsetLineY = lineY + gridSpeed * progress * 0.45;
+            if (offsetLineY <= h) {
+                ctx.beginPath();
+                ctx.moveTo(0, offsetLineY);
+                ctx.lineTo(w, offsetLineY);
+                ctx.stroke();
+            }
+        }
+        // Radiating perspective lines from horizon center
+        const vanX = w / 2;
+        const vanY = horizY;
+        for (let x = -w * 0.5; x <= w * 1.5; x += 65) {
+            ctx.beginPath();
+            ctx.moveTo(vanX, vanY);
+            ctx.lineTo(x, h);
+            ctx.stroke();
+        }
+
+        // 5. Floating Glowing Insight Shards & Sparks
+        titleParticles.forEach(p => {
+            p.y -= p.speed * dt;
+            if (p.y < 0) {
+                p.y = 1;
+                p.x = Math.random();
+            }
+            p.sway += dt * 1.8;
+            const px = (p.x * w + Math.sin(p.sway) * 24 + w) % w;
+            const py = p.y * h;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(px, py, p.size, p.size);
+        });
+
+        // 6. Radiant Center Archive Core Beacon (behind title card)
+        const pulse = 1 + 0.12 * Math.sin(t * 2.5);
+        ctx.save();
+        ctx.translate(w / 2, h / 2 - 20);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.32)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 160 * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.22)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 120 * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
     }
 
     // =========================================================================
@@ -4687,9 +4790,18 @@
         updateAllHud();
     }
 
-    // Cutscene & Title Buttons
-    document.getElementById('btnNextCutsceneScene').onclick = advanceCutsceneScene;
-    document.getElementById('btnSkipIntro').onclick = finishIntroCutscene;
+    // Cutscene Interaction: Click anywhere on the overlay or canvas to advance scenes
+    const cutsceneOverlayEl = document.getElementById('cutsceneOverlay');
+    if (cutsceneOverlayEl) {
+        cutsceneOverlayEl.onclick = () => {
+            if (appState === 'INTRO') advanceCutsceneScene();
+        };
+    }
+    if (canvas) {
+        canvas.onclick = () => {
+            if (appState === 'INTRO') advanceCutsceneScene();
+        };
+    }
     document.getElementById('btnReplayIntro').onclick = () => {
         document.getElementById('titleScreenModal').classList.add('hidden');
         document.getElementById('cutsceneOverlay').classList.remove('hidden');
@@ -4855,7 +4967,10 @@
 
         if (appState === 'INTRO') {
             updateAndRenderIntro(dt);
+        } else if (appState === 'TITLE') {
+            renderTitleBackground(now, dt);
         } else if (appState === 'CHAR_CREATE') {
+            renderTitleBackground(now, dt);
             pCtx.clearRect(0, 0, 128, 128);
             drawCharacterSprite(pCtx, 64, 70, 4.2, {
                 role: 'player',

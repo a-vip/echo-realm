@@ -50,6 +50,8 @@ function loadGameEnvironment() {
         appendChild: () => {},
         innerHTML: '',
         textContent: '',
+        addEventListener: () => {},
+        removeEventListener: () => {},
         onclick: null,
         oninput: null,
         onchange: null
