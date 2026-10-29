@@ -30,3 +30,4 @@ test('Systemic Difficulty Profiles Test Suite', async (t) => {
         assert.ok(expert.xpMult > easy.xpMult, 'Expert should reward higher bonus EXP for overcoming systemic barriers');
     });
 });
+

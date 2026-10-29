@@ -107,3 +107,4 @@ Saved under the `echo_realm_save_v1` key in `window.localStorage`:
 - Shards balance and total citizens liberated.
 - 8-Slot equipped gear and inventory consumables.
 - Player visual customizations (skin tone index, hair style, hair color, tunic color).
+

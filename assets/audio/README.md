@@ -15,3 +15,4 @@ The game uses a zero-dependency retro audio synthesizer (`RetroAudio`) powered b
 ## Expanding with Audio Assets:
 - Custom BGM: To add ambient soundtrack files, place `.ogg` or `.mp3` files in this directory and reference them via standard HTML5 Audio or Web Audio buffer nodes.
 - Tracker Chiptunes: Support for XM / MOD tracker formats can be added via lightweight WASM or JavaScript tracker players.
+

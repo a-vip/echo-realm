@@ -19,3 +19,4 @@ To integrate external PNG sprite sheets (e.g. from Aseprite or Kenney / OpenGame
 - Target frame dimensions: `16x20` or `32x32` pixels per frame.
 - Direction row order: Down (0), Up (1), Left (2), Right (3).
 - Animation columns: Idle, Walk 1, Walk 2, Attack Slash, Cast Beam, Overhead Fanfare.
+

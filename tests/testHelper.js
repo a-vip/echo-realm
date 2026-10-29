@@ -99,3 +99,4 @@ function loadGameEnvironment() {
 }
 
 module.exports = { loadGameEnvironment };
+

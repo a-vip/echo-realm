@@ -26,3 +26,4 @@ The game world is laid out in a responsive grid of `MAP_COLS = 34` by `MAP_ROWS 
 4. Define pre- and post-quest dialogues for Professor Avi.
 5. If creating an ALttP bright zone, set `isBrightAlttpZone: true` and specify `riverRows`.
 6. Run `npm test` to automatically verify map dimensions, portals, chest references, and Socratic duels.
+

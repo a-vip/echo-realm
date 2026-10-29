@@ -32,3 +32,4 @@ test('Combat Math & Stat Progression Test Suite', async (t) => {
         assert.strictEqual(game.getTotalAxiomAttack(), initialAtk + 2 * 6);
     });
 });
+

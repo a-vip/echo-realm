@@ -124,3 +124,4 @@ Puzzles are instantiated inside `loadMap(mapIndex)`:
 - **`push_block`**: Push into target coordinate to activate pressure switches.
 - **`socratic_pedestal`**: Interactive pedestals that open multiple-choice dialectic challenges.
 - **River Bridges**: Dynamically populated when `unlockRiverBridgeIfReady()` evaluates to true.
+

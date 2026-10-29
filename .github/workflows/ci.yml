@@ -20,3 +20,4 @@ jobs:
 
     - name: Run Test Suite
       run: npm test
+
