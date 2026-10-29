@@ -166,6 +166,9 @@
                 <button id="btnLoadGameTitle" class="retro-btn w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-extrabold pixel-font text-xs tracking-wider" disabled>
                     📂 CONTINUE SAVED GAME
                 </button>
+                <button id="btnToggleDevMode" class="retro-btn w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold pixel-font text-xs border border-amber-500/50 flex items-center justify-center gap-2">
+                    🛠️ DEVELOPER MODE: <span id="devModeStatusText" class="text-rose-400 font-extrabold">DISABLED</span>
+                </button>
                 <button id="btnOpenSettingsTitle" class="retro-btn w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold pixel-font text-xs border border-slate-600">
                     ⚙️ SETTINGS
                 </button>
@@ -315,6 +318,7 @@
                 <div class="flex items-center gap-2">
                     <span id="hudLevelBadge" class="px-2 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 font-bold text-xs mono-font">LV. 1</span>
                     <span id="hudPlayerName" class="font-bold text-sm text-white truncate">Auron</span>
+                    <span id="hudDevBadge" class="hidden text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/50 cursor-pointer animate-pulse" title="Developer Mode Active [Click or F2 to toggle]">🛠️ DEV</span>
                 </div>
                 <span id="hudDiffBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                     Privileged (Easy)
@@ -393,18 +397,21 @@
             <div class="bg-slate-950/90 border-2 border-slate-700 rounded-xl p-2 shadow-2xl flex items-center gap-2.5">
                 <div class="flex flex-col gap-1.5">
                     <div class="flex gap-1.5">
-                        <button id="btnHudBag" class="retro-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold px-2.5 py-1.5 rounded-lg text-amber-300">
-                            🎒 Bag [B]
+                        <button id="btnHudMap" class="retro-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold px-2 py-1.5 rounded-lg text-emerald-300" title="View Full World Map [M]">
+                            🗺️ Map [M]
                         </button>
-                        <button id="btnHudChar" class="retro-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold px-2.5 py-1.5 rounded-lg text-cyan-300">
-                            🛡️ Hero [C]
+                        <button id="btnHudBag" class="retro-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold px-2 py-1.5 rounded-lg text-amber-300">
+                            🎒 Bag [B]
                         </button>
                     </div>
                     <div class="flex gap-1.5">
-                        <button id="btnHudCodex" class="retro-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold px-2.5 py-1.5 rounded-lg text-emerald-300">
+                        <button id="btnHudChar" class="retro-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold px-2 py-1.5 rounded-lg text-cyan-300">
+                            🛡️ Hero [C]
+                        </button>
+                        <button id="btnHudCodex" class="retro-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold px-2 py-1.5 rounded-lg text-purple-300">
                             📖 Codex [J]
                         </button>
-                        <button id="btnHudPause" class="retro-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold px-2.5 py-1.5 rounded-lg text-slate-200">
+                        <button id="btnHudPause" class="retro-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold px-2 py-1.5 rounded-lg text-slate-200">
                             ⚙️ [ESC]
                         </button>
                     </div>
@@ -508,6 +515,43 @@
                 Identify the core manipulation fallacy to shatter the Boss's Delusion Armor:
             </p>
             <div id="duelChoicesContainer" class="space-y-2.5 text-xs"></div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- [M] FULL ALttP OVERWORLD MAP MODAL (Framed in Clouds)                -->
+    <!-- =================================================================== -->
+    <div id="worldMapModal" class="fixed inset-0 z-40 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 hidden pointer-events-auto">
+        <div class="relative retro-box rounded-2xl p-4 sm:p-5 max-w-2xl w-full flex flex-col items-center">
+            <!-- Modal Header -->
+            <div class="w-full flex justify-between items-center border-b border-slate-800 pb-2.5 mb-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="pixel-font text-xs text-amber-300">🗺️ OVERWORLD MAP [M]</span>
+                    <span id="worldMapDevIndicator" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/50 animate-pulse">
+                        ⚡ DEV TELEPORT ACTIVE (CLICK TO WARP)
+                    </span>
+                </div>
+                <button onclick="closeAllMenus()" class="retro-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300">
+                    Close [M / ESC]
+                </button>
+            </div>
+
+            <!-- Canvas Container with SNES ALttP Pixel Cloud Framing -->
+            <div class="relative flex items-center justify-center w-full max-w-[560px] aspect-square rounded-xl overflow-hidden border-2 border-slate-800 bg-slate-950 shadow-2xl">
+                <canvas id="worldMapCanvas" width="600" height="600" class="w-full h-full cursor-pointer"></canvas>
+            </div>
+
+            <!-- Modal Footer / Sector Info Bar -->
+            <div id="worldMapHoverBar" class="w-full mt-3 bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2 flex flex-col sm:flex-row items-center justify-between text-xs gap-1">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span id="mapHoverIcon" class="text-base shrink-0">📍</span>
+                    <span id="mapHoverName" class="font-bold text-white truncate">The Quiet Archive</span>
+                    <span id="mapHoverParallel" class="text-slate-400 text-[11px] shrink-0">(Sanctuary & Link's House)</span>
+                </div>
+                <div id="mapHoverAction" class="pixel-font text-[10px] text-cyan-300 shrink-0">
+                    [PRESS M TO CLOSE]
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2102,6 +2146,72 @@
     ];
 
     // =========================================================================
+    // 6.5. ZELDA: A LINK TO THE PAST OVERWORLD MAPPING & DEVELOPER MODE
+    // =========================================================================
+    // 3x3 Contiguous Overworld Grid modeled faithfully after ALttP Light World:
+    // Row 0: [5: Lost Woods]      [4: Death Mtn/Catacombs]   [2: Zora's River/Nuance]
+    // Row 1: [1: Kakariko/Valley] [8: Hyrule Castle/Citadel] [6: Eastern Ruins/Border]
+    // Row 2: [3: Desert/Divide]   [0: Quiet Archive/Sanct]   [7: Lake Hylia/Oasis]
+    const OVERWORLD_GRID = [
+        [5, 4, 2],
+        [1, 8, 6],
+        [3, 0, 7]
+    ];
+
+    const MAP_OVERWORLD_POS = {
+        0: { row: 2, col: 1, name: 'The Quiet Archive', alttpName: "Link's House & Sanctuary", icon: '📚' },
+        1: { row: 1, col: 0, name: 'Performative Valley', alttpName: 'Kakariko Village', icon: '🎭' },
+        2: { row: 0, col: 2, name: 'Sunlit Riverfront of Nuance', alttpName: "Zora's River & Waterfall", icon: '🌊' },
+        3: { row: 2, col: 0, name: 'The Iron & Velvet Divide', alttpName: 'Desert of Mystery & Canyon', icon: '🏜️' },
+        4: { row: 0, col: 1, name: 'The Dogma Catacombs', alttpName: 'Death Mountain & Catacombs', icon: '⛰️' },
+        5: { row: 0, col: 0, name: 'Whispering Woods of Inquiry', alttpName: 'Lost Woods', icon: '🌲' },
+        6: { row: 1, col: 2, name: 'Borderland of Scapegoats', alttpName: 'Eastern Ruins & Labyrinth', icon: '🏛️' },
+        7: { row: 2, col: 2, name: 'Highland Oasis of Solidarity', alttpName: 'Lake Hylia & Waterfalls', icon: '🏝️' },
+        8: { row: 1, col: 1, name: 'The Obsidian Reich-Citadel', alttpName: 'Hyrule Castle Citadel', icon: '🏰' }
+    };
+
+    let devMode = false;
+    try {
+        devMode = localStorage.getItem('ECHO_REALM_DEV_MODE') === 'true';
+    } catch (e) {}
+
+    function toggleDevMode() {
+        devMode = !devMode;
+        try {
+            localStorage.setItem('ECHO_REALM_DEV_MODE', devMode ? 'true' : 'false');
+        } catch (e) {}
+        updateDevModeUI();
+        if (devMode) {
+            audio.sfxItemFanfare();
+            addFloatText(player.x, player.y - 30, '🛠️ DEV MODE ACTIVATED', '#38bdf8');
+        } else {
+            addFloatText(player.x, player.y - 30, '🛠️ DEV MODE DISABLED', '#94a3b8');
+        }
+        const wmModal = document.getElementById('worldMapModal');
+        if (wmModal && !wmModal.classList.contains('hidden')) {
+            renderWorldMap();
+        }
+    }
+
+    function updateDevModeUI() {
+        const statusText = document.getElementById('devModeStatusText');
+        if (statusText) {
+            statusText.textContent = devMode ? 'ENABLED' : 'DISABLED';
+            statusText.className = devMode ? 'text-emerald-400 font-extrabold' : 'text-rose-400 font-extrabold';
+        }
+        const hudDevBadge = document.getElementById('hudDevBadge');
+        if (hudDevBadge) {
+            if (devMode) hudDevBadge.classList.remove('hidden');
+            else hudDevBadge.classList.add('hidden');
+        }
+        const devInd = document.getElementById('worldMapDevIndicator');
+        if (devInd) {
+            if (devMode) devInd.classList.remove('hidden');
+            else devInd.classList.add('hidden');
+        }
+    }
+
+    // =========================================================================
     // 7. GLOBAL GAME STATE & PLAYER DATA
     // =========================================================================
     const canvas = document.getElementById('gameCanvas');
@@ -3257,7 +3367,7 @@
     // =========================================================================
     // 9. MAP GENERATION, CHESTS, PROFESSOR AVI & ALTTP RIVER PUZZLES
     // =========================================================================
-    function loadMap(mapIndex) {
+    function loadMap(mapIndex, spawnX = null, spawnY = null) {
         currentMapIndex = mapIndex;
         if (mapIndex > highestMapReached) highestMapReached = mapIndex;
         const mapMeta = MAPS[mapIndex];
@@ -3337,6 +3447,40 @@
             }
         }
 
+        // Open seamless perimeter pathways connecting to adjacent ALttP overworld sectors
+        const overPos = MAP_OVERWORLD_POS[mapIndex];
+        if (overPos) {
+            const hasNorth = overPos.row > 0;
+            const hasSouth = overPos.row < 2;
+            const hasWest = overPos.col > 0;
+            const hasEast = overPos.col < 2;
+
+            if (hasNorth) {
+                for (let c = 14; c <= 20; c++) {
+                    mapGrid[0][c] = 1;
+                    mapGrid[1][c] = 1;
+                }
+            }
+            if (hasSouth) {
+                for (let c = 14; c <= 20; c++) {
+                    mapGrid[MAP_ROWS - 1][c] = 1;
+                    mapGrid[MAP_ROWS - 2][c] = 1;
+                }
+            }
+            if (hasWest) {
+                for (let r = 10; r <= 16; r++) {
+                    mapGrid[r][0] = 1;
+                    mapGrid[r][1] = 1;
+                }
+            }
+            if (hasEast) {
+                for (let r = 10; r <= 16; r++) {
+                    mapGrid[r][MAP_COLS - 1] = 1;
+                    mapGrid[r][MAP_COLS - 2] = 1;
+                }
+            }
+        }
+
         // Spawn thematic environmental hazard & trap tiles on contested maps
         if (mapIndex === 1) {
             // Performative Valley: Outrage Vents near clout hotspots
@@ -3357,9 +3501,14 @@
             [[14, 12], [20, 12]].forEach(([c, r]) => { if (mapGrid[r] && mapGrid[r][c] <= 1) mapGrid[r][c] = 11; });
         }
 
-        // Place Player near bottom entrance
-        player.x = 17 * TILE_SIZE + TILE_SIZE / 2;
-        player.y = 20 * TILE_SIZE;
+        // Place Player at custom spawn coordinates (when crossing borders) or default portal landing
+        if (spawnX !== null && spawnY !== null) {
+            player.x = spawnX;
+            player.y = spawnY;
+        } else {
+            player.x = 17 * TILE_SIZE + TILE_SIZE / 2;
+            player.y = 20 * TILE_SIZE;
+        }
         player.dir = 1;
 
         // North Portal
@@ -3659,7 +3808,16 @@
 
     function isTileBlocked(col, row) {
         if (!Number.isFinite(col) || !Number.isFinite(row)) return true;
-        if (row < 0 || row >= MAP_ROWS || col < 0 || col >= MAP_COLS) return true;
+        if (row < 0 || row >= MAP_ROWS || col < 0 || col >= MAP_COLS) {
+            const overPos = MAP_OVERWORLD_POS[currentMapIndex];
+            if (overPos) {
+                if (row < 0 && overPos.row > 0 && col >= 13 && col <= 21) return false;
+                if (row >= MAP_ROWS && overPos.row < 2 && col >= 13 && col <= 21) return false;
+                if (col < 0 && overPos.col > 0 && row >= 10 && row <= 17) return false;
+                if (col >= MAP_COLS && overPos.col < 2 && row >= 10 && row <= 17) return false;
+            }
+            return true;
+        }
         if (!mapGrid[row]) return true;
         const t = mapGrid[row][col];
         return t === 2 || t === 3 || t === 4 || t === 6;
@@ -3945,6 +4103,29 @@
         }
     }
 
+    function transitionToNeighborMap(targetMapIndex, spawnX, spawnY, dirName = '') {
+        loadMap(targetMapIndex, spawnX, spawnY);
+        audio.playFootstep('stone');
+        addFloatText(player.x, player.y - 32, `Entered: ${MAPS[targetMapIndex].name}`, '#38bdf8');
+        updateAllHud();
+    }
+
+    function teleportPlayerTo(targetMapIndex, targetCol, targetRow) {
+        const clampedCol = Math.max(2, Math.min(MAP_COLS - 3, targetCol));
+        const clampedRow = Math.max(2, Math.min(MAP_ROWS - 3, targetRow));
+        const targetX = (clampedCol + 0.5) * TILE_SIZE;
+        const targetY = (clampedRow + 0.5) * TILE_SIZE;
+
+        loadMap(targetMapIndex, targetX, targetY);
+        audio.sfxPortal();
+        addFloatText(player.x, player.y - 32, `⚡ WARPED TO ${MAPS[targetMapIndex].name}`, '#fbbf24');
+        updateAllHud();
+        const wmModal = document.getElementById('worldMapModal');
+        if (wmModal && !wmModal.classList.contains('hidden')) {
+            renderWorldMap();
+        }
+    }
+
     // =========================================================================
     // 11. MAIN GAMEPLAY UPDATE LOOP
     // =========================================================================
@@ -3965,6 +4146,29 @@
 
         const curCol = Math.floor(player.x / TILE_SIZE);
         const curRow = Math.floor(player.y / TILE_SIZE);
+
+        // Screen boundary edge transitions between ALttP overworld sectors
+        const overPos = MAP_OVERWORLD_POS[currentMapIndex];
+        if (overPos) {
+            const northMap = overPos.row > 0 ? OVERWORLD_GRID[overPos.row - 1][overPos.col] : null;
+            const southMap = overPos.row < 2 ? OVERWORLD_GRID[overPos.row + 1][overPos.col] : null;
+            const westMap = overPos.col > 0 ? OVERWORLD_GRID[overPos.row][overPos.col - 1] : null;
+            const eastMap = overPos.col < 2 ? OVERWORLD_GRID[overPos.row][overPos.col + 1] : null;
+
+            if (northMap !== null && player.y <= 0.8 * TILE_SIZE && curCol >= 13 && curCol <= 21) {
+                transitionToNeighborMap(northMap, player.x, (MAP_ROWS - 2) * TILE_SIZE, 'North');
+                return;
+            } else if (southMap !== null && player.y >= (MAP_ROWS - 1.8) * TILE_SIZE && curCol >= 13 && curCol <= 21) {
+                transitionToNeighborMap(southMap, player.x, 1.8 * TILE_SIZE, 'South');
+                return;
+            } else if (westMap !== null && player.x <= 0.8 * TILE_SIZE && curRow >= 10 && curRow <= 17) {
+                transitionToNeighborMap(westMap, (MAP_COLS - 2) * TILE_SIZE, player.y, 'West');
+                return;
+            } else if (eastMap !== null && player.x >= (MAP_COLS - 1.8) * TILE_SIZE && curRow >= 10 && curRow <= 17) {
+                transitionToNeighborMap(eastMap, 1.8 * TILE_SIZE, player.y, 'East');
+                return;
+            }
+        }
         const curTile = (mapGrid[curRow] && mapGrid[curRow][curCol] !== undefined) ? mapGrid[curRow][curCol] : 0;
         if (curTile === 10) {
             // Algorithmic Outrage Vent: Movement slow + Clarity drain
@@ -4935,6 +5139,580 @@
     }
 
     // =========================================================================
+    // 13.5. FULL ZELDA ALttP OVERWORLD MAP (Render, Clouds, Hover & Dev Teleport)
+    // =========================================================================
+    let mapHoverGridPos = null;
+
+    function toggleWorldMap() {
+        const wmModal = document.getElementById('worldMapModal');
+        if (!wmModal) return;
+        if (wmModal.classList.contains('hidden')) {
+            openMenu('worldMapModal');
+        } else {
+            closeAllMenus();
+        }
+    }
+
+    function openWorldMap() {
+        const wmModal = document.getElementById('worldMapModal');
+        if (!wmModal) return;
+        wmModal.classList.remove('hidden');
+        updateDevModeUI();
+        resetWorldMapHoverBar();
+        renderWorldMap();
+    }
+
+    function updateWorldMapHoverBar() {
+        if (!mapHoverGridPos) return;
+        const mapIdx = OVERWORLD_GRID[mapHoverGridPos.row][mapHoverGridPos.col];
+        const meta = MAP_OVERWORLD_POS[mapIdx];
+        const map = MAPS[mapIdx];
+
+        const iconEl = document.getElementById('mapHoverIcon');
+        const nameEl = document.getElementById('mapHoverName');
+        const parEl = document.getElementById('mapHoverParallel');
+        const actEl = document.getElementById('mapHoverAction');
+
+        if (iconEl && meta) iconEl.textContent = meta.icon || '📍';
+        if (nameEl && map) nameEl.textContent = `${map.name}`;
+        if (parEl && meta) parEl.textContent = `(${meta.alttpName})`;
+
+        if (actEl) {
+            if (devMode) {
+                actEl.textContent = '⚡ CLICK ANYWHERE TO TELEPORT';
+                actEl.className = 'pixel-font text-[10px] text-amber-300 animate-pulse';
+            } else if (mapIdx === currentMapIndex) {
+                actEl.textContent = 'YOU ARE HERE [M TO CLOSE]';
+                actEl.className = 'pixel-font text-[10px] text-emerald-400';
+            } else {
+                actEl.textContent = '[M / ESC TO CLOSE]';
+                actEl.className = 'pixel-font text-[10px] text-cyan-300';
+            }
+        }
+    }
+
+    function resetWorldMapHoverBar() {
+        const curMeta = MAP_OVERWORLD_POS[currentMapIndex];
+        const curMap = MAPS[currentMapIndex];
+        const iconEl = document.getElementById('mapHoverIcon');
+        const nameEl = document.getElementById('mapHoverName');
+        const parEl = document.getElementById('mapHoverParallel');
+        const actEl = document.getElementById('mapHoverAction');
+
+        if (iconEl && curMeta) iconEl.textContent = curMeta.icon || '📍';
+        if (nameEl && curMap) nameEl.textContent = curMap.name;
+        if (parEl && curMeta) parEl.textContent = `(${curMeta.alttpName})`;
+        if (actEl) {
+            actEl.textContent = devMode ? '⚡ DEV MODE ACTIVE • CLICK MAP TO WARP' : '[PRESS M TO CLOSE]';
+            actEl.className = devMode ? 'pixel-font text-[10px] text-amber-400' : 'pixel-font text-[10px] text-cyan-300';
+        }
+    }
+
+    function drawCloudPuff(ctx, cx, cy, r) {
+        ctx.fillStyle = '#64748b';
+        ctx.beginPath(); ctx.arc(cx + 2, cy + 2, r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#cbd5e1';
+        ctx.beginPath(); ctx.arc(cx + 1, cy + 1, r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath(); ctx.arc(cx - r * 0.15, cy - r * 0.15, r * 0.65, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function drawAlttpPixelCloudFrame(ctx, w, h, border) {
+        for (let x = 12; x <= w - 12; x += 32) {
+            const r = 24 + ((x % 7) * 2);
+            drawCloudPuff(ctx, x, border - 8 + ((x % 5) * 2), r);
+            drawCloudPuff(ctx, x + 16, border - 20, r * 0.85);
+        }
+        for (let x = 12; x <= w - 12; x += 32) {
+            const r = 24 + ((x % 7) * 2);
+            drawCloudPuff(ctx, x, h - border + 8 - ((x % 5) * 2), r);
+            drawCloudPuff(ctx, x + 16, h - border + 20, r * 0.85);
+        }
+        for (let y = 12; y <= h - 12; y += 32) {
+            const r = 24 + ((y % 7) * 2);
+            drawCloudPuff(ctx, border - 8 + ((y % 5) * 2), y, r);
+            drawCloudPuff(ctx, border - 20, y + 16, r * 0.85);
+        }
+        for (let y = 12; y <= h - 12; y += 32) {
+            const r = 24 + ((y % 7) * 2);
+            drawCloudPuff(ctx, w - border + 8 - ((y % 5) * 2), y, r);
+            drawCloudPuff(ctx, w - border + 20, y + 16, r * 0.85);
+        }
+        const corners = [
+            [20, 20], [w - 20, 20], [20, h - 20], [w - 20, h - 20]
+        ];
+        corners.forEach(([cx, cy]) => {
+            drawCloudPuff(ctx, cx, cy, 38);
+            drawCloudPuff(ctx, cx + (cx < w / 2 ? 14 : -14), cy + (cy < h / 2 ? 14 : -14), 30);
+            drawCloudPuff(ctx, cx + (cx < w / 2 ? 22 : -22), cy, 26);
+            drawCloudPuff(ctx, cx, cy + (cy < h / 2 ? 22 : -22), 26);
+        });
+    }
+
+    function drawAlttpSector(ctx, r, c, mapIdx, sx, sy, sw, sh) {
+        if (r === 0 && c === 0) {
+            // (0, 0) Map 5: Lost Woods (Whispering Woods of Inquiry)
+            ctx.fillStyle = '#14532d';
+            ctx.fillRect(sx, sy, sw, sh);
+            const trees = [
+                [20, 20, 24], [60, 25, 28], [110, 20, 25], [145, 30, 26],
+                [25, 70, 26], [140, 80, 30], [25, 120, 28], [70, 140, 26], [130, 135, 28]
+            ];
+            trees.forEach(([tx, ty, tr]) => {
+                ctx.fillStyle = '#166534';
+                ctx.beginPath(); ctx.arc(sx + tx, sy + ty, tr, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#15803d';
+                ctx.beginPath(); ctx.arc(sx + tx - 3, sy + ty - 3, tr * 0.75, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.fillStyle = '#a16207';
+            ctx.fillRect(sx + sw * 0.42, sy + sh * 0.38, sw * 0.22, sh * 0.24);
+            ctx.fillStyle = '#86efac';
+            ctx.beginPath(); ctx.arc(sx + sw * 0.53, sy + sh * 0.5, 14, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(sx + sw * 0.51, sy + sh * 0.35, 6, 26);
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(sx + sw * 0.49, sy + sh * 0.48, 10, 6);
+        } else if (r === 0 && c === 1) {
+            // (0, 1) Map 4: Death Mountain & Catacombs (The Dogma Catacombs)
+            ctx.fillStyle = '#7c2d12';
+            ctx.fillRect(sx, sy, sw, sh);
+            ctx.fillStyle = '#9a3412';
+            ctx.fillRect(sx, sy + 18, sw, sh * 0.28);
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(sx, sy + 58, sw, sh * 0.30);
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(sx, sy + 105, sw, sh * 0.32);
+            ctx.fillStyle = '#f8fafc';
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.moveTo(sx + i * 35, sy + 16);
+                ctx.lineTo(sx + i * 35 + 17, sy);
+                ctx.lineTo(sx + i * 35 + 35, sy + 16);
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillRect(sx + sw * 0.46, sy + 12, 18, 28);
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.moveTo(sx + sw * 0.43, sy + 12);
+            ctx.lineTo(sx + sw * 0.51, sy + 2);
+            ctx.lineTo(sx + sw * 0.59, sy + 12);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#64748b';
+            [[30, 130], [55, 126], [75, 135], [115, 130], [140, 134]].forEach(([tx, ty]) => {
+                ctx.fillRect(sx + tx, sy + ty, 6, 9);
+            });
+        } else if (r === 0 && c === 2) {
+            // (0, 2) Map 2: Zora's River & Waterfall (Sunlit Riverfront of Nuance)
+            ctx.fillStyle = '#15803d';
+            ctx.fillRect(sx, sy, sw, sh);
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(sx + sw * 0.5, sy, sw * 0.5, sh * 0.45);
+            ctx.fillStyle = '#e0f2fe';
+            ctx.fillRect(sx + sw * 0.28, sy, 22, 38);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(sx + sw * 0.30, sy + 2, 18, 36);
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.moveTo(sx + sw * 0.24, sy + 38);
+            ctx.bezierCurveTo(sx + sw * 0.1, sy + 70, sx + sw * 0.5, sy + 100, sx + sw * 0.45, sy + sh);
+            ctx.lineTo(sx + sw * 0.65, sy + sh);
+            ctx.bezierCurveTo(sx + sw * 0.68, sy + 90, sx + sw * 0.32, sy + 65, sx + sw * 0.42, sy + 38);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#d97706';
+            ctx.fillRect(sx + sw * 0.26, sy + 82, 36, 8);
+        } else if (r === 1 && c === 0) {
+            // (1, 0) Map 1: Kakariko Village (Performative Valley)
+            ctx.fillStyle = '#16a34a';
+            ctx.fillRect(sx, sy, sw, sh);
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillRect(sx + 15, sy + sh * 0.46, sw - 30, 12);
+            ctx.fillRect(sx + sw * 0.48, sy + 12, 12, sh - 24);
+            const houses = [
+                [22, 20, '#dc2626'], [75, 18, '#2563eb'], [122, 22, '#dc2626'],
+                [24, 95, '#2563eb'], [120, 92, '#dc2626'], [75, 115, '#2563eb']
+            ];
+            houses.forEach(([hx, hy, roofColor]) => {
+                ctx.fillStyle = '#fef3c7';
+                ctx.fillRect(sx + hx, sy + hy + 10, 24, 16);
+                ctx.fillStyle = roofColor;
+                ctx.beginPath();
+                ctx.moveTo(sx + hx - 3, sy + hy + 10);
+                ctx.lineTo(sx + hx + 12, sy + hy);
+                ctx.lineTo(sx + hx + 27, sy + hy + 10);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(sx + hx + 9, sy + hy + 18, 6, 8);
+            });
+            ctx.fillStyle = '#64748b';
+            ctx.beginPath(); ctx.arc(sx + sw * 0.53, sy + sh * 0.52, 9, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath(); ctx.arc(sx + sw * 0.53, sy + sh * 0.52, 5, 0, Math.PI * 2); ctx.fill();
+        } else if (r === 1 && c === 1) {
+            // (1, 1) Map 8: Hyrule Castle & Moat (The Obsidian Reich-Citadel)
+            ctx.fillStyle = '#166534';
+            ctx.fillRect(sx, sy, sw, sh);
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(sx + 18, sy + 18, sw - 36, sh - 36);
+            ctx.fillStyle = '#166534';
+            ctx.fillRect(sx + 34, sy + 34, sw - 68, sh - 68);
+
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillRect(sx + sw * 0.44, sy + 14, 20, 24);
+            ctx.fillRect(sx + sw * 0.44, sy + sh - 38, 20, 24);
+            ctx.fillRect(sx + 14, sy + sh * 0.44, 24, 20);
+            ctx.fillRect(sx + sw - 38, sy + sh * 0.44, 24, 20);
+
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(sx + 44, sy + 44, sw - 88, sh - 88);
+            ctx.fillStyle = '#94a3b8';
+            ctx.strokeRect(sx + 44, sy + 44, sw - 88, sh - 88);
+
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(sx + sw * 0.46, sy + 56, 14, sh - 112);
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(sx + sw * 0.36, sy + 52, sw * 0.28, sh * 0.28);
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.moveTo(sx + sw * 0.34, sy + 52);
+            ctx.lineTo(sx + sw * 0.5, sy + 32);
+            ctx.lineTo(sx + sw * 0.66, sy + 52);
+            ctx.closePath();
+            ctx.fill();
+        } else if (r === 1 && c === 2) {
+            // (1, 2) Map 6: Eastern Ruins & Labyrinth (Borderland of Scapegoats)
+            ctx.fillStyle = '#a16207';
+            ctx.fillRect(sx, sy, sw, sh);
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(sx + 10, sy + 10, sw - 20, sh - 20);
+            ctx.fillStyle = '#ca8a04';
+            ctx.fillRect(sx + 20, sy + 20, sw - 40, sh - 40);
+
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(sx + 35, sy + 35); ctx.lineTo(sx + 120, sy + 35); ctx.lineTo(sx + 120, sy + 80);
+            ctx.moveTo(sx + 50, sy + 60); ctx.lineTo(sx + 50, sy + 120); ctx.lineTo(sx + 100, sy + 120);
+            ctx.moveTo(sx + 85, sy + 75); ctx.lineTo(sx + 135, sy + 75); ctx.lineTo(sx + 135, sy + 130);
+            ctx.stroke();
+
+            ctx.fillStyle = '#eab308';
+            ctx.fillRect(sx + sw * 0.62, sy + 22, 42, 34);
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(sx + sw * 0.68, sy + 40, 16, 16);
+        } else if (r === 2 && c === 0) {
+            // (2, 0) Map 3: Desert of Mystery & Canyon (The Iron & Velvet Divide)
+            ctx.fillStyle = '#d97706';
+            ctx.fillRect(sx, sy, sw, sh);
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.moveTo(sx, sy + 30);
+            ctx.bezierCurveTo(sx + 40, sy + 15, sx + 80, sy + 45, sx + sw, sy + 20);
+            ctx.lineTo(sx + sw, sy + sh); ctx.lineTo(sx, sy + sh);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#451a03';
+            ctx.beginPath();
+            ctx.moveTo(sx + sw * 0.48, sy);
+            ctx.lineTo(sx + sw * 0.54, sy + 50);
+            ctx.lineTo(sx + sw * 0.46, sy + 110);
+            ctx.lineTo(sx + sw * 0.52, sy + sh);
+            ctx.lineTo(sx + sw * 0.58, sy + sh);
+            ctx.lineTo(sx + sw * 0.52, sy + 110);
+            ctx.lineTo(sx + sw * 0.60, sy + 50);
+            ctx.lineTo(sx + sw * 0.54, sy);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(sx + 18, sy + sh * 0.45, 36, 42);
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(sx + 22, sy + sh * 0.48, 5, 32);
+            ctx.fillRect(sx + 34, sy + sh * 0.48, 5, 32);
+            ctx.fillRect(sx + 44, sy + sh * 0.48, 5, 32);
+        } else if (r === 2 && c === 1) {
+            // (2, 1) Map 0: Link's House & Sanctuary Grove (The Quiet Archive)
+            ctx.fillStyle = '#15803d';
+            ctx.fillRect(sx, sy, sw, sh);
+
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.ellipse(sx + sw * 0.5, sy + sh * 0.78, 48, 22, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#86efac';
+            [[40, 125], [75, 138], [110, 130]].forEach(([lx, ly]) => {
+                ctx.beginPath(); ctx.arc(sx + lx, sy + ly, 4, 0, Math.PI * 2); ctx.fill();
+            });
+
+            ctx.fillStyle = '#fef3c7';
+            ctx.fillRect(sx + sw * 0.42, sy + sh * 0.35, 32, 24);
+            ctx.fillStyle = '#92400e';
+            ctx.beginPath();
+            ctx.moveTo(sx + sw * 0.38, sy + sh * 0.35);
+            ctx.lineTo(sx + sw * 0.52, sy + sh * 0.24);
+            ctx.lineTo(sx + sw * 0.66, sy + sh * 0.35);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(sx + sw * 0.50, sy + sh * 0.45, 8, 14);
+
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillRect(sx + sw * 0.45, sy, 18, sh * 0.35);
+        } else if (r === 2 && c === 2) {
+            // (2, 2) Map 7: Lake Hylia & Waterfalls (Highland Oasis of Solidarity)
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(sx, sy, sw, sh);
+
+            ctx.fillStyle = '#15803d';
+            ctx.beginPath();
+            ctx.moveTo(sx, sy); ctx.lineTo(sx + sw * 0.3, sy); ctx.lineTo(sx, sy + sh * 0.4);
+            ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(sx + sw, sy); ctx.lineTo(sx + sw, sy + sh * 0.6); ctx.lineTo(sx + sw * 0.7, sy);
+            ctx.closePath(); ctx.fill();
+
+            ctx.fillStyle = '#22c55e';
+            ctx.beginPath();
+            ctx.ellipse(sx + sw * 0.52, sy + sh * 0.52, 28, 22, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(sx + sw * 0.49, sy + sh * 0.44, 10, 16);
+
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(sx + sw * 0.49, sy + sh * 0.62, 10, 36);
+        }
+
+        const meta = MAP_OVERWORLD_POS[mapIdx];
+        if (meta) {
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.78)';
+            ctx.fillRect(sx + 5, sy + 5, sw - 10, 16);
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '7px "Press Start 2P", monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(`${meta.icon} ${meta.alttpName}`, sx + 9, sy + 16);
+        }
+    }
+
+    function drawOverworldConnectingPaths(ctx, innerX, innerY, sw, sh) {
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(innerX + sw * 1.45, innerY + sh * 0.75, 18, sh * 0.55);
+        ctx.fillRect(innerX + sw * 1.45, innerY + sh * 1.75, 18, sh * 0.55);
+        ctx.fillRect(innerX + sw * 0.75, innerY + sh * 1.45, sw * 0.55, 18);
+        ctx.fillRect(innerX + sw * 1.75, innerY + sh * 1.45, sw * 0.55, 18);
+        ctx.fillRect(innerX + sw * 0.48, innerY + sh * 0.85, 16, sh * 0.35);
+        ctx.fillRect(innerX + sw * 0.48, innerY + sh * 1.85, 16, sh * 0.35);
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(innerX + sw * 2.45, innerY + sh * 1.85, 20, sh * 0.35);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(innerX + sw * 1.82, innerY + sh * 2.45, sw * 0.4, 16);
+        ctx.fillRect(innerX + sw * 0.82, innerY + sh * 2.45, sw * 0.4, 16);
+    }
+
+    function renderWorldMap() {
+        const wmCanvas = document.getElementById('worldMapCanvas');
+        if (!wmCanvas) return;
+        const ctx = wmCanvas.getContext('2d');
+        const w = wmCanvas.width;
+        const h = wmCanvas.height;
+
+        ctx.fillStyle = '#060913';
+        ctx.fillRect(0, 0, w, h);
+
+        const border = 44;
+        const innerX = border;
+        const innerY = border;
+        const innerW = w - border * 2;
+        const innerH = h - border * 2;
+        const secW = innerW / 3;
+        const secH = innerH / 3;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(innerX, innerY, innerW, innerH);
+        ctx.clip();
+
+        ctx.fillStyle = '#1e3a1f';
+        ctx.fillRect(innerX, innerY, innerW, innerH);
+
+        for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+                const mapIdx = OVERWORLD_GRID[r][c];
+                const sx = innerX + c * secW;
+                const sy = innerY + r * secH;
+                drawAlttpSector(ctx, r, c, mapIdx, sx, sy, secW, secH);
+            }
+        }
+
+        drawOverworldConnectingPaths(ctx, innerX, innerY, secW, secH);
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        for (let i = 1; i < 3; i++) {
+            ctx.beginPath();
+            ctx.moveTo(innerX + i * secW, innerY);
+            ctx.lineTo(innerX + i * secW, innerY + innerH);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(innerX, innerY + i * secH);
+            ctx.lineTo(innerX + innerW, innerY + i * secH);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        if (mapHoverGridPos) {
+            const hx = innerX + mapHoverGridPos.col * secW;
+            const hy = innerY + mapHoverGridPos.row * secH;
+            ctx.fillStyle = devMode ? 'rgba(251, 191, 36, 0.12)' : 'rgba(56, 189, 248, 0.12)';
+            ctx.fillRect(hx, hy, secW, secH);
+            ctx.strokeStyle = devMode ? '#fbbf24' : '#38bdf8';
+            ctx.lineWidth = 2.5;
+            ctx.strokeRect(hx + 1, hy + 1, secW - 2, secH - 2);
+        }
+
+        const curMeta = MAP_OVERWORLD_POS[currentMapIndex];
+        if (curMeta) {
+            const px = innerX + curMeta.col * secW + (player.x / (MAP_COLS * TILE_SIZE)) * secW;
+            const py = innerY + curMeta.row * secH + (player.y / (MAP_ROWS * TILE_SIZE)) * secH;
+            const pulse = 1 + 0.25 * Math.sin(performance.now() / 150);
+
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(px, py, 11 * pulse, 0, Math.PI * 2);
+            ctx.stroke();
+
+            const flash = Math.sin(performance.now() / 180) > 0;
+            ctx.fillStyle = flash ? '#ef4444' : '#fbbf24';
+            ctx.strokeStyle = '#020617';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(px, py - 4);
+            ctx.lineTo(px - 7, py - 18);
+            ctx.lineTo(px + 7, py - 18);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.92)';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 1.5;
+            const pillW = 82;
+            const pillH = 16;
+            ctx.fillRect(px - pillW / 2, py - 36, pillW, pillH);
+            ctx.strokeRect(px - pillW / 2, py - 36, pillW, pillH);
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = '8px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('YOU ARE HERE', px, py - 24);
+        }
+
+        if (devMode && mapHoverGridPos) {
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(mapHoverGridPos.mx, mapHoverGridPos.my, 8, 0, Math.PI * 2);
+            ctx.moveTo(mapHoverGridPos.mx - 14, mapHoverGridPos.my);
+            ctx.lineTo(mapHoverGridPos.mx + 14, mapHoverGridPos.my);
+            ctx.moveTo(mapHoverGridPos.mx, mapHoverGridPos.my - 14);
+            ctx.lineTo(mapHoverGridPos.mx, mapHoverGridPos.my + 14);
+            ctx.stroke();
+
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(mapHoverGridPos.mx + 10, mapHoverGridPos.my + 4, 62, 14);
+            ctx.strokeStyle = '#fbbf24';
+            ctx.strokeRect(mapHoverGridPos.mx + 10, mapHoverGridPos.my + 4, 62, 14);
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = '7px "Press Start 2P", monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText('⚡ WARP', mapHoverGridPos.mx + 14, mapHoverGridPos.my + 14);
+        }
+
+        ctx.restore();
+
+        drawAlttpPixelCloudFrame(ctx, w, h, border);
+    }
+
+    function setupWorldMapEvents() {
+        const wmCanvas = document.getElementById('worldMapCanvas');
+        if (!wmCanvas) return;
+
+        wmCanvas.onmousemove = (e) => {
+            const rect = wmCanvas.getBoundingClientRect();
+            const scaleX = wmCanvas.width / rect.width;
+            const scaleY = wmCanvas.height / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX;
+            const my = (e.clientY - rect.top) * scaleY;
+
+            const border = 44;
+            const innerX = border, innerY = border;
+            const innerW = wmCanvas.width - border * 2;
+            const innerH = wmCanvas.height - border * 2;
+
+            if (mx >= innerX && mx <= innerX + innerW && my >= innerY && my <= innerY + innerH) {
+                const c = Math.floor((mx - innerX) / (innerW / 3));
+                const r = Math.floor((my - innerY) / (innerH / 3));
+                mapHoverGridPos = {
+                    row: Math.max(0, Math.min(2, r)),
+                    col: Math.max(0, Math.min(2, c)),
+                    mx,
+                    my
+                };
+                wmCanvas.style.cursor = devMode ? 'crosshair' : 'pointer';
+                updateWorldMapHoverBar();
+            } else {
+                mapHoverGridPos = null;
+                wmCanvas.style.cursor = 'default';
+                resetWorldMapHoverBar();
+            }
+            renderWorldMap();
+        };
+
+        wmCanvas.onmouseleave = () => {
+            mapHoverGridPos = null;
+            wmCanvas.style.cursor = 'default';
+            resetWorldMapHoverBar();
+            renderWorldMap();
+        };
+
+        wmCanvas.onclick = (e) => {
+            if (!mapHoverGridPos) return;
+            const targetMapIdx = OVERWORLD_GRID[mapHoverGridPos.row][mapHoverGridPos.col];
+            if (devMode) {
+                const border = 44;
+                const innerX = border, innerY = border;
+                const innerW = wmCanvas.width - border * 2;
+                const innerH = wmCanvas.height - border * 2;
+                const secW = innerW / 3;
+                const secH = innerH / 3;
+
+                const secRelX = mapHoverGridPos.mx - (innerX + mapHoverGridPos.col * secW);
+                const secRelY = mapHoverGridPos.my - (innerY + mapHoverGridPos.row * secH);
+                const targetCol = Math.floor((secRelX / secW) * MAP_COLS);
+                const targetRow = Math.floor((secRelY / secH) * MAP_ROWS);
+
+                teleportPlayerTo(targetMapIdx, targetCol, targetRow);
+            } else {
+                addFloatText(player.x, player.y - 20, 'Enable Dev Mode [F2] to Teleport!', '#fbbf24');
+                const actionEl = document.getElementById('mapHoverAction');
+                if (actionEl) {
+                    actionEl.textContent = 'ENABLE DEV MODE [F2] TO TELEPORT';
+                    actionEl.className = 'pixel-font text-[10px] text-amber-400 animate-pulse';
+                }
+            }
+        };
+    }
+
+    // =========================================================================
     // 14. DIALOGUE SYSTEM, MENUS (ESC, B, C, J) & SAVE/LOAD
     // =========================================================================
     let activeDialogueList = [];
@@ -5020,6 +5798,7 @@
         if (modalId === 'inventoryModal') renderInventoryMenu();
         if (modalId === 'characterModal') renderCharacterMenu();
         if (modalId === 'codexModal') renderCodexMenu();
+        if (modalId === 'worldMapModal') openWorldMap();
         if (modalId === 'pauseModal') {
             document.getElementById('pauseLocationText').textContent = MAPS[currentMapIndex].name;
             document.getElementById('saveStatusMsg').textContent = '';
@@ -5028,8 +5807,9 @@
     }
 
     function closeAllMenus(keepPaused = false) {
-        ['inventoryModal', 'characterModal', 'codexModal', 'pauseModal', 'settingsModal', 'victoryModal'].forEach(id => {
-            document.getElementById(id).classList.add('hidden');
+        ['inventoryModal', 'characterModal', 'codexModal', 'pauseModal', 'settingsModal', 'victoryModal', 'worldMapModal'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
         });
         if (!keepPaused && appState === 'PAUSED') {
             appState = 'PLAYING';
@@ -5485,19 +6265,37 @@
             advanceDialogue();
             return;
         }
+        if (e.code === 'F2') {
+            e.preventDefault();
+            toggleDevMode();
+            return;
+        }
         if (appState === 'PLAYING') {
             if (e.code === 'KeyE') castAxiomStrikeE();
             else if (e.code === 'KeyR') castSocraticNovaR();
             else if (e.code === 'KeyF') castSanctuaryAegisF();
             else if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); triggerInteraction(); }
+            else if (e.code === 'KeyM') toggleWorldMap();
             else if (e.code === 'KeyB') openMenu('inventoryModal');
             else if (e.code === 'KeyC') openMenu('characterModal');
             else if (e.code === 'KeyJ') openMenu('codexModal');
             else if (e.code === 'Digit1') useQuickTonic();
             else if (e.code === 'Escape') openMenu('pauseModal');
-        } else if (appState === 'PAUSED' && e.code === 'Escape') {
-            if (!document.getElementById('socraticDuelModal').classList.contains('hidden')) return;
-            closeAllMenus();
+        } else if (appState === 'PAUSED') {
+            if (e.code === 'KeyM') {
+                const wm = document.getElementById('worldMapModal');
+                if (wm && !wm.classList.contains('hidden')) {
+                    closeAllMenus();
+                    return;
+                } else {
+                    openMenu('worldMapModal');
+                    return;
+                }
+            }
+            if (e.code === 'Escape') {
+                if (!document.getElementById('socraticDuelModal').classList.contains('hidden')) return;
+                closeAllMenus();
+            }
         }
     });
 
@@ -5676,6 +6474,22 @@
         document.getElementById('crtOverlay').style.display = e.target.checked ? 'block' : 'none';
     };
 
+    const btnToggleDevModeEl = document.getElementById('btnToggleDevMode');
+    if (btnToggleDevModeEl) btnToggleDevModeEl.onclick = toggleDevMode;
+
+    const hudDevBadgeEl = document.getElementById('hudDevBadge');
+    if (hudDevBadgeEl) hudDevBadgeEl.onclick = toggleDevMode;
+
+    const btnHudMapEl = document.getElementById('btnHudMap');
+    if (btnHudMapEl) btnHudMapEl.onclick = toggleWorldMap;
+
+    const minimapCanvasEl = document.getElementById('minimapCanvas');
+    if (minimapCanvasEl) {
+        minimapCanvasEl.onclick = toggleWorldMap;
+        minimapCanvasEl.style.cursor = 'pointer';
+        minimapCanvasEl.title = 'Click to open Full World Map [M]';
+    }
+
     // =========================================================================
     // 18. MAIN ANIMATION LOOP & INITIALIZATION
     // =========================================================================
@@ -5714,6 +6528,10 @@
         } else if (appState === 'PLAYING' || appState === 'PAUSED' || appState === 'DIALOGUE' || appState === 'ITEM_FANFARE') {
             updateGameplay(dt);
             renderGameplay();
+            const wmModal = document.getElementById('worldMapModal');
+            if (wmModal && !wmModal.classList.contains('hidden')) {
+                renderWorldMap();
+            }
         }
 
         requestAnimationFrame(mainLoop);
@@ -5723,6 +6541,8 @@
         resizeCanvas();
         renderCutsceneDots();
         checkSavedGameSlot();
+        setupWorldMapEvents();
+        updateDevModeUI();
         requestAnimationFrame(mainLoop);
     };
     </script>

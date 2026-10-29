@@ -83,5 +83,68 @@ test('World & Map Validation Test Suite', async (t) => {
                 `Boss duel on map ${mapIdx} must have exactly 1 logically correct dialectic refutation`);
         });
     });
+
+    await t.test('Zelda ALttP 3x3 Overworld Grid defines all 9 contiguous sectors', () => {
+        assert.strictEqual(game.OVERWORLD_GRID.length, 3);
+        assert.strictEqual(game.OVERWORLD_GRID[0].length, 3);
+        assert.strictEqual(game.OVERWORLD_GRID[1].length, 3);
+        assert.strictEqual(game.OVERWORLD_GRID[2].length, 3);
+
+        // Every map from 0 to 8 must appear exactly once in the 3x3 grid
+        const allGridMaps = game.OVERWORLD_GRID.flat();
+        assert.strictEqual(allGridMaps.length, 9);
+        for (let i = 0; i < 9; i++) {
+            assert.ok(allGridMaps.includes(i), `Map ID ${i} must exist in OVERWORLD_GRID`);
+            const meta = game.MAP_OVERWORLD_POS[i];
+            assert.ok(meta, `Map ID ${i} must have MAP_OVERWORLD_POS metadata`);
+            assert.ok(meta.name, `Map ID ${i} must have name`);
+            assert.ok(meta.alttpName, `Map ID ${i} must have ALttP parallel region name`);
+            assert.ok(meta.icon, `Map ID ${i} must have icon`);
+            assert.strictEqual(game.OVERWORLD_GRID[meta.row][meta.col], i,
+                `Map ID ${i} position (${meta.row}, ${meta.col}) must match OVERWORLD_GRID`);
+        }
+    });
+
+    await t.test('Seamless perimeter border exits open toward adjacent overworld neighbors', () => {
+        // Map 8 (Hyrule Castle Citadel) is in the center at (1, 1) and connects to all 4 neighbors!
+        game.loadMap(8);
+        const grid = game.mapGrid;
+        // North exit at row 0, cols 14..20
+        for (let c = 14; c <= 20; c++) {
+            assert.strictEqual(grid[0][c], 1, `Center Citadel should have open North exit at col ${c}`);
+        }
+        // South exit at row MAP_ROWS - 1, cols 14..20
+        for (let c = 14; c <= 20; c++) {
+            assert.strictEqual(grid[game.MAP_ROWS - 1][c], 1, `Center Citadel should have open South exit at col ${c}`);
+        }
+        // West exit at col 0, rows 10..16
+        for (let r = 10; r <= 16; r++) {
+            assert.strictEqual(grid[r][0], 1, `Center Citadel should have open West exit at row ${r}`);
+        }
+        // East exit at col MAP_COLS - 1, rows 10..16
+        for (let r = 10; r <= 16; r++) {
+            assert.strictEqual(grid[r][game.MAP_COLS - 1], 1, `Center Citadel should have open East exit at row ${r}`);
+        }
+    });
+
+    await t.test('Developer Mode toggles and enables click teleportation to any sector and tile', () => {
+        const initialDev = game.devMode;
+        game.toggleDevMode();
+        assert.strictEqual(game.devMode, !initialDev, 'toggleDevMode should invert devMode state');
+
+        // Teleport to Map 1 (Performative Valley) at col 10, row 12
+        game.teleportPlayerTo(1, 10, 12);
+        assert.strictEqual(game.player.mapCitizensFreed, 0);
+        assert.strictEqual(game.player.x, (10 + 0.5) * game.TILE_SIZE, 'Player X should match teleport target');
+        assert.strictEqual(game.player.y, (12 + 0.5) * game.TILE_SIZE, 'Player Y should match teleport target');
+
+        // Test renderWorldMap execution without error
+        assert.doesNotThrow(() => {
+            game.renderWorldMap();
+        }, 'renderWorldMap should execute cleanly');
+
+        // Reset dev mode
+        if (game.devMode !== initialDev) game.toggleDevMode();
+    });
 });
 

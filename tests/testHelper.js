@@ -36,14 +36,25 @@ function loadGameEnvironment() {
         ZONE_BGM_TRACKS,
         revealFogAround,
         get fogGrid() { return fogGrid; },
-        get mapGrid() { return mapGrid; }
+        get mapGrid() { return mapGrid; },
+        get devMode() { return devMode; },
+        toggleDevMode,
+        teleportPlayerTo,
+        transitionToNeighborMap,
+        OVERWORLD_GRID,
+        MAP_OVERWORLD_POS,
+        renderWorldMap
     };`;
 
     const mockElem = {
         getContext: () => ({
-            clearRect: () => {}, fillRect: () => {}, beginPath: () => {}, arc: () => {},
+            clearRect: () => {}, fillRect: () => {}, strokeRect: () => {}, beginPath: () => {}, arc: () => {},
             fill: () => {}, stroke: () => {}, drawImage: () => {}, save: () => {},
-            restore: () => {}, translate: () => {}, rotate: () => {}, fillText: () => {}
+            restore: () => {}, translate: () => {}, rotate: () => {}, fillText: () => {},
+            moveTo: () => {}, lineTo: () => {}, closePath: () => {}, ellipse: () => {},
+            rect: () => {}, clip: () => {}, setLineDash: () => {}, bezierCurveTo: () => {},
+            createLinearGradient: () => ({ addColorStop: () => {} }),
+            createRadialGradient: () => ({ addColorStop: () => {} })
         }),
         classList: { add: () => {}, remove: () => {}, contains: () => false },
         style: {},
