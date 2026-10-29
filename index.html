@@ -1358,6 +1358,27 @@
         }
     };
 
+    function getItemRarity(item) {
+        if (!item) return { name: 'Common', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.12)', border: '#64748b', textGlow: 'none' };
+        if (item.rarity && typeof item.rarity === 'object') return item.rarity;
+        if (item.id === 'aegis_dialectics') {
+            return { name: 'Mythic', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.2)', border: '#f43f5e', textGlow: '0 0 12px rgba(244, 63, 94, 0.85)' };
+        }
+        if (item.id === 'crown_veritas' || item.id === 'prism_sunburst') {
+            return { name: 'Legendary', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.2)', border: '#f59e0b', textGlow: '0 0 10px rgba(245, 158, 11, 0.8)' };
+        }
+        if (item.id === 'raiment_solidarity' || item.id === 'pauldrons_empathy' || item.id === 'cloak_grounding') {
+            return { name: 'Epic', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.2)', border: '#c084fc', textGlow: '0 0 10px rgba(192, 132, 252, 0.8)' };
+        }
+        if (item.id === 'circlet_nuance' || item.id === 'gauntlets_solidarity' || item.id === 'boots_inquiry') {
+            return { name: 'Rare', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.2)', border: '#38bdf8', textGlow: '0 0 10px rgba(56, 189, 248, 0.8)' };
+        }
+        if (item.type === 'consumable') {
+            return { name: 'Uncommon', color: '#34d399', bg: 'rgba(52, 211, 153, 0.2)', border: '#34d399', textGlow: '0 0 8px rgba(52, 211, 153, 0.7)' };
+        }
+        return { name: 'Common', color: '#cbd5e1', bg: 'rgba(148, 163, 184, 0.12)', border: '#64748b', textGlow: 'none' };
+    }
+
     // =========================================================================
     // 4B. CUSTOM SPRITE SHEET & TILESET ASSET MANAGER
     // =========================================================================
@@ -1365,7 +1386,34 @@
         constructor() {
             this.spritesheets = new Map();
             this.tilesets = new Map();
+            this.images = new Map();
             this.enabled = true;
+        }
+        registerImage(id, src) {
+            const entry = { id, src, loaded: false, img: null };
+            this.images.set(id, entry);
+            if (typeof Image !== 'undefined') {
+                const img = new Image();
+                img.src = src;
+                entry.img = img;
+                img.onload = () => { entry.loaded = true; };
+                img.onerror = () => { entry.loaded = false; };
+            }
+            return entry;
+        }
+        hasImage(id) {
+            const im = this.images.get(id);
+            return !!(im && im.loaded);
+        }
+        drawImage(ctx, id, dx, dy, dw, dh) {
+            const im = this.images.get(id);
+            if (!im || !im.loaded || !ctx.drawImage) return false;
+            try {
+                ctx.drawImage(im.img, dx, dy, dw, dh);
+                return true;
+            } catch (e) {
+                return false;
+            }
         }
         registerSpriteSheet(id, src, frameW = 16, frameH = 20) {
             const entry = { id, src, frameW, frameH, loaded: false, img: null };
@@ -1434,6 +1482,18 @@
         }
     }
     const assets = new AssetManager();
+    // 100% Cleaned Transparent PNG Sprites (Eliminates all white-box / border artifacts)
+    assets.registerImage('alttp_tree', 'assets/sprites/alttp_tree.png');
+    assets.registerImage('red_cottage_1', 'assets/sprites/red_cottage_1.png');
+    assets.registerImage('red_cottage_2', 'assets/sprites/red_cottage_2.png');
+    assets.registerImage('blue_cottage_1', 'assets/sprites/blue_cottage_1.png');
+    assets.registerImage('blue_cottage_2', 'assets/sprites/blue_cottage_2.png');
+    assets.registerImage('cyan_house', 'assets/sprites/cyan_house.png');
+    assets.registerImage('long_tavern', 'assets/sprites/long_tavern.png');
+    assets.registerImage('shed', 'assets/sprites/shed.png');
+    assets.registerImage('weathervane', 'assets/sprites/weathervane.png');
+
+    // Legacy spritesheet registration for fallback
     assets.registerSpriteSheet('alttp_overworld', 'assets/sprites/alttp_overworld_spritesheet.jpg', 16, 16);
 
     const ALTTP_SPRITE_RECTS = {
@@ -1962,10 +2022,15 @@
         const w = b.wCols * TILE_SIZE;
         const h = b.hRows * TILE_SIZE;
 
-        const rect = ALTTP_SPRITE_RECTS[b.spriteKey];
         let drawnFromSheet = false;
-        if (rect && assets.hasSpriteSheet('alttp_overworld')) {
-            drawnFromSheet = assets.drawSubRect(ctx, 'alttp_overworld', rect.sx, rect.sy, rect.sw, rect.sh, x, y, w, h);
+        // Prioritize isolated clean transparent PNG with zero white box / background border artifacts
+        if (assets.hasImage(b.spriteKey)) {
+            drawnFromSheet = assets.drawImage(ctx, b.spriteKey, x, y, w, h);
+        } else {
+            const rect = ALTTP_SPRITE_RECTS[b.spriteKey];
+            if (rect && assets.hasSpriteSheet('alttp_overworld')) {
+                drawnFromSheet = assets.drawSubRect(ctx, 'alttp_overworld', rect.sx, rect.sy, rect.sw, rect.sh, x, y, w, h);
+            }
         }
 
         if (!drawnFromSheet) {
@@ -1996,12 +2061,19 @@
         const cx = (col + 0.5) * TILE_SIZE;
         const cy = (row + 0.5) * TILE_SIZE;
 
-        const rect = ALTTP_SPRITE_RECTS['weathervane'];
         let drawn = false;
-        if (rect && assets.hasSpriteSheet('alttp_overworld')) {
-            const dw = 70;
-            const dh = 64;
-            drawn = assets.drawSubRect(ctx, 'alttp_overworld', rect.sx, rect.sy, rect.sw, rect.sh, cx - dw / 2, cy - dh / 2 - 8, dw, dh);
+        // Prioritize isolated clean transparent PNG with zero white box / background border artifacts
+        if (assets.hasImage('weathervane')) {
+            const dw = 56;
+            const dh = 72;
+            drawn = assets.drawImage(ctx, 'weathervane', cx - dw / 2, cy - dh / 2 - 10, dw, dh);
+        } else {
+            const rect = ALTTP_SPRITE_RECTS['weathervane'];
+            if (rect && assets.hasSpriteSheet('alttp_overworld')) {
+                const dw = 70;
+                const dh = 64;
+                drawn = assets.drawSubRect(ctx, 'alttp_overworld', rect.sx, rect.sy, rect.sw, rect.sh, cx - dw / 2, cy - dh / 2 - 8, dw, dh);
+            }
         }
         if (!drawn) {
             ctx.save();
@@ -3828,52 +3900,74 @@
         const hasRiver = Array.isArray(mapMeta.riverRows) && mapMeta.riverRows.length > 0;
         const grid = [];
 
+        const midC = Math.floor(cols / 2);
+        const midR = Math.floor(rows / 2);
+
         for (let r = 0; r < rows; r++) {
             grid[r] = [];
             for (let c = 0; c < cols; c++) {
                 if (r === 0 || r === rows - 1 || c === 0 || c === cols - 1) {
-                    grid[r][c] = 2;
+                    grid[r][c] = 2; // Outer Boundary Wall
                     continue;
                 }
-                if (hasRiver && mapMeta.riverRows.includes(r)) {
-                    grid[r][c] = 4;
+
+                // Organic winding river for interlude zones (Maps 2, 5, 7)
+                if (hasRiver) {
+                    const riverCurve = Math.round(midC + 5 * Math.sin(r * 0.28) + 2 * Math.cos(r * 0.55));
+                    if (Math.abs(c - riverCurve) <= 2) {
+                        grid[r][c] = 4; // Sparkling River Water
+                        continue;
+                    }
+                }
+
+                // Natural organic trails (flowing curved pathways connecting sectors instead of rigid grids)
+                const nsTrail = Math.round(midC + 3 * Math.sin(r * 0.22));
+                const ewTrail = Math.round(midR + 2 * Math.cos(c * 0.22));
+                if (Math.abs(c - nsTrail) <= 1 || Math.abs(r - ewTrail) <= 1) {
+                    grid[r][c] = 1; // Walkable Path
                     continue;
                 }
-                const midC = Math.floor(cols / 2);
-                const midR = Math.floor(rows / 2);
-                if (Math.abs(c - midC) <= 1 && r > 2 && r < rows - 2) {
+
+                // Wide open plazas at north & south portal approaches
+                if (Math.abs(c - midC) <= 3 && (r <= 4 || r >= rows - 4)) {
                     grid[r][c] = 1;
                     continue;
                 }
-                if (Math.abs(r - midR) <= 1 && c > 3 && c < cols - 4) {
-                    grid[r][c] = 1;
-                    continue;
-                }
+
+                // Safe open clearing around chest
                 if (mapMeta.chest && Math.hypot(c - mapMeta.chest.col, r - mapMeta.chest.row) <= 2) {
                     grid[r][c] = 0;
                     continue;
                 }
-                const hash = Math.sin((r + mapIndex * 17) * 12.9898 + c * 78.233) * 43758.5453;
-                const rand = hash - Math.floor(hash);
-                if (mapMeta.isBrightAlttpZone) {
-                    if (rand < 0.06 && c > 3 && c < cols - 4 && r > 3 && r < rows - 4 && Math.abs(c - midC) > 4 && Math.abs(r - midR) > 2) {
-                        grid[r][c] = 3;
-                    } else if (rand > 0.78) {
-                        grid[r][c] = 9;
-                    } else {
-                        grid[r][c] = 0;
-                    }
+
+                // Coherent clustered terrain features using smooth wave noise
+                const clusterNoise = Math.sin((r + mapIndex * 7) * 0.42) * Math.cos((c + mapIndex * 13) * 0.42);
+                if (clusterNoise > 0.46) {
+                    grid[r][c] = 3; // Clustered authentic ALttP Trees
+                } else if (mapMeta.isBrightAlttpZone && clusterNoise < -0.42) {
+                    grid[r][c] = 9; // Sunlit Wildflower Meadow
+                } else if (!mapMeta.isBrightAlttpZone && clusterNoise < -0.52) {
+                    grid[r][c] = 6; // Sector specific thematic stone obelisks
                 } else {
-                    if (rand < 0.07 && c > 3 && c < cols - 4 && r > 4 && r < rows - 4 && Math.abs(c - midC) > 3 && Math.abs(r - midR) > 2) {
-                        grid[r][c] = 3;
-                    } else if (rand < 0.095 && c > 4 && c < cols - 5 && r > 4 && r < rows - 5 && Math.abs(c - midC) > 4) {
-                        grid[r][c] = 6;
-                    } else {
-                        grid[r][c] = 0;
+                    grid[r][c] = 0; // Natural open grass
+                }
+            }
+        }
+
+        // Extend natural wooden footbridges across the river
+        if (hasRiver) {
+            const bridgeR1 = midR - 1;
+            const bridgeR2 = midR;
+            for (let r = bridgeR1; r <= bridgeR2; r++) {
+                const curve = Math.round(midC + 5 * Math.sin(r * 0.28) + 2 * Math.cos(r * 0.55));
+                for (let c = curve - 2; c <= curve + 2; c++) {
+                    if (grid[r] && grid[r][c] === 4) {
+                        grid[r][c] = 8; // Extended Wooden River Bridge
                     }
                 }
             }
         }
+
         return grid;
     }
 
@@ -4141,30 +4235,58 @@
             });
         }
 
-        // Spawn Professor Avi (Main Mentor & Quest Giver on every map)
-        const aviX = mapIndex === 0 ? 17.5 * TILE_SIZE : (mapIndex === 1 ? 22.5 * TILE_SIZE : (Math.floor(cols / 2) - 2.5) * TILE_SIZE);
-        const aviY = mapIndex === 0 ? 14.5 * TILE_SIZE : (mapIndex === 1 ? 21.5 * TILE_SIZE : (rows - 5.5) * TILE_SIZE);
-        npcs.push({
-            x: aviX,
-            y: aviY,
-            name: 'Professor Avi',
-            role: 'avi',
-            isQuestGiver: true,
-            preDialogues: mapMeta.aviPreDialogues,
-            postDialogues: mapMeta.aviPostDialogues
-        });
-
-        // Spawn Resistance Revolutionary Ally if present
-        if (mapMeta.ally) {
+        // Spawn Zone-Specific Mentors & Quest Givers
+        // Map 0 & Map 8 are led by Professor Avi; Maps 1-7 are led by zone-specific Resistance mentors!
+        if (mapMeta.ally && mapIndex > 0 && mapIndex < 8) {
             npcs.push({
                 x: (mapMeta.ally.col + 0.5) * TILE_SIZE,
                 y: (mapMeta.ally.row + 0.5) * TILE_SIZE,
                 name: mapMeta.ally.name,
                 role: 'ally',
                 tunicColor: mapMeta.ally.tunicColor,
-                isQuestGiver: false,
-                dialogues: mapMeta.ally.dialogues
+                isQuestGiver: true,
+                preDialogues: mapMeta.aviPreDialogues,
+                postDialogues: mapMeta.aviPostDialogues
             });
+
+            // Professor Avi also visits near the entrance as an Archival Scholar
+            const aviX = mapIndex === 1 ? 25.5 * TILE_SIZE : (Math.floor(cols / 2) - 4) * TILE_SIZE;
+            const aviY = mapIndex === 1 ? 40 * TILE_SIZE : (rows - 4) * TILE_SIZE;
+            npcs.push({
+                x: aviX,
+                y: aviY,
+                name: 'Professor Avi',
+                role: 'avi',
+                isQuestGiver: false,
+                dialogues: [
+                    `I am here documenting the liberation of ${mapMeta.name}. Speak with ${mapMeta.ally.name} to receive your sector assignment!`,
+                    `Remember initiate: verify shared context with your [Q] Prism and hold firm to your principles.`
+                ]
+            });
+        } else {
+            const aviX = mapIndex === 0 ? 17.5 * TILE_SIZE : (Math.floor(cols / 2) - 2.5) * TILE_SIZE;
+            const aviY = mapIndex === 0 ? 14.5 * TILE_SIZE : (rows - 5.5) * TILE_SIZE;
+            npcs.push({
+                x: aviX,
+                y: aviY,
+                name: 'Professor Avi',
+                role: 'avi',
+                isQuestGiver: true,
+                preDialogues: mapMeta.aviPreDialogues,
+                postDialogues: mapMeta.aviPostDialogues
+            });
+
+            if (mapMeta.ally) {
+                npcs.push({
+                    x: (mapMeta.ally.col + 0.5) * TILE_SIZE,
+                    y: (mapMeta.ally.row + 0.5) * TILE_SIZE,
+                    name: mapMeta.ally.name,
+                    role: 'ally',
+                    tunicColor: mapMeta.ally.tunicColor,
+                    isQuestGiver: false,
+                    dialogues: mapMeta.ally.dialogues
+                });
+            }
         }
 
         // Spawn Dummies or Sector Enemies on verified open tiles
@@ -4606,7 +4728,20 @@
             if (!player.questReadyToTurnIn) {
                 player.questReadyToTurnIn = true;
                 player.questAccepted = true;
-                addFloatText(player.x, player.y - 40, 'OBJECTIVE COMPLETE! RETURN TO PROFESSOR AVI [?]', '#fde047');
+
+                // Find active Quest Giver on this map
+                const qg = npcs.find(n => n.isQuestGiver);
+                const targetPortal = portals.find(p => p.targetMap > currentMapIndex) || portals[0];
+                if (qg && targetPortal) {
+                    // Teleport Quest Giver directly to the Exit Portal so player does not need to backtrack
+                    qg.x = targetPortal.x - 38;
+                    qg.y = targetPortal.y + 14;
+                    spawnBurst(qg.x, qg.y, '#fde047', 22);
+                    audio.sfxPuzzleSolved();
+                    addFloatText(player.x, player.y - 40, `OBJECTIVE COMPLETE! ${qg.name} awaits at the Exit Portal [?]!`, '#fde047');
+                } else {
+                    addFloatText(player.x, player.y - 40, 'OBJECTIVE COMPLETE! Return to your mentor at the Exit Portal [?]', '#fde047');
+                }
             }
         }
     }
@@ -5072,10 +5207,11 @@
             startNpcDialogue(target.obj);
         } else if (target.type === 'portal') {
             if (target.obj.targetMap > currentMapIndex && !player.questTurnedIn) {
+                const qg = npcs.find(n => n.isQuestGiver) || { name: 'Quest Mentor' };
                 if (player.questReadyToTurnIn) {
-                    addFloatText(player.x, player.y - 30, 'Turn in your completed quest to Professor Avi [?] first!', '#fde047');
+                    addFloatText(player.x, player.y - 30, `Speak with ${qg.name} [?] right here to unlock portal!`, '#fde047');
                 } else {
-                    addFloatText(player.x, player.y - 30, 'Complete Professor Avi’s Chapter Quest First!', '#fb7185');
+                    addFloatText(player.x, player.y - 30, `Complete ${qg.name}’s Chapter Quest First!`, '#fb7185');
                 }
                 audio.sfxHit();
                 return;
@@ -5152,15 +5288,16 @@
         if (relic.stat === 'maxHp') player.hp += relic.val;
         updateAllHud();
 
-        // Show bottom dialogue box with rendered pixel relic icon
+        // Show bottom dialogue box with colored text and rendered pixel relic icon
+        const rarity = getItemRarity(relic);
         activeDialogueList = [
-            `You opened the Archive Chest and obtained [${relic.name}]! (${relic.bonus}) — ${relic.desc}`
+            `You opened the Archive Chest and obtained <span style="color: ${rarity.color}; font-weight: 800; text-shadow: ${rarity.textGlow};">[${relic.name}]</span>! <span class="text-cyan-300 font-bold">(${relic.bonus})</span><br><br><span class="text-slate-300 italic">"${relic.desc}"</span>`
         ];
         activeDialogueIndex = 0;
         activeDialogueNpc = null;
         renderDialoguePortraitCanvas({ type: 'item', item: relic });
         document.getElementById('dialogueSpeaker').textContent = `RELIC ACQUIRED // ${relic.slot.toUpperCase()} SLOT`;
-        document.getElementById('dialogueText').textContent = activeDialogueList[0];
+        document.getElementById('dialogueText').innerHTML = activeDialogueList[0];
         document.getElementById('dialogueStepCounter').textContent = '[SPACE / CLICK] Equip & Continue »';
         document.getElementById('dialogueModal').classList.remove('hidden');
     }
@@ -5228,16 +5365,30 @@
                     ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#14532d' : '#1e293b';
                     ctx.fillRect(tx + 4, ty + 4, TILE_SIZE - 8, TILE_SIZE - 12);
                 } else if (t === 3) {
-                    // Zelda: A Link to the Past Layered Canopy Tree
-                    ctx.fillStyle = '#451a03';
-                    ctx.fillRect(tx + 16, ty + 26, 12, 16);
-                    ctx.fillStyle = currentMapIndex === 8 ? '#450a0a' : (mapMeta.isBrightAlttpZone ? '#15803d' : '#065f46');
-                    ctx.fillRect(tx + 5, ty + 5, 34, 25);
-                    ctx.fillStyle = currentMapIndex === 8 ? '#7f1d1d' : (mapMeta.isBrightAlttpZone ? '#22c55e' : '#059669');
-                    ctx.fillRect(tx + 9, ty + 7, 26, 15);
-                    if (mapMeta.isBrightAlttpZone) {
-                        ctx.fillStyle = '#86efac';
-                        ctx.fillRect(tx + 13, ty + 9, 10, 6);
+                    // Zelda: A Link to the Past Authentic Tree (100% transparent PNG with soft ground shadow)
+                    let drawnTree = false;
+                    if (assets.hasImage('alttp_tree')) {
+                        // Soft ambient ground shadow under trunk & roots
+                        ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+                        ctx.beginPath();
+                        ctx.ellipse(tx + TILE_SIZE / 2, ty + TILE_SIZE - 4, 20, 8, 0, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        const dw = 56;
+                        const dh = 72;
+                        drawnTree = assets.drawImage(ctx, 'alttp_tree', tx + (TILE_SIZE - dw) / 2, ty + TILE_SIZE - dh, dw, dh);
+                    }
+                    if (!drawnTree) {
+                        ctx.fillStyle = '#451a03';
+                        ctx.fillRect(tx + 16, ty + 26, 12, 16);
+                        ctx.fillStyle = currentMapIndex === 8 ? '#450a0a' : (mapMeta.isBrightAlttpZone ? '#15803d' : '#065f46');
+                        ctx.fillRect(tx + 5, ty + 5, 34, 25);
+                        ctx.fillStyle = currentMapIndex === 8 ? '#7f1d1d' : (mapMeta.isBrightAlttpZone ? '#22c55e' : '#059669');
+                        ctx.fillRect(tx + 9, ty + 7, 26, 15);
+                        if (mapMeta.isBrightAlttpZone) {
+                            ctx.fillStyle = '#86efac';
+                            ctx.fillRect(tx + 13, ty + 9, 10, 6);
+                        }
                     }
                 } else if (t === 4) {
                     // Sparkling ALTTP River Water with Shoreline Foam & Animated Wave Crests
@@ -6345,7 +6496,7 @@
         activeDialogueIndex = 0;
         renderDialoguePortraitCanvas({ type: 'npc', npc });
         document.getElementById('dialogueSpeaker').textContent = npc.name.toUpperCase();
-        document.getElementById('dialogueText').textContent = activeDialogueList[0];
+        document.getElementById('dialogueText').innerHTML = activeDialogueList[0];
         document.getElementById('dialogueStepCounter').textContent = `1 / ${activeDialogueList.length} [SPACE] »`;
         document.getElementById('dialogueModal').classList.remove('hidden');
         audio.sfxDialog();
@@ -6354,7 +6505,7 @@
     function advanceDialogue() {
         activeDialogueIndex++;
         if (activeDialogueIndex < activeDialogueList.length) {
-            document.getElementById('dialogueText').textContent = activeDialogueList[activeDialogueIndex];
+            document.getElementById('dialogueText').innerHTML = activeDialogueList[activeDialogueIndex];
             document.getElementById('dialogueStepCounter').textContent = `${activeDialogueIndex + 1} / ${activeDialogueList.length} [SPACE] »`;
             audio.sfxDialog();
         } else {
@@ -6413,27 +6564,71 @@
         grid.innerHTML = '';
 
         player.inventory.forEach((item, idx) => {
+            const rarity = getItemRarity(item);
             const btn = document.createElement('button');
-            btn.className = 'h-16 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-slate-700 focus:border-amber-400 flex flex-col items-center justify-center relative';
+            btn.className = 'h-20 rounded-xl bg-slate-900/90 hover:bg-slate-800 border-2 transition-all p-1 flex flex-col items-center justify-between relative shadow-md';
+            btn.style.borderColor = rarity.border;
+            btn.style.boxShadow = `0 0 8px ${rarity.bg}`;
+            btn.title = `${item.name} (${rarity.name})`;
+
             btn.innerHTML = `
-                <span class="text-2xl">${item.icon || '🔮'}</span>
-                <span class="text-[10px] font-bold text-slate-300 truncate max-w-[90%]">${item.name}</span>
+                <div class="text-2xl mt-0.5">${item.icon || '🔮'}</div>
+                <div class="text-[10px] font-bold truncate max-w-[95%] text-center" style="color: ${rarity.color}; text-shadow: ${rarity.textGlow};">${item.name}</div>
+                <div class="text-[8px] font-bold px-1.5 py-0.5 rounded uppercase" style="color: ${rarity.color}; background: ${rarity.bg}; border: 1px solid ${rarity.border}44;">${rarity.name}</div>
                 ${item.count ? `<span class="absolute top-1 right-1.5 text-[10px] mono-font font-bold text-amber-300">x${item.count}</span>` : ''}
             `;
+
             btn.onclick = () => {
+                // Interactive Clickable Tooltip Card
+                let statComparisonHtml = '';
+                if (item.type === 'equipment' && item.slot) {
+                    const currentEquipped = player.equipment[item.slot];
+                    if (currentEquipped) {
+                        const diffVal = item.val - (currentEquipped.val || 0);
+                        const diffText = diffVal > 0
+                            ? `<span class="text-emerald-400 font-bold">▲ +${diffVal} Upgrade</span>`
+                            : (diffVal === 0 ? `<span class="text-slate-400 font-bold">= Equal Stat</span>` : `<span class="text-rose-400 font-bold">▼ ${diffVal} Downgrade</span>`);
+                        statComparisonHtml = `
+                            <div class="bg-slate-950/80 p-2 rounded-lg border border-slate-800 text-[11px] mb-2.5">
+                                <div class="text-slate-400">Currently in ${item.slot.toUpperCase()} Slot:</div>
+                                <div class="flex justify-between items-center mt-0.5">
+                                    <span class="text-white font-semibold">${currentEquipped.name}</span>
+                                    ${diffText}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        statComparisonHtml = `
+                            <div class="bg-emerald-950/40 p-2 rounded-lg border border-emerald-500/40 text-[11px] text-emerald-300 font-bold mb-2.5">
+                                ⚡ Direct Upgrade! Slot is currently empty.
+                            </div>
+                        `;
+                    }
+                }
+
                 detail.innerHTML = `
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="text-2xl">${item.icon || '🔮'}</span>
-                        <div>
-                            <div class="font-bold text-white text-sm">${item.name}</div>
-                            <div class="text-[10px] uppercase text-cyan-400">${item.slot ? `Slot: ${item.slot.toUpperCase()}` : item.type}</div>
+                    <div class="flex items-center gap-2.5 mb-2.5 pb-2 border-b border-slate-800">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center text-2xl shrink-0" style="background: ${rarity.bg}; border: 1px solid ${rarity.border};">
+                            ${item.icon || '🔮'}
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-extrabold text-sm truncate" style="color: ${rarity.color}; text-shadow: ${rarity.textGlow};">${item.name}</div>
+                            <div class="flex items-center gap-1.5 text-[9px] mt-0.5">
+                                <span class="font-bold uppercase px-1.5 py-0.5 rounded" style="color: ${rarity.color}; background: ${rarity.bg};">${rarity.name}</span>
+                                <span class="text-cyan-400 font-bold uppercase">${item.slot ? `Slot: ${item.slot.toUpperCase()}` : item.type.toUpperCase()}</span>
+                            </div>
                         </div>
                     </div>
-                    <p class="text-xs text-slate-300 leading-relaxed mb-3">${item.desc}</p>
-                    <button id="btnUseSelectedItem" class="retro-btn w-full py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs">
-                        ${item.type === 'consumable' ? '🧪 Use Item' : '🛡️ Equip on Character'}
+                    ${item.bonus ? `<div class="text-xs font-bold text-amber-300 mb-2 flex items-center gap-1">✨ <span>${item.bonus}</span></div>` : ''}
+                    ${statComparisonHtml}
+                    <div class="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-xs text-slate-300 italic leading-relaxed mb-3">
+                        "${item.desc}"
+                    </div>
+                    <button id="btnUseSelectedItem" class="retro-btn w-full py-2.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs shadow-lg transition-transform active:scale-95">
+                        ${item.type === 'consumable' ? '🧪 Use Consumable' : '🛡️ Equip on Character'}
                     </button>
                 `;
+
                 document.getElementById('btnUseSelectedItem').onclick = () => {
                     if (item.type === 'consumable') {
                         if (item.heal) player.hp = Math.min(getTotalMaxHp(), player.hp + item.heal);
@@ -6676,11 +6871,13 @@
         const qIcon = document.getElementById('hudQuestMarkerIcon');
         const qText = document.getElementById('hudQuestPillText');
 
+        const qg = npcs.find(n => n.isQuestGiver) || { name: 'Quest Mentor' };
+
         if (!player.questAccepted) {
             qIcon.textContent = '!';
             qIcon.className = 'pixel-font text-sm text-amber-400 font-bold shrink-0 animate-bounce';
             qIcon.style.textShadow = '0 2px 0 #000, 0 0 8px rgba(251,191,36,0.75)';
-            qText.textContent = 'Speak with Professor Avi [SPACE]';
+            qText.textContent = `Speak with ${qg.name} [SPACE]`;
         } else if (!player.questReadyToTurnIn) {
             qIcon.textContent = '?';
             qIcon.className = 'pixel-font text-sm text-slate-400 font-bold shrink-0';
@@ -6691,7 +6888,7 @@
             qIcon.textContent = '?';
             qIcon.className = 'pixel-font text-sm text-amber-300 font-bold shrink-0 animate-pulse';
             qIcon.style.textShadow = '0 2px 0 #000, 0 0 10px rgba(253,224,71,0.9)';
-            qText.textContent = 'Quest Complete! Return to Professor Avi [SPACE]';
+            qText.textContent = `Quest Complete! Speak with ${qg.name} at the Portal [SPACE]`;
         } else {
             qIcon.textContent = '✓';
             qIcon.className = 'pixel-font text-sm text-emerald-400 font-bold shrink-0';

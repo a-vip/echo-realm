@@ -43,7 +43,11 @@ function loadGameEnvironment() {
         transitionToNeighborMap,
         OVERWORLD_GRID,
         MAP_OVERWORLD_POS,
-        renderWorldMap
+        renderWorldMap,
+        getItemRarity,
+        checkQuestProgressState,
+        get npcs() { return npcs; },
+        get portals() { return portals; }
     };`;
 
     const mockElem = {

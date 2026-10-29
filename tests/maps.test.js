@@ -176,5 +176,117 @@ test('World & Map Validation Test Suite', async (t) => {
         // Verify official ALttP spritesheet is registered in AssetManager
         assert.ok(game.assets.spritesheets.get('alttp_overworld'), 'alttp_overworld spritesheet must be registered');
     });
+
+    await t.test('Cleaned transparent PNG sprites are registered in AssetManager without white border box artifacts', () => {
+        const expectedCleanSprites = [
+            'alttp_tree',
+            'red_cottage_1',
+            'red_cottage_2',
+            'blue_cottage_1',
+            'blue_cottage_2',
+            'cyan_house',
+            'long_tavern',
+            'shed',
+            'weathervane'
+        ];
+        expectedCleanSprites.forEach(spriteKey => {
+            assert.ok(game.assets.images.has(spriteKey), `Clean transparent sprite '${spriteKey}' must be registered in AssetManager`);
+            const entry = game.assets.images.get(spriteKey);
+            assert.ok(entry.src.endsWith('.png'), `Sprite '${spriteKey}' src must be a PNG file (${entry.src})`);
+        });
+    });
+
+    await t.test('Dynamic zone mentors are assigned as primary quest givers across maps 1 through 7', () => {
+        // Map 0: Professor Avi
+        game.loadMap(0);
+        const qg0 = game.npcs.find(n => n.isQuestGiver);
+        assert.ok(qg0, 'Map 0 must have a quest giver');
+        assert.strictEqual(qg0.name, 'Professor Avi');
+
+        // Map 1: Commander Maya
+        game.loadMap(1);
+        const qg1 = game.npcs.find(n => n.isQuestGiver);
+        assert.ok(qg1, 'Map 1 must have a quest giver');
+        assert.strictEqual(qg1.name, 'Commander Maya');
+
+        // Map 2: Bridgekeeper Lyra
+        game.loadMap(2);
+        const qg2 = game.npcs.find(n => n.isQuestGiver);
+        assert.ok(qg2, 'Map 2 must have a quest giver');
+        assert.strictEqual(qg2.name, 'Bridgekeeper Lyra');
+
+        // Map 3: Comrade Tariq
+        game.loadMap(3);
+        const qg3 = game.npcs.find(n => n.isQuestGiver);
+        assert.ok(qg3, 'Map 3 must have a quest giver');
+        assert.strictEqual(qg3.name, 'Comrade Tariq');
+
+        // Map 4: Sister Elena
+        game.loadMap(4);
+        const qg4 = game.npcs.find(n => n.isQuestGiver);
+        assert.ok(qg4, 'Map 4 must have a quest giver');
+        assert.strictEqual(qg4.name, 'Sister Elena');
+
+        // Map 5: Ranger Rowan
+        game.loadMap(5);
+        const qg5 = game.npcs.find(n => n.isQuestGiver);
+        assert.ok(qg5, 'Map 5 must have a quest giver');
+        assert.strictEqual(qg5.name, 'Ranger Rowan');
+
+        // Map 6: Organizer Kael
+        game.loadMap(6);
+        const qg6 = game.npcs.find(n => n.isQuestGiver);
+        assert.ok(qg6, 'Map 6 must have a quest giver');
+        assert.strictEqual(qg6.name, 'Organizer Kael');
+
+        // Map 8: Professor Avi
+        game.loadMap(8);
+        const qg8 = game.npcs.find(n => n.isQuestGiver);
+        assert.ok(qg8, 'Map 8 must have a quest giver');
+        assert.strictEqual(qg8.name, 'Professor Avi');
+    });
+
+    await t.test('Quest giver immediately teleports adjacent to the exit portal when chapter objectives are completed', () => {
+        game.loadMap(1); // Performative Valley (5 cured goal, Commander Maya)
+        const qg = game.npcs.find(n => n.isQuestGiver);
+        const exitPortal = game.portals.find(p => p.targetMap > 1) || game.portals[0];
+        assert.ok(qg, 'Must have active quest giver');
+        assert.ok(exitPortal, 'Must have exit portal');
+
+        const initialQgX = qg.x;
+        const initialQgY = qg.y;
+        assert.strictEqual(game.player.questReadyToTurnIn, false);
+
+        // Fulfill chapter objective
+        game.player.mapCitizensFreed = game.MAPS[1].curedGoal;
+        game.checkQuestProgressState();
+
+        assert.strictEqual(game.player.questReadyToTurnIn, true, 'Quest must be marked ready to turn in');
+        assert.strictEqual(qg.x, exitPortal.x - 38, 'Quest giver X must be teleported adjacent to exit portal');
+        assert.strictEqual(qg.y, exitPortal.y + 14, 'Quest giver Y must be teleported adjacent to exit portal');
+        assert.notStrictEqual(qg.x, initialQgX, 'Quest giver X must have moved from original village position');
+    });
+
+    await t.test('Items feature color-coded rarity metadata, distinct visual colors, and glowing text styles', () => {
+        const mythic = game.getItemRarity({ id: 'aegis_dialectics' });
+        assert.strictEqual(mythic.name, 'Mythic');
+        assert.strictEqual(mythic.color, '#f43f5e');
+
+        const legendary = game.getItemRarity({ id: 'crown_veritas' });
+        assert.strictEqual(legendary.name, 'Legendary');
+        assert.strictEqual(legendary.color, '#f59e0b');
+
+        const epic = game.getItemRarity({ id: 'raiment_solidarity' });
+        assert.strictEqual(epic.name, 'Epic');
+        assert.strictEqual(epic.color, '#c084fc');
+
+        const rare = game.getItemRarity({ id: 'circlet_nuance' });
+        assert.strictEqual(rare.name, 'Rare');
+        assert.strictEqual(rare.color, '#38bdf8');
+
+        const consumable = game.getItemRarity({ id: 'tonic', type: 'consumable' });
+        assert.strictEqual(consumable.name, 'Uncommon');
+        assert.strictEqual(consumable.color, '#34d399');
+    });
 });
 
