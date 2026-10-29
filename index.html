@@ -183,79 +183,78 @@
     <!-- CHARACTER CREATION & SYSTEMIC DIFFICULTY SCREEN                     -->
     <!-- =================================================================== -->
     <div id="charCreateModal" class="fixed inset-0 z-30 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
-        <div class="max-w-4xl w-full retro-box rounded-2xl p-6 md:p-8 max-h-[92vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6">
+        <div class="max-w-4xl w-full retro-box rounded-xl p-5 md:p-7 max-h-[92vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b-2 border-slate-800 pb-3 mb-5">
                 <div>
-                    <span class="pixel-font text-[10px] text-cyan-400">PROLOGUE INITIALIZATION</span>
-                    <h2 class="text-xl md:text-2xl font-bold text-white mt-1">Create Your Archivist & Select Lived Reality</h2>
+                    <h2 class="pixel-font text-base md:text-lg text-amber-300 tracking-wider">CREATE YOUR ARCHIVIST</h2>
                 </div>
-                <button id="btnBackToTitle" class="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300">
-                    &larr; Back
+                <button id="btnBackToTitle" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-[10px] pixel-font text-slate-300 hover:text-white transition-colors">
+                    &larr; BACK
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
                 <!-- Left Column: Live Animated Pixel Sprite Preview -->
-                <div class="lg:col-span-5 bg-slate-900/90 border border-slate-700 rounded-xl p-5 flex flex-col items-center justify-between">
-                    <div class="text-xs font-bold text-cyan-300 uppercase tracking-wider mb-2">Live 32-Bit Sprite Preview</div>
-                    <div class="bg-slate-950 border-2 border-slate-800 rounded-xl p-4 flex items-center justify-center w-44 h-44 relative">
+                <div class="lg:col-span-5 bg-slate-900/90 border-2 border-slate-800 rounded-xl p-4 flex flex-col items-center justify-between">
+                    <div class="pixel-font text-[10px] text-cyan-300 uppercase tracking-widest mb-2">SPRITE PREVIEW</div>
+                    <div class="bg-slate-950 border-2 border-slate-800 rounded-lg p-3 flex items-center justify-center w-40 h-40 relative">
                         <canvas id="previewSpriteCanvas" width="128" height="128" class="w-32 h-32"></canvas>
-                        <button id="btnRotatePreview" class="absolute bottom-2 right-2 bg-slate-800 hover:bg-slate-700 text-[10px] px-2 py-1 rounded text-cyan-300 border border-slate-600">
-                            ↻ Turn
+                        <button id="btnRotatePreview" class="absolute bottom-2 right-2 bg-slate-900 hover:bg-slate-800 text-[10px] pixel-font px-2 py-1 rounded text-cyan-300 border border-slate-700">
+                            ↻ TURN
                         </button>
                     </div>
 
                     <!-- Systemic Difficulty Box -->
-                    <div class="w-full mt-4 bg-slate-950 border-2 border-amber-500/50 rounded-xl p-3.5">
+                    <div class="w-full mt-3 bg-slate-950 border-2 border-amber-500/50 rounded-lg p-3">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="text-[11px] font-bold uppercase text-amber-300">Systemic Profile Mode:</span>
-                            <span id="diffBadgeTitle" class="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">EASY MODE</span>
+                            <span class="pixel-font text-[10px] uppercase text-amber-300">SYSTEMIC PROFILE:</span>
+                            <span id="diffBadgeTitle" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">EASY MODE</span>
                         </div>
                         <p id="diffDescText" class="text-xs text-slate-300 leading-relaxed mb-2">
                             Algorithms and authorities grant you the benefit of the doubt. -25% enemy hostility range, +25% Data Shard rewards, and border sentries ignore you unless attacked.
                         </p>
-                        <div id="diffStatsText" class="text-[11px] mono-font text-cyan-300 border-t border-slate-800 pt-1.5">
+                        <div id="diffStatsText" class="text-[10px] mono-font text-cyan-300 border-t border-slate-800 pt-1.5">
                             Aggro Radius: 0.75x | Damage Taken: 0.85x | Shard Gain: 1.25x
                         </div>
                     </div>
                 </div>
 
                 <!-- Right Column: Customization Controls -->
-                <div class="lg:col-span-7 space-y-4">
+                <div class="lg:col-span-7 space-y-3.5">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Archivist Name</label>
-                        <input id="inputPlayerName" type="text" value="Auron" maxlength="14" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-lg px-3.5 py-2 text-white font-bold outline-none" />
+                        <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Archivist Name</label>
+                        <input id="inputPlayerName" type="text" value="Auron" maxlength="14" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-lg px-3 py-1.5 text-white font-bold outline-none text-sm" />
                     </div>
 
                     <!-- Skin Tone / Systemic Difficulty Slider -->
                     <div>
-                        <div class="flex justify-between text-xs font-bold uppercase mb-1.5">
-                            <span class="text-amber-300">Skin Tone & Systemic Scrutiny (Difficulty)</span>
-                            <span class="text-slate-400 text-[11px]">Click to Select</span>
+                        <div class="flex justify-between text-xs font-bold uppercase mb-1">
+                            <span class="pixel-font text-[10px] text-amber-300">Skin Tone & Systemic Scrutiny</span>
+                            <span class="text-slate-400 text-[10px]">Click to Select</span>
                         </div>
-                        <div class="grid grid-cols-4 gap-2.5" id="skinToneButtons">
-                            <button data-skin="0" class="skin-btn p-2.5 rounded-xl border-2 border-cyan-400 bg-slate-900 flex flex-col items-center gap-1.5">
-                                <span class="w-8 h-8 rounded-full border border-white/30" style="background:#fde6d8"></span>
-                                <span class="text-[11px] font-bold text-emerald-300">Privileged</span>
+                        <div class="grid grid-cols-4 gap-2" id="skinToneButtons">
+                            <button data-skin="0" class="skin-btn p-2 rounded-lg border-2 border-cyan-400 bg-slate-900 flex flex-col items-center gap-1">
+                                <span class="w-7 h-7 rounded-full border border-white/30" style="background:#fde6d8"></span>
+                                <span class="text-[10px] font-bold text-emerald-300">Privileged</span>
                                 <span class="text-[9px] text-slate-400">Easy Mode</span>
                             </button>
-                            <button data-skin="1" class="skin-btn p-2.5 rounded-xl border-2 border-slate-700 bg-slate-900 flex flex-col items-center gap-1.5">
-                                <span class="w-8 h-8 rounded-full border border-white/30" style="background:#e0ac69"></span>
-                                <span class="text-[11px] font-bold text-cyan-300">Standard</span>
-                                <span class="text-[9px] text-slate-400">Normal Mode</span>
+                            <button data-skin="1" class="skin-btn p-2 rounded-lg border-2 border-slate-700 bg-slate-900 flex flex-col items-center gap-1">
+                                <span class="w-7 h-7 rounded-full border border-white/30" style="background:#e0ac69"></span>
+                                <span class="text-[10px] font-bold text-cyan-300">Standard</span>
+                                <span class="text-[9px] text-slate-400">Normal</span>
                             </button>
-                            <button data-skin="2" class="skin-btn p-2.5 rounded-xl border-2 border-slate-700 bg-slate-900 flex flex-col items-center gap-1.5">
-                                <span class="w-8 h-8 rounded-full border border-white/30" style="background:#9c6137"></span>
-                                <span class="text-[11px] font-bold text-amber-300">Profiled</span>
+                            <button data-skin="2" class="skin-btn p-2 rounded-lg border-2 border-slate-700 bg-slate-900 flex flex-col items-center gap-1">
+                                <span class="w-7 h-7 rounded-full border border-white/30" style="background:#9c6137"></span>
+                                <span class="text-[10px] font-bold text-amber-300">Profiled</span>
                                 <span class="text-[9px] text-slate-400">Hard Mode</span>
                             </button>
-                            <button data-skin="3" class="skin-btn p-2.5 rounded-xl border-2 border-slate-700 bg-slate-900 flex flex-col items-center gap-1.5">
-                                <span class="w-8 h-8 rounded-full border border-white/30" style="background:#4a2912"></span>
-                                <span class="text-[11px] font-bold text-rose-400">Targeted</span>
-                                <span class="text-[9px] text-slate-400">Expert Mode</span>
+                            <button data-skin="3" class="skin-btn p-2 rounded-lg border-2 border-slate-700 bg-slate-900 flex flex-col items-center gap-1">
+                                <span class="w-7 h-7 rounded-full border border-white/30" style="background:#4a2912"></span>
+                                <span class="text-[10px] font-bold text-rose-400">Targeted</span>
+                                <span class="text-[9px] text-slate-400">Expert</span>
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-1 italic">
+                        <p class="text-[10px] text-slate-400 mt-1 italic">
                             *Reflects how real-world surveillance algorithms and authoritarian policing disproportionately target darker skin tones.
                         </p>
                     </div>
@@ -263,8 +262,8 @@
                     <!-- Hair Style & Hair Color -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Hair / Headgear Style</label>
-                            <select id="selectHairStyle" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-bold outline-none">
+                            <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Hair / Headgear</label>
+                            <select id="selectHairStyle" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-bold outline-none">
                                 <option value="0">Spiky Adventurer Crop</option>
                                 <option value="1">Flowing Scholar Locks</option>
                                 <option value="2">Archivist Ranger Hood</option>
@@ -272,33 +271,33 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Hair / Hood Color</label>
-                            <div class="flex gap-2 pt-1" id="hairColorButtons">
-                                <button data-hcolor="#f59e0b" class="w-7 h-7 rounded-full border-2 border-white" style="background:#f59e0b"></button>
-                                <button data-hcolor="#3b2219" class="w-7 h-7 rounded-full border border-slate-600" style="background:#3b2219"></button>
-                                <button data-hcolor="#111827" class="w-7 h-7 rounded-full border border-slate-600" style="background:#111827"></button>
-                                <button data-hcolor="#dc2626" class="w-7 h-7 rounded-full border border-slate-600" style="background:#dc2626"></button>
-                                <button data-hcolor="#e2e8f0" class="w-7 h-7 rounded-full border border-slate-600" style="background:#e2e8f0"></button>
-                                <button data-hcolor="#38bdf8" class="w-7 h-7 rounded-full border border-slate-600" style="background:#38bdf8"></button>
+                            <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Hair / Hood Color</label>
+                            <div class="flex gap-2 pt-0.5" id="hairColorButtons">
+                                <button data-hcolor="#f59e0b" class="w-6 h-6 rounded-full border-2 border-white" style="background:#f59e0b"></button>
+                                <button data-hcolor="#3b2219" class="w-6 h-6 rounded-full border border-slate-600" style="background:#3b2219"></button>
+                                <button data-hcolor="#111827" class="w-6 h-6 rounded-full border border-slate-600" style="background:#111827"></button>
+                                <button data-hcolor="#dc2626" class="w-6 h-6 rounded-full border border-slate-600" style="background:#dc2626"></button>
+                                <button data-hcolor="#e2e8f0" class="w-6 h-6 rounded-full border border-slate-600" style="background:#e2e8f0"></button>
+                                <button data-hcolor="#38bdf8" class="w-6 h-6 rounded-full border border-slate-600" style="background:#38bdf8"></button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Tunic Color -->
                     <div>
-                        <label class="block text-xs font-bold uppercase text-slate-300 mb-1">Archivist Tunic & Cloak Color</label>
-                        <div class="grid grid-cols-5 gap-2" id="tunicColorButtons">
-                            <button data-tcolor="#0284c7" class="py-1.5 px-2 rounded-lg border-2 border-white text-xs font-bold text-white" style="background:#0284c7">Sapphire</button>
-                            <button data-tcolor="#059669" class="py-1.5 px-2 rounded-lg border border-slate-700 text-xs font-bold text-white" style="background:#059669">Emerald</button>
-                            <button data-tcolor="#dc2626" class="py-1.5 px-2 rounded-lg border border-slate-700 text-xs font-bold text-white" style="background:#dc2626">Crimson</button>
-                            <button data-tcolor="#7c3aed" class="py-1.5 px-2 rounded-lg border border-slate-700 text-xs font-bold text-white" style="background:#7c3aed">Amethyst</button>
-                            <button data-tcolor="#d97706" class="py-1.5 px-2 rounded-lg border border-slate-700 text-xs font-bold text-white" style="background:#d97706">Amber</button>
+                        <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Tunic & Cloak Color</label>
+                        <div class="grid grid-cols-5 gap-1.5" id="tunicColorButtons">
+                            <button data-tcolor="#0284c7" class="py-1 px-1.5 rounded-lg border-2 border-white text-[11px] font-bold text-white" style="background:#0284c7">Sapphire</button>
+                            <button data-tcolor="#059669" class="py-1 px-1.5 rounded-lg border border-slate-700 text-[11px] font-bold text-white" style="background:#059669">Emerald</button>
+                            <button data-tcolor="#dc2626" class="py-1 px-1.5 rounded-lg border border-slate-700 text-[11px] font-bold text-white" style="background:#dc2626">Crimson</button>
+                            <button data-tcolor="#7c3aed" class="py-1 px-1.5 rounded-lg border border-slate-700 text-[11px] font-bold text-white" style="background:#7c3aed">Amethyst</button>
+                            <button data-tcolor="#d97706" class="py-1 px-1.5 rounded-lg border border-slate-700 text-[11px] font-bold text-white" style="background:#d97706">Amber</button>
                         </div>
                     </div>
 
-                    <div class="pt-3">
-                        <button id="btnConfirmChar" class="retro-btn w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-extrabold pixel-font text-xs tracking-wider">
-                            ⚔️ BEGIN PROLOGUE IN THE QUIET ARCHIVE
+                    <div class="pt-2">
+                        <button id="btnConfirmChar" class="retro-btn w-full py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-bold pixel-font text-xs tracking-wider">
+                            ⚔️ BEGIN JOURNEY IN THE QUIET ARCHIVE
                         </button>
                     </div>
                 </div>
@@ -1631,14 +1630,18 @@
             px(12, -4, 6, 1, '#f59e0b');
             px(13, -2, 4, 3, '#38bdf8');
             px(14, -1, 2, 1, '#ffffff');
-        } else if (role === 'player' && !holdingItemOverhead) {
-            // Off-Hand Shield
-            const shColor = (equipment && equipment.offHand && equipment.offHand.visualColor) ? equipment.offHand.visualColor : '#fbbf24';
-            px(13, 11, 3, 5, shColor);
-            px(14, 12, 1, 3, '#0284c7');
-            // Main-Hand Prism Crystal
-            const mhColor = (equipment && equipment.mainHand && equipment.mainHand.visualColor) ? equipment.mainHand.visualColor : '#38bdf8';
-            px(0, 11, 2, 4, mhColor);
+        } else if (role === 'player' && !holdingItemOverhead && !opts.hideWeapons) {
+            // Off-Hand Shield (only if equipped and not hidden)
+            if (equipment && equipment.offHand) {
+                const shColor = equipment.offHand.visualColor || '#fbbf24';
+                px(13, 11, 3, 5, shColor);
+                px(14, 12, 1, 3, '#0284c7');
+            }
+            // Main-Hand Prism Crystal (only if equipped and not hidden)
+            if (equipment && equipment.mainHand) {
+                const mhColor = equipment.mainHand.visualColor || '#38bdf8';
+                px(0, 11, 2, 4, mhColor);
+            }
         }
 
         // Stun halo stars
@@ -2445,8 +2448,8 @@
 
             // Floating luminous codices / books drifting with wings of light
             for (let b = 0; b < 3; b++) {
-                const bx = (b === 0 ? -120 : (b === 1 ? 120 : 0));
-                const by = -85 + Math.sin(t * 2.2 + b * 2) * 12;
+                const bx = (b === 0 ? -130 : (b === 1 ? 130 : 0));
+                const by = (b === 2 ? -112 : -85) + Math.sin(t * 2.2 + b * 2) * 10;
                 ctx.fillStyle = b === 0 ? '#0284c7' : (b === 1 ? '#059669' : '#7c3aed');
                 ctx.fillRect(bx - 12, by - 8, 24, 16);
                 ctx.fillStyle = '#fef08a';
@@ -2479,9 +2482,11 @@
             drawCharacterSprite(ctx, 80, 48, 3.4, { role: 'avi', dir: 2, frame: walkFrame, skinColor: '#b87747' });
             drawCharacterSprite(ctx, 175, 48, 3.2, { role: 'ally', dir: 2, frame: walkFrame, skinColor: '#9c6137', tunicColor: '#7c3aed' });
 
-            // Floating Dialogue Bubbles: Shared context, insight, empathy
+            // Floating Dialogue Bubbles: Shared Context, Empathy (above book), and Reason
             const bubbleY = 0 + Math.sin(t * 2.5) * 4;
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+
+            // 1. Left Dialogue: "📖 Context"
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
             ctx.strokeStyle = '#38bdf8';
             ctx.lineWidth = 1.5;
             ctx.strokeRect(-135, bubbleY - 25, 68, 22);
@@ -2491,10 +2496,26 @@
             ctx.textAlign = 'center';
             ctx.fillText('📖 Context', -101, bubbleY - 10);
 
+            // 2. Center Dialogue above the Great Tome: "💖 Empathy"
+            const empY = -80 + Math.sin(t * 2.5) * 3;
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+            ctx.strokeStyle = '#f43f5e';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(-44, empY, 88, 22);
+            ctx.fillRect(-44, empY, 88, 22);
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillStyle = '#fb7185';
+            ctx.fillText('💖 Empathy', 0, empY + 15);
+
+            // 3. Right Dialogue: "💡 Reason" (warm dark slate background with amber border & text)
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1.5;
             ctx.strokeRect(95, bubbleY - 25, 74, 22);
             ctx.fillRect(95, bubbleY - 25, 74, 22);
-            ctx.fillStyle = '#34d399';
-            ctx.fillText('💡 Empathy', 132, bubbleY - 10);
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillText('💡 Reason', 132, bubbleY - 10);
 
             ctx.restore();
         } else if (introSceneIndex === 1) {
@@ -2700,10 +2721,6 @@
             ctx.fillStyle = '#f43f5e';
             ctx.fillText('❤️ 99K Likes', 224, cloutY);
 
-            ctx.fillStyle = '#ef4444';
-            ctx.font = 'bold 11px sans-serif';
-            ctx.fillText('⛔ MEMBERS ONLY', 30, -22);
-
             // 2. Left Side: Authentic, Diverse Citizens Being Pushed Away / Shunned
             const stumbleBack = Math.sin(t * 2) * 5;
             drawCharacterSprite(ctx, -55 + stumbleBack, 48, 3.2, { role: 'ally', dir: 3, frame: 0, skinColor: '#9c6137', tunicColor: '#059669' });
@@ -2772,15 +2789,6 @@
             ctx.arc(0, -95, waveR, -Math.PI * 0.2, Math.PI * 0.2);
             ctx.stroke();
 
-            // Raining Profiteer Cash & Dollar Signs into Abyss
-            for (let d = 0; d < 8; d++) {
-                const dy = ((t * 45 + d * 32) % 180) - 80;
-                const dx = ((d % 2 === 0 ? -12 : 12) + Math.sin(t * 3 + d) * 8);
-                ctx.fillStyle = '#fbbf24';
-                ctx.font = 'bold 12px sans-serif';
-                ctx.fillText('$$$', dx, dy);
-            }
-
             // Left: Manosphere "Iron" Sprites
             const pushBob = Math.sin(t * 5) * 4;
             drawCharacterSprite(ctx, -150 + pushBob, 46, 3.4, { role: 'iron', dir: 3, frame: walkFrame, skinColor: '#fde6d8' });
@@ -2790,11 +2798,16 @@
             ctx.fillStyle = '#e0ac69';
             ctx.fillRect(-34 + pushBob, 39, 6, 7);
 
+            // Manosphere Banner
             ctx.fillStyle = '#dc2626';
-            ctx.fillRect(-220, -70, 55, 22);
+            ctx.fillRect(-240, -70, 110, 22);
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-240, -70, 110, 22);
             ctx.font = 'bold 10px sans-serif';
             ctx.fillStyle = '#ffffff';
-            ctx.fillText('⚔️ ALPHA', -192, -55);
+            ctx.textAlign = 'center';
+            ctx.fillText('⚔️ MANOSPHERE', -185, -55);
             ctx.font = '16px sans-serif';
             ctx.fillText('💢', -65 + pushBob, 12);
 
@@ -2806,11 +2819,16 @@
             ctx.fillStyle = '#9c6137';
             ctx.fillRect(28 - pushBob, 39, 6, 7);
 
+            // Femosphere Banner
             ctx.fillStyle = '#86198f';
-            ctx.fillRect(165, -70, 60, 22);
+            ctx.fillRect(130, -70, 110, 22);
+            ctx.strokeStyle = '#d946ef';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(130, -70, 110, 22);
             ctx.font = 'bold 10px sans-serif';
             ctx.fillStyle = '#f0abfc';
-            ctx.fillText('🥀 CYNIC', 195, -55);
+            ctx.textAlign = 'center';
+            ctx.fillText('🥀 FEMOSPHERE', 185, -55);
             ctx.font = '16px sans-serif';
             ctx.fillText('💔', 65 - pushBob, 12);
 
@@ -2900,14 +2918,6 @@
 
             // Innocent Questioning Seeker on knees, holding scroll with '?'
             drawCharacterSprite(ctx, -60, 54, 2.8, { role: 'player', dir: 3, frame: 0, skinColor: '#e0ac69', tunicColor: '#0284c7' });
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-            ctx.strokeStyle = '#ef4444';
-            ctx.strokeRect(-72, 8, 48, 20);
-            ctx.fillRect(-72, 8, 48, 20);
-            ctx.font = 'bold 11px sans-serif';
-            ctx.fillStyle = '#ef4444';
-            ctx.textAlign = 'center';
-            ctx.fillText('❌ HERESY', -48, 22);
 
             // Exile Gate on far right
             ctx.strokeStyle = '#451a03';
@@ -2958,46 +2968,6 @@
             ctx.beginPath();
             ctx.arc(0, -80, pulseR, -Math.PI * 0.4, Math.PI * 0.4);
             ctx.stroke();
-
-            // 4 Radicalization Pipelines Converging into Citadel Maw
-            ctx.strokeStyle = '#fbbf24';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(-320, 25);
-            ctx.lineTo(-40, 10);
-            ctx.stroke();
-
-            ctx.strokeStyle = '#ef4444';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(-280, 45);
-            ctx.lineTo(-30, 15);
-            ctx.stroke();
-
-            ctx.strokeStyle = '#d946ef';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(280, 45);
-            ctx.lineTo(30, 15);
-            ctx.stroke();
-
-            ctx.strokeStyle = '#9333ea';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(320, 25);
-            ctx.lineTo(40, 10);
-            ctx.stroke();
-
-            ctx.fillStyle = '#fbbf24';
-            ctx.font = 'bold 9px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('CLOUT ➔', -180, 18);
-            ctx.fillStyle = '#ef4444';
-            ctx.fillText('MANOSPHERE ➔', -170, 40);
-            ctx.fillStyle = '#d946ef';
-            ctx.fillText('⬅ FEMOSPHERE', 170, 40);
-            ctx.fillStyle = '#9333ea';
-            ctx.fillText('⬅ DOGMA', 180, 18);
 
             // Foreground: Ranks of Marching Blackshirts in Lockstep Unison
             ctx.fillStyle = '#050507';
@@ -3065,15 +3035,16 @@
             // Professor Avi: Distinguished Sage Wizard (warm lighter brown skin, silver beard, archmage robe & staff)
             drawCharacterSprite(ctx, -130, 44, 3.8, { role: 'avi', dir: 3, frame: walkFrame, skinColor: '#b87747' });
 
-            // The Initiating Archivist (Player)
+            // The Initiating Archivist (Player - not holding anything yet, warm brown skin matching theme)
             drawCharacterSprite(ctx, 130, 44, 3.8, {
                 role: 'player',
                 dir: 2,
                 frame: 0,
-                skinColor: '#fde6d8',
+                skinColor: '#a06038',
                 hairColor: '#f59e0b',
                 tunicColor: '#0284c7',
-                equipment: player.equipment
+                hideWeapons: true,
+                equipment: null
             });
 
             // Center: The Floating Radiant PRISM OF CONTEXT & AXIOM CREST
@@ -5737,7 +5708,8 @@
                 hairStyle: player.hairStyle,
                 hairColor: player.hairColor,
                 tunicColor: player.tunicColor,
-                equipment: player.equipment
+                hideWeapons: true,
+                equipment: null
             });
         } else if (appState === 'PLAYING' || appState === 'PAUSED' || appState === 'DIALOGUE' || appState === 'ITEM_FANFARE') {
             updateGameplay(dt);
