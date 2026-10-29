@@ -30,7 +30,13 @@ function loadGameEnvironment() {
         isRelicOwned,
         player,
         loadMap,
-        unlockRiverBridgeIfReady
+        unlockRiverBridgeIfReady,
+        assets,
+        audio,
+        ZONE_BGM_TRACKS,
+        revealFogAround,
+        get fogGrid() { return fogGrid; },
+        get mapGrid() { return mapGrid; }
     };`;
 
     const mockElem = {
@@ -86,6 +92,18 @@ function loadGameEnvironment() {
             setItem: () => {},
             removeItem: () => {}
         },
+        setInterval: (fn, ms) => {
+            const id = setInterval(fn, ms);
+            if (id && typeof id.unref === 'function') id.unref();
+            return id;
+        },
+        clearInterval: (id) => clearInterval(id),
+        setTimeout: (fn, ms) => {
+            const id = setTimeout(fn, ms);
+            if (id && typeof id.unref === 'function') id.unref();
+            return id;
+        },
+        clearTimeout: (id) => clearTimeout(id),
         requestAnimationFrame: () => {},
         performance: { now: () => 0 },
         Math: Math,

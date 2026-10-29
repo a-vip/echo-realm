@@ -74,8 +74,8 @@ The combat system rejects pure violence in favor of *cognitive liberation*:
 
 ---
 
-## 5. Procedural 16x20 Pixel Sprite Renderer
-Characters and equipment are rendered via direct Canvas 2D raster commands without requiring large external sprite sheets:
+## 5. Procedural 16x20 Pixel Sprite Renderer & Custom Asset Pipeline
+Characters and equipment are rendered via direct Canvas 2D raster commands without requiring external sprite sheets:
 - **Base Resolution**: 16 pixels wide by 20 pixels tall.
 - **Layer Stack**:
   1. Ground shadow (semi-transparent ellipse)
@@ -87,20 +87,56 @@ Characters and equipment are rendered via direct Canvas 2D raster commands witho
   7. Arms (directional walking, staff thrust, or overhead Item-Get posture)
   8. Equipped Weapons (Prism Crystal) & Off-Hand Shield (Axiom Crest)
 
+### AssetManager (`assets`)
+Enables zero-breaking-change integration of external PNG sprite sheets and tilesets:
+- `assets.registerSpriteSheet(id, src, frameW, frameH)`: Registers an external character sprite sheet.
+- `assets.registerTileSet(id, src, tileSize)`: Registers an external tileset image.
+- When an asset is registered and loaded, `drawCharacterSprite` and `renderGameplay` automatically render the external frames; otherwise, they seamlessly fall back to the built-in procedural raster engine.
+
 ---
 
 ## 6. Realtime Web Audio Chiptune Synthesizer (`RetroAudio`)
-- Synthesizes 8-bit / 16-bit sound directly via native `AudioContext` oscillators.
-- **Waveforms**: Square waves for 8-bit leads, Sawtooth for bass and resonance, White Noise for impacts and footsteps.
-- **Sound Events**:
-  - `playFanfare()`: Multi-stage ascending Zelda item discovery fanfare.
-  - `playBridgeSecretChime()`: 8-note mystery solved chime.
-  - `playSlash()`, `playBeam()`, `playNova()`, `playAegis()`: Dynamic combat audio.
-  - `playDialogueBlip()`: Typewriter-style NPC voice modulation.
+Synthesizes 8-bit / 16-bit sound directly via native `AudioContext` oscillators with zero external audio assets.
+
+### Zone-Specific Ambient BGM Tracks (`ZONE_BGM_TRACKS`)
+Each chapter features a procedurally synthesized retro background track reflecting its philosophical theme:
+- **The Quiet Archive (`archive`)**: Contemplative D-minor Dorian arpeggio on soft triangle and sine waves.
+- **Performative Valley (`valley`)**: Erratic, syncopated clout-chasing square wave melody in E-minor.
+- **ALttP Interludes (`pastoral`)**: Heroic, expansive pastoral Zelda-inspired overworld themes in G and C Major.
+- **Iron & Velvet Divide (`divide`)**: Conflicting, sharp polyrhythmic minor arpeggio.
+- **Dogma Catacombs (`catacombs`)**: Solemn liturgical chiptune chant with deep sub-bass resonance.
+- **Borderland of Scapegoats (`border`)**: Tense marching cadence in B-minor.
+- **The Obsidian Reich-Citadel (`citadel`)**: Menacing, totalitarian brass-like march with descending dissonance.
+
+### Tactile Material-Based Footsteps (`playFootstep`)
+Synthesizes subtle terrain-specific audio feedback based on the tile beneath the Archivist:
+- **`stone`**: Crisp, high-frequency tick for cobblestones, sanctuary floors, and monoliths.
+- **`wood`**: Resonant, hollow thud for wooden river bridge planks.
+- **`water`**: Bright liquid squelch for shallow stream crossings.
+- **`flower`**: Soft, breezy rustle across sunlit wildflower meadows.
+- **`hazard`**: Sizzling static distortion chirp over echo traps.
+- **`grass`**: Default soft filtered noise puff.
 
 ---
 
-## 7. Persistence & Game Saves
+## 7. Dynamic Minimap Fog of War (`fogGrid`)
+Exploration is governed by a persistent `fogGrid[MAP_ROWS][MAP_COLS]` matrix:
+- **Revelation Radius**: As the player moves, `revealFogAround(x, y, 6)` continuously uncovers a 6-tile circular radius.
+- **Minimap Shroud**: Unvisited quadrants remain shrouded in deep void (`#050811`), hiding distant terrain, unopened chests, allies, and enemy patrols until discovered.
+- **Explored Terrain**: Visited paths, waterways, bridges, and hazards render in stylized tactical minimap colors.
+
+---
+
+## 8. Thematic Environmental Hazards & Echo Traps
+- **Outrage Vent (Tile `10`)**: An unstable algorithmic distortion vent. Spews rage-bait static, slowing player speed by 40% and draining 2-4 Clarity per second.
+- **Dogmatic Stasis Rune (Tile `11`)**: A thought-terminating ideological trap. Slows movement by 70% and deals an instant burst of stasis damage.
+- **Cleansing & Neutralization**:
+  - Focusing the **`[Q]` Prism Beam of Nuance** for 0.75s dispels the delusion, purifying the tile into clean cobblestone and rewarding +1 Data Shard and +15 Insight EXP.
+  - Striking adjacent hazards with **`[E]` Axiom Strike** instantly shatters the trap.
+
+---
+
+## 9. Persistence & Game Saves
 Saved under the `echo_realm_save_v1` key in `window.localStorage`:
 - Current map index and highest map unlocked.
 - Player level, EXP, current and max HP, stat points, and temper level.

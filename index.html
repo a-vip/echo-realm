@@ -747,12 +747,94 @@
     // =========================================================================
     // 1. AUDIO SYNTHESIZER (Chiptune Cutscene Music, Treasure Fanfare & SFX)
     // =========================================================================
+    const ZONE_BGM_TRACKS = {
+        // Map 0: The Quiet Archive (Peaceful, scholarly D-minor Dorian arpeggio)
+        archive: {
+            tempo: 280,
+            type: 'triangle',
+            bassType: 'sine',
+            notes: [
+                293.66, 349.23, 440.0, 523.25, 440.0, 349.23, 392.0, 329.63,
+                261.63, 329.63, 392.0, 440.0, 349.23, 293.66, 261.63, 220.0
+            ],
+            bass: [146.83, 146.83, 130.81, 130.81, 110.0, 110.0, 146.83, 146.83]
+        },
+        // Map 1: Performative Valley (Chaotic, syncopated clout pulses in E minor)
+        valley: {
+            tempo: 210,
+            type: 'square',
+            bassType: 'sawtooth',
+            notes: [
+                329.63, 0, 493.88, 329.63, 587.33, 493.88, 0, 659.25,
+                587.33, 493.88, 440.0, 392.0, 440.0, 493.88, 329.63, 0
+            ],
+            bass: [164.81, 164.81, 196.0, 164.81, 220.0, 196.0, 164.81, 146.83]
+        },
+        // Maps 2, 5, 7: Bright ALttP Interludes (Pastoral, heroic Zelda-inspired overworld in G / C Major)
+        pastoral: {
+            tempo: 220,
+            type: 'triangle',
+            bassType: 'triangle',
+            notes: [
+                392.0, 440.0, 523.25, 587.33, 659.25, 587.33, 523.25, 440.0,
+                392.0, 523.25, 659.25, 783.99, 659.25, 587.33, 523.25, 392.0
+            ],
+            bass: [196.0, 196.0, 261.63, 261.63, 220.0, 220.0, 196.0, 196.0]
+        },
+        // Map 3: Iron & Velvet Divide (Conflicting, sharp, polyrhythmic minor)
+        divide: {
+            tempo: 230,
+            type: 'sawtooth',
+            bassType: 'square',
+            notes: [
+                220.0, 246.94, 261.63, 220.0, 329.63, 293.66, 261.63, 246.94,
+                220.0, 207.65, 220.0, 261.63, 311.13, 293.66, 220.0, 196.0
+            ],
+            bass: [110.0, 110.0, 130.81, 123.47, 110.0, 103.83, 110.0, 98.0]
+        },
+        // Map 4: Dogma Catacombs (Solemn liturgical chiptune chant, deep reverb)
+        catacombs: {
+            tempo: 320,
+            type: 'sine',
+            bassType: 'triangle',
+            notes: [
+                220.0, 261.63, 293.66, 329.63, 293.66, 261.63, 220.0, 196.0,
+                220.0, 246.94, 220.0, 174.61, 196.0, 220.0, 196.0, 164.81
+            ],
+            bass: [110.0, 110.0, 146.83, 146.83, 87.31, 87.31, 110.0, 110.0]
+        },
+        // Map 6: Borderland of Scapegoats (Uneasy, marching minor cadence)
+        border: {
+            tempo: 240,
+            type: 'square',
+            bassType: 'sawtooth',
+            notes: [
+                196.0, 220.0, 246.94, 196.0, 261.63, 246.94, 220.0, 196.0,
+                185.0, 196.0, 220.0, 185.0, 246.94, 220.0, 196.0, 164.81
+            ],
+            bass: [98.0, 98.0, 123.47, 123.47, 92.5, 92.5, 98.0, 82.41]
+        },
+        // Map 8: Obsidian Reich-Citadel (Totalitarian, menacing dramatic march)
+        citadel: {
+            tempo: 200,
+            type: 'sawtooth',
+            bassType: 'sawtooth',
+            notes: [
+                146.83, 155.56, 174.61, 155.56, 146.83, 138.59, 130.81, 123.47,
+                146.83, 174.61, 220.0, 207.65, 174.61, 155.56, 146.83, 116.54
+            ],
+            bass: [73.42, 73.42, 87.31, 87.31, 69.3, 69.3, 73.42, 58.27]
+        }
+    };
+
     class RetroAudio {
         constructor() {
             this.ctx = null;
             this.volume = 0.7;
             this.bgmInterval = null;
             this.bgmStep = 0;
+            this.currentBgmMap = null;
+            this.isBgmPaused = false;
         }
         init() {
             if (!this.ctx) {
@@ -762,7 +844,7 @@
             if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
         }
         playNote(freq, type = 'square', duration = 0.15, gainScale = 0.12, slideTo = null) {
-            if (!this.ctx || this.volume <= 0) return;
+            if (!this.ctx || this.volume <= 0 || freq <= 0) return;
             try {
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -795,11 +877,129 @@
                 this.bgmStep++;
             }, 240);
         }
+        startZoneBgm(mapIndex) {
+            if (this.currentBgmMap === mapIndex && this.bgmInterval) return;
+            this.stopMusic();
+            this.currentBgmMap = mapIndex;
+            this.isBgmPaused = false;
+
+            let trackKey = 'archive';
+            if (mapIndex === 1) trackKey = 'valley';
+            else if (mapIndex === 2 || mapIndex === 5 || mapIndex === 7) trackKey = 'pastoral';
+            else if (mapIndex === 3) trackKey = 'divide';
+            else if (mapIndex === 4) trackKey = 'catacombs';
+            else if (mapIndex === 6) trackKey = 'border';
+            else if (mapIndex === 8) trackKey = 'citadel';
+
+            const track = ZONE_BGM_TRACKS[trackKey];
+            if (!track) return;
+
+            this.bgmStep = 0;
+            this.bgmInterval = setInterval(() => {
+                if (this.isBgmPaused) return;
+                if (appState !== 'PLAYING' && appState !== 'PAUSED' && appState !== 'DIALOGUE') {
+                    return;
+                }
+                if (this.volume <= 0 || !this.ctx) return;
+
+                const note = track.notes[this.bgmStep % track.notes.length];
+                if (note > 0) {
+                    this.playNote(note, track.type, 0.18, 0.045);
+                }
+                if (this.bgmStep % 2 === 0) {
+                    const bassIdx = Math.floor(this.bgmStep / 2) % track.bass.length;
+                    const b = track.bass[bassIdx];
+                    if (b > 0) {
+                        this.playNote(b, track.bassType, 0.26, 0.035);
+                    }
+                }
+                this.bgmStep++;
+            }, track.tempo);
+        }
+        pauseBgm() {
+            this.isBgmPaused = true;
+        }
+        resumeBgm() {
+            this.isBgmPaused = false;
+        }
         stopMusic() {
             if (this.bgmInterval) {
                 clearInterval(this.bgmInterval);
                 this.bgmInterval = null;
             }
+            this.currentBgmMap = null;
+            this.isBgmPaused = false;
+        }
+        playFootstep(material) {
+            if (!this.ctx || this.volume <= 0) return;
+            const v = 0.045 * this.volume;
+            try {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                gain.connect(this.ctx.destination);
+                const t = this.ctx.currentTime;
+                if (material === 'stone') {
+                    // Crisp short high-frequency tick
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(750, t);
+                    osc.frequency.exponentialRampToValueAtTime(320, t + 0.035);
+                    gain.gain.setValueAtTime(v * 0.9, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+                    osc.connect(gain);
+                    osc.start(t);
+                    osc.stop(t + 0.035);
+                } else if (material === 'wood') {
+                    // Hollow bridge plank thud
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(180, t);
+                    osc.frequency.exponentialRampToValueAtTime(80, t + 0.06);
+                    gain.gain.setValueAtTime(v * 0.8, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+                    osc.connect(gain);
+                    osc.start(t);
+                    osc.stop(t + 0.06);
+                } else if (material === 'water') {
+                    // Shallow river splash squelch
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(420, t);
+                    osc.frequency.exponentialRampToValueAtTime(680, t + 0.055);
+                    gain.gain.setValueAtTime(v * 1.1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.055);
+                    osc.connect(gain);
+                    osc.start(t);
+                    osc.stop(t + 0.055);
+                } else if (material === 'flower') {
+                    // Soft breezy rustle
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(320, t);
+                    osc.frequency.exponentialRampToValueAtTime(190, t + 0.045);
+                    gain.gain.setValueAtTime(v * 0.7, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.045);
+                    osc.connect(gain);
+                    osc.start(t);
+                    osc.stop(t + 0.045);
+                } else if (material === 'hazard') {
+                    // Sizzling static distortion chirp
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, t);
+                    osc.frequency.exponentialRampToValueAtTime(65, t + 0.05);
+                    gain.gain.setValueAtTime(v * 1.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+                    osc.connect(gain);
+                    osc.start(t);
+                    osc.stop(t + 0.05);
+                } else {
+                    // Default Grass rustle
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(130, t);
+                    osc.frequency.exponentialRampToValueAtTime(60, t + 0.04);
+                    gain.gain.setValueAtTime(v * 0.65, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+                    osc.connect(gain);
+                    osc.start(t);
+                    osc.stop(t + 0.04);
+                }
+            } catch (e) {}
         }
         sfxBeam() { this.playNote(420 + Math.random() * 80, 'sine', 0.09, 0.04, 580); }
         sfxSlash() { this.playNote(240, 'sawtooth', 0.14, 0.12, 90); }
@@ -822,6 +1022,7 @@
             this.playNote(660, 'square', 0.08, 0.1, 880);
         }
         sfxItemFanfare() {
+            this.pauseBgm();
             const notes = [
                 { f: 392.0, d: 0.12, t: 0 },
                 { f: 440.0, d: 0.12, t: 110 },
@@ -832,6 +1033,9 @@
                 { f: 783.99, d: 0.45, t: 730 }
             ];
             notes.forEach(n => setTimeout(() => this.playNote(n.f, 'square', n.d, 0.11), n.t));
+            setTimeout(() => {
+                this.resumeBgm();
+            }, 1250);
         }
         sfxHit() { this.playNote(130, 'sawtooth', 0.2, 0.15, 55); }
         sfxDialog() { this.playNote(540 + Math.random() * 120, 'square', 0.04, 0.04); }
@@ -1121,6 +1325,69 @@
     };
 
     // =========================================================================
+    // 4B. CUSTOM SPRITE SHEET & TILESET ASSET MANAGER
+    // =========================================================================
+    class AssetManager {
+        constructor() {
+            this.spritesheets = new Map();
+            this.tilesets = new Map();
+            this.enabled = true;
+        }
+        registerSpriteSheet(id, src, frameW = 16, frameH = 20) {
+            if (typeof Image === 'undefined') return { id, src, frameW, frameH, loaded: false };
+            const img = new Image();
+            img.src = src;
+            const entry = { id, img, frameW, frameH, loaded: false };
+            img.onload = () => { entry.loaded = true; };
+            img.onerror = () => { entry.loaded = false; };
+            this.spritesheets.set(id, entry);
+            return entry;
+        }
+        registerTileSet(id, src, tileSize = 44) {
+            if (typeof Image === 'undefined') return { id, src, tileSize, loaded: false };
+            const img = new Image();
+            img.src = src;
+            const entry = { id, img, tileSize, loaded: false };
+            img.onload = () => { entry.loaded = true; };
+            img.onerror = () => { entry.loaded = false; };
+            this.tilesets.set(id, entry);
+            return entry;
+        }
+        hasSpriteSheet(id) {
+            const s = this.spritesheets.get(id);
+            return !!(s && s.loaded);
+        }
+        hasTileSet(id) {
+            const t = this.tilesets.get(id);
+            return !!(t && t.loaded);
+        }
+        drawSprite(ctx, id, frameX, frameY, dx, dy, dw, dh) {
+            const s = this.spritesheets.get(id);
+            if (!s || !s.loaded || !ctx.drawImage) return false;
+            try {
+                ctx.drawImage(s.img, frameX * s.frameW, frameY * s.frameH, s.frameW, s.frameH, dx, dy, dw, dh);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        drawTile(ctx, id, tileIndex, dx, dy, dw, dh) {
+            const t = this.tilesets.get(id);
+            if (!t || !t.loaded || !ctx.drawImage) return false;
+            try {
+                const cols = Math.floor(t.img.width / t.tileSize) || 1;
+                const sx = (tileIndex % cols) * t.tileSize;
+                const sy = Math.floor(tileIndex / cols) * t.tileSize;
+                ctx.drawImage(t.img, sx, sy, t.tileSize, t.tileSize, dx, dy, dw, dh);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+    }
+    const assets = new AssetManager();
+
+    // =========================================================================
     // 5. 32-BIT ZELDA-STYLE 16x20 PIXEL SPRITE RENDERER
     // =========================================================================
     function drawCharacterSprite(ctx, x, y, scale, opts) {
@@ -1136,8 +1403,18 @@
             isStunned = false,
             isHurt = false,
             holdingItemOverhead = false,
-            equipment = null
+            equipment = null,
+            spriteSheetId = null
         } = opts;
+
+        // Custom sprite sheet fallback check
+        if (spriteSheetId && assets.hasSpriteSheet(spriteSheetId)) {
+            const dw = 16 * scale;
+            const dh = 20 * scale;
+            if (assets.drawSprite(ctx, spriteSheetId, frame, dir, Math.round(x - dw / 2), Math.round(y - dh / 2), dw, dh)) {
+                return;
+            }
+        }
 
         ctx.save();
         ctx.translate(Math.floor(x), Math.floor(y));
@@ -1820,6 +2097,8 @@
     let currentMapIndex = 0;
     let highestMapReached = 0;
     let mapGrid = [];
+    let fogGrid = []; // Dynamic Minimap Fog of War: [MAP_ROWS][MAP_COLS] boolean explored grid
+    let hazardCleanseProgress = {}; // Key: `${r}_${c}` -> float progress (0.0 to 1.0)
     let portals = [];
     let npcs = [];
     let chests = [];
@@ -1848,6 +2127,9 @@
         dir: 1, // 0: Down, 1: Up, 2: Left, 3: Right
         animFrame: 0,
         animTimer: 0,
+        stepTimer: 0,
+        hazardSlowTimer: 0,
+        hazardDamageTimer: 0,
         level: 1,
         exp: 0,
         expNext: 100,
@@ -1918,6 +2200,24 @@
 
     function getTotalSpeed() {
         return player.speed + getEquipBonus('speed') + player.temperLevel * 6;
+    }
+
+    function revealFogAround(worldX, worldY, radiusTiles = 6) {
+        if (!fogGrid || fogGrid.length === 0) return;
+        const centerCol = Math.floor(worldX / TILE_SIZE);
+        const centerRow = Math.floor(worldY / TILE_SIZE);
+        const radSq = radiusTiles * radiusTiles;
+        for (let dr = -radiusTiles; dr <= radiusTiles; dr++) {
+            for (let dc = -radiusTiles; dc <= radiusTiles; dc++) {
+                const r = centerRow + dr;
+                const c = centerCol + dc;
+                if (r >= 0 && r < MAP_ROWS && c >= 0 && c < MAP_COLS) {
+                    if (dr * dr + dc * dc <= radSq) {
+                        if (fogGrid[r]) fogGrid[r][c] = true;
+                    }
+                }
+            }
+        }
     }
 
     // =========================================================================
@@ -2206,6 +2506,26 @@
             }
         }
 
+        // Spawn thematic environmental hazard & trap tiles on contested maps
+        if (mapIndex === 1) {
+            // Performative Valley: Outrage Vents near clout hotspots
+            [[8, 8], [25, 8], [12, 18], [22, 18]].forEach(([c, r]) => { if (mapGrid[r] && mapGrid[r][c] <= 1) mapGrid[r][c] = 10; });
+        } else if (mapIndex === 3) {
+            // Iron & Velvet Divide: Outrage vents & stasis runes flanking the avenue
+            [[10, 8], [24, 8], [17, 7]].forEach(([c, r]) => { if (mapGrid[r] && mapGrid[r][c] <= 1) mapGrid[r][c] = 10; });
+            [[12, 11], [22, 11]].forEach(([c, r]) => { if (mapGrid[r] && mapGrid[r][c] <= 1) mapGrid[r][c] = 11; });
+        } else if (mapIndex === 4) {
+            // Dogma Catacombs: Thought-Terminating Stasis Runes
+            [[7, 12], [27, 12], [14, 6], [20, 6], [17, 8]].forEach(([c, r]) => { if (mapGrid[r] && mapGrid[r][c] <= 1) mapGrid[r][c] = 11; });
+        } else if (mapIndex === 6) {
+            // Borderland of Scapegoats: Outrage Vents along wall & crossings
+            [[9, 9], [25, 9], [17, 8], [11, 16], [23, 16]].forEach(([c, r]) => { if (mapGrid[r] && mapGrid[r][c] <= 1) mapGrid[r][c] = 10; });
+        } else if (mapIndex === 8) {
+            // Obsidian Reich-Citadel: Totalitarian echo sinks & stasis barriers
+            [[12, 7], [22, 7], [17, 9], [10, 15], [24, 15]].forEach(([c, r]) => { if (mapGrid[r] && mapGrid[r][c] <= 1) mapGrid[r][c] = 10; });
+            [[14, 12], [20, 12]].forEach(([c, r]) => { if (mapGrid[r] && mapGrid[r][c] <= 1) mapGrid[r][c] = 11; });
+        }
+
         // Place Player near bottom entrance
         player.x = 17 * TILE_SIZE + TILE_SIZE / 2;
         player.y = 20 * TILE_SIZE;
@@ -2411,6 +2731,20 @@
                 });
             }
         }
+
+        // Start Zone BGM
+        audio.startZoneBgm(mapIndex);
+
+        // Reset & Initialize Dynamic Minimap Fog of War
+        fogGrid = [];
+        for (let r = 0; r < MAP_ROWS; r++) {
+            fogGrid[r] = [];
+            for (let c = 0; c < MAP_COLS; c++) {
+                fogGrid[r][c] = false;
+            }
+        }
+        revealFogAround(player.x, player.y, 6);
+        hazardCleanseProgress = {};
 
         updateAllHud();
     }
@@ -2624,6 +2958,23 @@
                 }
             }
         });
+
+        // Axiom Strike dispels and shatters adjacent hazard tiles
+        const strikeReach = 58;
+        const ang = getFacingAngle(player.dir);
+        const fx = player.x + Math.cos(ang) * strikeReach;
+        const fy = player.y + Math.sin(ang) * strikeReach;
+        const fc = Math.floor(fx / TILE_SIZE);
+        const fr = Math.floor(fy / TILE_SIZE);
+        if (mapGrid[fr] && (mapGrid[fr][fc] === 10 || mapGrid[fr][fc] === 11)) {
+            const wasVent = mapGrid[fr][fc] === 10;
+            mapGrid[fr][fc] = 1;
+            audio.sfxCure();
+            spawnBurst((fc + 0.5) * TILE_SIZE, (fr + 0.5) * TILE_SIZE, '#fbbf24', 22);
+            addFloatText((fc + 0.5) * TILE_SIZE, (fr + 0.5) * TILE_SIZE - 16, wasVent ? '⚔️ OUTRAGE VENT SHATTERED!' : '⚔️ DOGMA RUNE SHATTERED!', '#fbbf24');
+            player.shards += 1;
+            gainExp(15);
+        }
     }
 
     function triggerSocraticBossDuel(boss) {
@@ -2779,6 +3130,41 @@
         if (player.aegisTimer > 0) player.aegisTimer = Math.max(0, player.aegisTimer - dt);
 
         // 1. Player Movement (WASD / Arrows)
+        revealFogAround(player.x, player.y, 6);
+
+        const curCol = Math.floor(player.x / TILE_SIZE);
+        const curRow = Math.floor(player.y / TILE_SIZE);
+        const curTile = (mapGrid[curRow] && mapGrid[curRow][curCol] !== undefined) ? mapGrid[curRow][curCol] : 0;
+        if (curTile === 10) {
+            // Algorithmic Outrage Vent: Movement slow + Clarity drain
+            player.hazardSlowTimer = 0.25;
+            player.hazardDamageTimer = (player.hazardDamageTimer || 0) + dt;
+            if (player.hazardDamageTimer > 0.4) {
+                player.hazardDamageTimer = 0;
+                if (player.aegisTimer <= 0) {
+                    const dmg = 2 * (DIFFICULTY_PROFILES[player.skinIndex] ? DIFFICULTY_PROFILES[player.skinIndex].dmgTakenMult : 1);
+                    player.hp = Math.max(1, player.hp - dmg);
+                    audio.sfxHit();
+                    addFloatText(player.x, player.y - 20, `-${Math.round(dmg)} OUTRAGE DRAIN`, '#f43f5e');
+                    updateAllHud();
+                }
+            }
+        } else if (curTile === 11) {
+            // Dogmatic Stasis Rune: Heavy slow + Stasis hit
+            player.hazardSlowTimer = 0.45;
+            player.hazardDamageTimer = (player.hazardDamageTimer || 0) + dt;
+            if (player.hazardDamageTimer > 0.5) {
+                player.hazardDamageTimer = 0;
+                if (player.aegisTimer <= 0) {
+                    const dmg = 3 * (DIFFICULTY_PROFILES[player.skinIndex] ? DIFFICULTY_PROFILES[player.skinIndex].dmgTakenMult : 1);
+                    player.hp = Math.max(1, player.hp - dmg);
+                    audio.sfxHit();
+                    addFloatText(player.x, player.y - 20, `-${Math.round(dmg)} DOGMA STASIS`, '#c084fc');
+                    updateAllHud();
+                }
+            }
+        }
+
         let mx = 0, my = 0;
         if (keys['KeyW'] || keys['ArrowUp']) { my -= 1; player.dir = 1; }
         if (keys['KeyS'] || keys['ArrowDown']) { my += 1; player.dir = 0; }
@@ -2790,13 +3176,28 @@
             my *= Math.SQRT1_2;
         }
 
-        const totalSpd = getTotalSpeed() * (player.aegisTimer > 0 ? 1.35 : 1.0);
+        const hazardMult = player.hazardSlowTimer > 0 ? 0.6 : 1.0;
+        if (player.hazardSlowTimer > 0) player.hazardSlowTimer = Math.max(0, player.hazardSlowTimer - dt);
+        const totalSpd = getTotalSpeed() * (player.aegisTimer > 0 ? 1.35 : 1.0) * hazardMult;
         if (mx !== 0 || my !== 0) {
             moveEntityWithCollision(player, mx * totalSpd * dt, my * totalSpd * dt);
             player.animTimer += dt;
             if (player.animTimer > 0.14) {
                 player.animTimer = 0;
                 player.animFrame = (player.animFrame + 1) % 4;
+            }
+
+            // Material-based footstep audio feedback
+            player.stepTimer = (player.stepTimer || 0) + dt;
+            if (player.stepTimer > 0.28) {
+                player.stepTimer = 0;
+                let mat = 'grass';
+                if (curTile === 1 || curTile === 2 || curTile === 5 || curTile === 6) mat = 'stone';
+                else if (curTile === 8) mat = 'wood';
+                else if (curTile === 4) mat = 'water';
+                else if (curTile === 9) mat = 'flower';
+                else if (curTile === 10 || curTile === 11) mat = 'hazard';
+                audio.playFootstep(mat);
             }
 
             // Zelda Push-Block interaction: slide block toward its target rune when player walks against it!
@@ -2879,6 +3280,39 @@
                     }
                 }
             });
+
+            // Channeling [Q] Prism Beam dispels environmental hazard vents within beam cone!
+            for (let r = 0; r < MAP_ROWS; r++) {
+                for (let c = 0; c < MAP_COLS; c++) {
+                    const t = mapGrid[r][c];
+                    if (t === 10 || t === 11) {
+                        const hx = (c + 0.5) * TILE_SIZE;
+                        const hy = (r + 0.5) * TILE_SIZE;
+                        const dx = hx - player.x;
+                        const dy = hy - player.y;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist <= beamRange) {
+                            let angDiff = Math.atan2(dy, dx) - beamAng;
+                            while (angDiff > Math.PI) angDiff -= Math.PI * 2;
+                            while (angDiff < -Math.PI) angDiff += Math.PI * 2;
+                            if (Math.abs(angDiff) <= halfCone) {
+                                const hKey = `${r}_${c}`;
+                                hazardCleanseProgress[hKey] = (hazardCleanseProgress[hKey] || 0) + dt;
+                                spawnBurst(hx, hy, t === 10 ? '#f43f5e' : '#a855f7', 1);
+                                if (hazardCleanseProgress[hKey] >= 0.75) {
+                                    mapGrid[r][c] = 1;
+                                    audio.sfxCure();
+                                    spawnBurst(hx, hy, '#38bdf8', 20);
+                                    addFloatText(hx, hy - 16, t === 10 ? '✨ OUTRAGE VENT CLEANSED!' : '✨ DOGMA RUNE DISPELLED!', '#38bdf8');
+                                    player.shards += 1;
+                                    gainExp(15);
+                                    delete hazardCleanseProgress[hKey];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // 3. Update Enemies & Bosses (Modified by Systemic Skin Tone Difficulty)
@@ -3272,6 +3706,44 @@
                     ctx.fillStyle = currentMapIndex === 0 ? '#f59e0b' : '#38bdf8';
                     ctx.fillRect(tx + 8, ty + 8, TILE_SIZE - 16, 6);
                     ctx.fillRect(tx + 8, ty + 18, TILE_SIZE - 16, 6);
+                } else if (t === 10) {
+                    // Algorithmic Outrage Vent (Swirling glitch vortex, crimson / magenta)
+                    const pulseTime = performance.now() / 200;
+                    const pulseR = 14 + Math.sin(pulseTime) * 3;
+                    ctx.fillStyle = '#450a0a';
+                    ctx.fillRect(tx + 3, ty + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+                    ctx.strokeStyle = '#e11d48';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(tx + 3, ty + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+                    ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
+                    ctx.beginPath();
+                    ctx.arc(tx + TILE_SIZE / 2, ty + TILE_SIZE / 2, pulseR, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#fda4af';
+                    ctx.fillRect(tx + 18, ty + 18, 8, 8);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(tx + 20, ty + 20, 4, 4);
+                } else if (t === 11) {
+                    // Dogmatic Stasis Rune (Shimmering purple concentric sigil)
+                    const pulseTime = performance.now() / 300;
+                    const pAlpha = 0.5 + 0.3 * Math.sin(pulseTime);
+                    ctx.fillStyle = '#3b0764';
+                    ctx.fillRect(tx + 3, ty + 3, TILE_SIZE - 6, TILE_SIZE - 6);
+                    ctx.strokeStyle = `rgba(168, 85, 247, ${pAlpha})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(tx + TILE_SIZE / 2, ty + TILE_SIZE / 2, 14, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.fillStyle = '#c084fc';
+                    ctx.beginPath();
+                    ctx.moveTo(tx + TILE_SIZE / 2, ty + 8);
+                    ctx.lineTo(tx + TILE_SIZE - 8, ty + TILE_SIZE / 2);
+                    ctx.lineTo(tx + TILE_SIZE / 2, ty + TILE_SIZE - 8);
+                    ctx.lineTo(tx + 8, ty + TILE_SIZE / 2);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(tx + 20, ty + 20, 4, 4);
                 }
             }
         }
@@ -3549,38 +4021,86 @@
     function renderMinimap() {
         const mw = minimapCanvas.width;
         const mh = minimapCanvas.height;
-        mmCtx.fillStyle = '#090d16';
+        mmCtx.fillStyle = '#050811';
         mmCtx.fillRect(0, 0, mw, mh);
 
         const sx = mw / (MAP_COLS * TILE_SIZE);
         const sy = mh / (MAP_ROWS * TILE_SIZE);
+        const tw = mw / MAP_COLS;
+        const th = mh / MAP_ROWS;
 
-        // Portals
+        // Draw explored tiles from fogGrid
+        for (let r = 0; r < MAP_ROWS; r++) {
+            for (let c = 0; c < MAP_COLS; c++) {
+                if (fogGrid[r] && fogGrid[r][c]) {
+                    const t = mapGrid[r][c];
+                    let color = '#0f172a'; // standard ground
+                    if (t === 1) color = '#475569'; // path
+                    else if (t === 2) color = '#1e293b'; // perimeter wall
+                    else if (t === 3) color = '#065f46'; // tree
+                    else if (t === 4) color = '#0284c7'; // river
+                    else if (t === 5) color = '#1e293b'; // sanctuary
+                    else if (t === 8) color = '#d97706'; // bridge
+                    else if (t === 9) color = '#15803d'; // meadow wildflowers
+                    else if (t === 10) color = '#e11d48'; // outrage vent
+                    else if (t === 11) color = '#9333ea'; // stasis rune
+                    mmCtx.fillStyle = color;
+                    mmCtx.fillRect(c * tw, r * th, tw + 0.5, th + 0.5);
+                } else {
+                    // Subtle fog speckle
+                    if ((r + c) % 4 === 0) {
+                        mmCtx.fillStyle = '#0a1020';
+                        mmCtx.fillRect(c * tw, r * th, tw, th);
+                    }
+                }
+            }
+        }
+
+        // Portals (only revealed if tile explored)
         portals.forEach(p => {
-            mmCtx.fillStyle = '#38bdf8';
-            mmCtx.fillRect(p.x * sx - 2, p.y * sy - 2, 4, 4);
+            const pr = Math.floor(p.y / TILE_SIZE);
+            const pc = Math.floor(p.x / TILE_SIZE);
+            if (fogGrid[pr] && fogGrid[pr][pc]) {
+                mmCtx.fillStyle = '#38bdf8';
+                mmCtx.fillRect(p.x * sx - 2, p.y * sy - 2, 4, 4);
+            }
         });
-        // Chests
+        // Chests (only revealed if tile explored)
         chests.forEach(c => {
-            if (!c.opened) {
+            const cr = Math.floor(c.y / TILE_SIZE);
+            const cc = Math.floor(c.x / TILE_SIZE);
+            if (!c.opened && fogGrid[cr] && fogGrid[cr][cc]) {
                 mmCtx.fillStyle = '#fbbf24';
                 mmCtx.fillRect(c.x * sx - 2, c.y * sy - 2, 4, 4);
             }
         });
-        // NPCs
+        // NPCs (only revealed if tile explored)
         npcs.forEach(n => {
-            mmCtx.fillStyle = '#fde047';
-            mmCtx.fillRect(n.x * sx - 2, n.y * sy - 2, 4, 4);
+            const nr = Math.floor(n.y / TILE_SIZE);
+            const nc = Math.floor(n.x / TILE_SIZE);
+            if (fogGrid[nr] && fogGrid[nr][nc]) {
+                mmCtx.fillStyle = '#fde047';
+                mmCtx.fillRect(n.x * sx - 2, n.y * sy - 2, 4, 4);
+            }
         });
-        // Enemies
+        // Enemies (only revealed if tile explored)
         enemies.forEach(e => {
-            mmCtx.fillStyle = e.state === 'cured' ? '#34d399' : (e.isBoss ? '#f43f5e' : '#ef4444');
-            const sz = e.isBoss ? 5 : 3;
-            mmCtx.fillRect(e.x * sx - sz / 2, e.y * sy - sz / 2, sz, sz);
+            const er = Math.floor(e.y / TILE_SIZE);
+            const ec = Math.floor(e.x / TILE_SIZE);
+            if (fogGrid[er] && fogGrid[er][ec]) {
+                mmCtx.fillStyle = e.state === 'cured' ? '#34d399' : (e.isBoss ? '#f43f5e' : '#ef4444');
+                const sz = e.isBoss ? 5 : 3;
+                mmCtx.fillRect(e.x * sx - sz / 2, e.y * sy - sz / 2, sz, sz);
+            }
         });
-        // Player
+        // Player (always visible and pulsing)
+        const pulse = 1 + 0.25 * Math.sin(performance.now() / 180);
+        mmCtx.fillStyle = '#38bdf8';
+        mmCtx.beginPath();
+        mmCtx.arc(player.x * sx, player.y * sy, 4 * pulse, 0, Math.PI * 2);
+        mmCtx.fill();
         mmCtx.fillStyle = '#ffffff';
-        mmCtx.fillRect(player.x * sx - 2.5, player.y * sy - 2.5, 5, 5);
+        mmCtx.fillRect(player.x * sx - 2, player.y * sy - 2, 4, 4);
     }
 
     // =========================================================================

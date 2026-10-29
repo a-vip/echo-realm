@@ -125,3 +125,35 @@ Puzzles are instantiated inside `loadMap(mapIndex)`:
 - **`socratic_pedestal`**: Interactive pedestals that open multiple-choice dialectic challenges.
 - **River Bridges**: Dynamically populated when `unlockRiverBridgeIfReady()` evaluates to true.
 
+---
+
+## 5. Registering Custom Sprite Sheets & Tilesets
+
+The game includes a plug-and-play asset pipeline via `assets`:
+
+```javascript
+// Register an external character sheet (e.g. from Aseprite)
+assets.registerSpriteSheet('player_hero', 'assets/sprites/player_32x32.png', 32, 32);
+
+// Register an external tileset
+assets.registerTileSet('overworld_tiles', 'assets/maps/tileset.png', 44);
+```
+
+When registered, the renderer draws from the external image assets; when unset or loading, it seamlessly defaults to the built-in procedural 16x20 32-bit pixel engine.
+
+---
+
+## 6. Composing Custom Zone BGM Tracks
+
+To add a new procedural chiptune ambient track, add an entry to `ZONE_BGM_TRACKS`:
+
+```javascript
+ZONE_BGM_TRACKS.my_custom_zone = {
+    tempo: 240,            // Note duration interval in milliseconds
+    type: 'triangle',       // Lead oscillator: 'triangle', 'square', 'sine', 'sawtooth'
+    bassType: 'sawtooth',   // Bass oscillator
+    notes: [392.0, 440.0, 523.25, 587.33, 659.25], // Melody frequencies in Hz
+    bass: [196.0, 261.63, 220.0, 196.0]            // Bass counterpoint
+};
+```
+
