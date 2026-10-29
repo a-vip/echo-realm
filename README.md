@@ -3,6 +3,24 @@
 > **A 32-Bit Action RPG exploring echo chambers, cognitive inoculation, algorithmic radicalization, and Socratic inquiry.**  
 > *Inspired by the aesthetics and puzzle mechanics of The Legend of Zelda: A Link to the Past.*
 
+🎮 **Live Playable Web App (GitHub Pages)**: [https://a-vip.github.io/echo-realm/](https://a-vip.github.io/echo-realm/)  
+📦 **GitHub Repository**: [https://github.com/a-vip/echo-realm](https://github.com/a-vip/echo-realm)
+
+---
+
+## 🌐 Embedding in Your Website (iframe)
+
+To embed the game directly into your website, blog, or portfolio:
+
+```html
+<iframe 
+  src="https://a-vip.github.io/echo-realm/" 
+  style="width: 100%; height: 85vh; border: 3px solid #38bdf8; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);" 
+  allow="autoplay"
+  loading="lazy">
+</iframe>
+```
+
 ---
 
 ## 🎮 Game Overview
@@ -142,3 +160,4 @@ echo-realm/
    - Support optional external 32x32 pixel tilesets (Kenney/Aseprite) alongside the procedural renderer.
 5. **New Game+ & Speedrun Timer**:
    - Add a speedrun timer hud element, Socratic accuracy score (percentage of first-try correct refutations), and New Game+ modifiers.
+
