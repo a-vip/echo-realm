@@ -4718,24 +4718,16 @@
             }
         }
 
-        // 2. Base Inter-Sector Highway Corridors (Seamless across adjacent map boundaries)
-        for (let r = 1; r < rows - 1; r++) {
-            for (let c = 16; c <= 20; c++) grid[r][c] = 1; // North-South Highway
-        }
-        for (let c = 1; c < cols - 1; c++) {
-            for (let r = 12; r <= 16; r++) grid[r][c] = 1; // West-East Highway
-        }
-
-        // 3. Tailored sector topography & visual landmarks for each individual zone
+        // 2. Tailored sector topography & bespoke road networks for each individual zone
+        // (Seamlessly connects ONLY adjacent valid sector gateways without cloned crossroads)
         if (mapIndex === 2) {
-            // MAP 3: Sunlit Riverfront of Nuance (Diagonal River Delta & Socratic Twin Bridges)
+            // MAP 3: Sunlit Riverfront of Nuance (Diagonal River Delta & Socratic Bridge)
+            // Exits: West (r 10..18) and South (c 14..22)
             for (let r = 1; r < rows - 1; r++) {
                 const riverC = Math.round((cols - 10) - (r / rows) * (cols - 22) + 4 * Math.sin(r * 0.2));
                 for (let c = 1; c < cols - 1; c++) {
                     if (Math.abs(c - riverC) <= 2) {
                         grid[r][c] = 4; // Sparkling River Water
-                    } else if (Math.abs(c - riverC) === 3) {
-                        grid[r][c] = 1; // Riverbank paved causeway
                     } else if (c < riverC - 3 && Math.sin(r * 0.3 + c * 0.2) > 0.46) {
                         grid[r][c] = 3; // West forest grove
                     } else if (c > riverC + 3 && Math.cos(r * 0.25 + c * 0.2) > 0.44) {
@@ -4745,21 +4737,31 @@
                     }
                 }
             }
-            // Braided River Island in mid-stream
-            for (let r = midR - 3; r <= midR + 3; r++) {
-                const riverC = Math.round((cols - 10) - (r / rows) * (cols - 22) + 4 * Math.sin(r * 0.2));
-                grid[r][riverC] = 9;
-                if (grid[r][riverC - 1] === 4) grid[r][riverC - 1] = 9;
-            }
-            // Twin Arched Wooden Bridges across river
-            for (const r of [14, 15, 16, 30, 31, 32]) {
+            // Arched Wooden Bridge across river
+            for (const r of [13, 14, 15, 16]) {
                 const riverC = Math.round((cols - 10) - (r / rows) * (cols - 22) + 4 * Math.sin(r * 0.2));
                 for (let c = riverC - 2; c <= riverC + 2; c++) {
                     if (c > 0 && c < cols - 1) grid[r][c] = 8;
                 }
             }
+            // West gate road leading to river bridge
+            for (let r = 12; r <= 16; r++) {
+                const riverC = Math.round((cols - 10) - (r / rows) * (cols - 22) + 4 * Math.sin(r * 0.2));
+                for (let c = 1; c <= riverC - 2; c++) grid[r][c] = 1;
+            }
+            // East bank riverfront road leading from bridge down to South gate
+            for (let r = 14; r < rows - 1; r++) {
+                const riverC = Math.round((cols - 10) - (r / rows) * (cols - 22) + 4 * Math.sin(r * 0.2));
+                for (let dc = 1; dc <= 4; dc++) {
+                    if (riverC + dc < cols - 1) grid[r][riverC + dc] = 1;
+                }
+            }
+            for (let r = rows - 6; r < rows - 1; r++) {
+                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
+            }
         } else if (mapIndex === 3) {
             // MAP 4: The Iron & Velvet Divide (Central Chasm Gorge & Fortified Bridge)
+            // Exits: North (c 14..22) and East (r 10..18)
             for (let r = 1; r < rows - 1; r++) {
                 for (let c = 1; c < cols - 1; c++) {
                     if (c >= midC - 1 && c <= midC + 1) {
@@ -4773,7 +4775,7 @@
                         }
                     } else {
                         // Eastern Velvet Gardens: Circular promenades & elegant flowerbeds
-                        const gDist = Math.hypot(c - 36, r - 24);
+                        const gDist = Math.hypot(c - 38, r - 24);
                         if (Math.abs(gDist - 8) <= 1.5 || gDist <= 3) {
                             grid[r][c] = 1;
                         } else if (Math.cos(r * 0.3 + c * 0.25) > 0.45) {
@@ -4784,17 +4786,24 @@
                     }
                 }
             }
+            // North entrance highway through Bastion parade grounds
+            for (let r = 1; r <= 16; r++) {
+                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
+            }
             // Fortified Central Causeway Bridge across chasm
             for (let r = 12; r <= 16; r++) {
-                for (let c = midC - 1; c <= midC + 1; c++) grid[r][c] = 1;
+                for (let c = 18; c <= midC + 2; c++) grid[r][c] = 1;
+            }
+            // East promenade highway through velvet gardens to East exit
+            for (let r = 12; r <= 16; r++) {
+                for (let c = midC + 2; c < cols - 1; c++) grid[r][c] = 1;
             }
         } else if (mapIndex === 4) {
             // MAP 5: The Dogma Catacombs (Gothic Cruciform Cathedral Crypt)
+            // Exits: West (r 10..18), East (r 10..18), South (c 14..22)
             for (let r = 1; r < rows - 1; r++) {
                 for (let c = 1; c < cols - 1; c++) {
-                    if (Math.abs(c - midC) <= 2 || Math.abs(r - midR) <= 2) {
-                        grid[r][c] = 1; // Grand Central Cruciform Naves
-                    } else if (c === 10 || c === cols - 11 || r === 8 || r === rows - 9) {
+                    if (c === 10 || c === cols - 11 || r === 8 || r === rows - 9) {
                         grid[r][c] = 1; // Outer Cloister Ambulatory
                     } else if (c % 6 === 0 && r % 6 === 0) {
                         grid[r][c] = 6; // Vaulted Stone Pillar
@@ -4805,8 +4814,25 @@
                     }
                 }
             }
+            // Transverse Nave connecting West exit to East exit
+            for (let r = 12; r <= 16; r++) {
+                for (let c = 1; c < cols - 1; c++) grid[r][c] = 1;
+            }
+            // Grand Southern Processional Nave heading down to Citadel
+            for (let r = 12; r < rows - 1; r++) {
+                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
+            }
+            // Northern High Altar sanctuary chamber (no north exit)
+            for (let r = 3; r <= 12; r++) {
+                for (let c = midC - 5; c <= midC + 5; c++) grid[r][c] = 1;
+            }
+            grid[6][midC - 4] = 6;
+            grid[6][midC + 4] = 6;
+            grid[9][midC - 4] = 6;
+            grid[9][midC + 4] = 6;
         } else if (mapIndex === 5) {
             // MAP 6: Whispering Woods of Inquiry (Labyrinthine Forest with Rings & Creek)
+            // Exits: South (c 14..22) and East (r 10..18)
             for (let r = 1; r < rows - 1; r++) {
                 for (let c = 1; c < cols - 1; c++) {
                     const gDist = Math.hypot(c - midC, r - midR);
@@ -4819,28 +4845,36 @@
                     }
                 }
             }
-            // Northern meandering woodland brook
+            // Northern meandering woodland brook (isolated in deep north forest)
             for (let c = 1; c < cols - 1; c++) {
-                const brookR = Math.round(9 + 2 * Math.sin(c * 0.22));
+                const brookR = Math.round(7 + 2 * Math.sin(c * 0.22));
                 if (brookR > 1 && brookR < rows - 2) {
                     grid[brookR][c] = 4;
                     grid[brookR + 1][c] = 4;
                 }
             }
-            // Wooden bridge over brook along north-south highway
-            for (let c = 16; c <= 20; c++) {
-                const brookR = Math.round(9 + 2 * Math.sin(c * 0.22));
+            for (let c = 26; c <= 29; c++) {
+                const brookR = Math.round(7 + 2 * Math.sin(c * 0.22));
                 if (brookR > 1 && brookR < rows - 2) {
                     grid[brookR][c] = 8;
                     grid[brookR + 1][c] = 8;
                 }
             }
+            // South entrance path leading to central glade
+            for (let r = 16; r < rows - 1; r++) {
+                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
+            }
+            // East path leading from central glade to East exit
+            for (let r = 12; r <= 16; r++) {
+                for (let c = 18; c < cols - 1; c++) grid[r][c] = 1;
+            }
         } else if (mapIndex === 6) {
-            // MAP 7: Borderland of Scapegoats (Diagonal Earthen Ramparts & Checkpoint Highway)
+            // MAP 7: Borderland of Scapegoats (Diagonal Earthen Ramparts & Checkpoint Courtyard)
+            // Exits: North (c 14..22), South (c 14..22), West (r 10..18)
             for (let r = 1; r < rows - 1; r++) {
-                const wallC = Math.round(16 + (r / rows) * (cols - 28));
+                const wallC = Math.round(20 + (r / rows) * (cols - 30));
                 for (let c = 1; c < cols - 1; c++) {
-                    if (Math.abs(c - wallC) <= 1 && !(r >= 12 && r <= 16)) {
+                    if (Math.abs(c - wallC) <= 1 && !(r >= 11 && r <= 17)) {
                         grid[r][c] = 2; // Diagonal Earthen Rampart Wall
                     } else if (Math.abs(c - (wallC - 4)) <= 1 || Math.abs(c - (wallC + 4)) <= 1) {
                         grid[r][c] = 1; // Patrol roadway
@@ -4849,22 +4883,32 @@
                     }
                 }
             }
-            // Checkpoint Gatehouse Courtyard at military highway crossing
+            // Checkpoint Gatehouse Courtyard at highway junction
             for (let r = 11; r <= 17; r++) {
-                const wallC = Math.round(16 + (r / rows) * (cols - 28));
-                for (let c = wallC - 4; c <= wallC + 4; c++) {
-                    if (c > 0 && c < cols - 1) grid[r][c] = 1;
-                }
+                for (let c = 13; c <= 23; c++) grid[r][c] = 1;
+            }
+            // West entrance supply road from Citadel
+            for (let r = 12; r <= 16; r++) {
+                for (let c = 1; c <= 14; c++) grid[r][c] = 1;
+            }
+            // North patrol road to Riverfront exit
+            for (let r = 1; r <= 12; r++) {
+                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
+            }
+            // South patrol road to Highland Oasis exit
+            for (let r = 16; r < rows - 1; r++) {
+                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
             }
         } else if (mapIndex === 7) {
             // MAP 8: Highland Oasis of Solidarity (Mountain Oasis Lake & Shrine Island)
+            // Exits: North (c 14..22) and West (r 10..18)
             for (let r = 1; r < rows - 1; r++) {
                 for (let c = 1; c < cols - 1; c++) {
-                    const lakeDist = Math.hypot((c - (cols - 18)) * 0.9, r - (rows - 16));
+                    const lakeDist = Math.hypot((c - (cols - 16)) * 0.9, r - (rows - 14));
                     if (lakeDist <= 14) {
-                        if (lakeDist <= 4) grid[r][c] = 9; // Socratic Shrine Island
+                        if (lakeDist <= 3.5) grid[r][c] = 9; // Socratic Shrine Island
                         else grid[r][c] = 4; // Sparkling Oasis Lake Water
-                    } else if (lakeDist <= 16) {
+                    } else if (lakeDist <= 16.5) {
                         grid[r][c] = 1; // Lakeside Promenade
                     } else if (Math.sin(r * 0.3 + c * 0.3) > 0.46) {
                         grid[r][c] = 3;
@@ -4874,13 +4918,22 @@
                 }
             }
             // Wooden Pier extending from West shore to Shrine Island
-            const pierR = rows - 16;
-            for (let c = cols - 28; c <= cols - 18; c++) {
+            const pierR = rows - 14;
+            for (let c = cols - 24; c <= cols - 16; c++) {
                 if (grid[pierR] && c > 0 && c < cols - 1) grid[pierR][c] = 8;
                 if (grid[pierR + 1] && c > 0 && c < cols - 1) grid[pierR + 1][c] = 8;
             }
+            // West gate avenue
+            for (let r = 12; r <= 16; r++) {
+                for (let c = 1; c <= 18; c++) grid[r][c] = 1;
+            }
+            // Lakeside promenade turning North to North exit
+            for (let r = 1; r <= 14; r++) {
+                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
+            }
         } else if (mapIndex === 8) {
             // MAP 9: The Obsidian Reich-Citadel (Imperial Fortress Castle & Grand Boulevard)
+            // Exits: All 4 directions (center of continent)
             for (let r = 1; r < rows - 1; r++) {
                 for (let c = 1; c < cols - 1; c++) {
                     // Outer fortress basalt walls with gate openings
@@ -4888,16 +4941,22 @@
                         !(c >= midC - 4 && c <= midC + 5) &&
                         !(r >= 12 && r <= 16)) {
                         grid[r][c] = 2;
-                    } else if (c >= midC - 3 && c <= midC + 4) {
-                        grid[r][c] = 1; // 8-tile wide Imperial Grand Boulevard
-                    } else if (Math.abs(r - midR) <= 6 && Math.abs(c - midC) <= 8) {
-                        grid[r][c] = 1; // Inner Throne Court
-                    } else if ((c === 16 || c === cols - 17) && r >= 14 && r <= rows - 14) {
-                        grid[r][c] = 1; // Wing parade ground
                     } else if (Math.sin(r * 0.35 + c * 0.35) > 0.5) {
                         grid[r][c] = 12; // Dark stone barricade
                     }
                 }
+            }
+            // Imperial Grand Boulevard North-South
+            for (let r = 1; r < rows - 1; r++) {
+                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
+            }
+            // Royal Highway West-East
+            for (let c = 1; c < cols - 1; c++) {
+                for (let r = 12; r <= 16; r++) grid[r][c] = 1;
+            }
+            // Grand Imperial Throne Court / Plaza
+            for (let r = 10; r <= 18; r++) {
+                for (let c = 13; c <= 23; c++) grid[r][c] = 1;
             }
         }
 
@@ -5065,7 +5124,7 @@
                 puzzleGoal: mapMeta.puzzleGoal || 0,
                 bossDefeated: false,
                 hasBoss: !!mapMeta.boss,
-                accepted: true,
+                accepted: false,
                 readyToTurnIn: false,
                 completed: false
             };
@@ -6016,7 +6075,7 @@
         checkQuestProgressState();
 
         const codexKey = MAPS[currentMapIndex].codexKey;
-        showDeconstructToast(codexKey);
+        showDeconstructToast(codexKey, en);
         updateAllHud();
     }
 
@@ -6038,6 +6097,7 @@
                 player.questReadyToTurnIn = true;
                 player.questAccepted = true;
                 if (player.zoneQuests && player.zoneQuests[currentMapIndex]) {
+                    player.zoneQuests[currentMapIndex].accepted = true;
                     player.zoneQuests[currentMapIndex].readyToTurnIn = true;
                 }
 
@@ -8687,7 +8747,18 @@
         const speakerEl = document.getElementById('dialogueSpeaker');
         const textEl = document.getElementById('dialogueText');
         if (typeof step === 'object' && step !== null) {
-            if (speakerEl) speakerEl.textContent = (step.speaker || (activeDialogueNpc ? activeDialogueNpc.name : 'DIALOGUE')).toUpperCase();
+            if (speakerEl) {
+                if (step.speaker === '') {
+                    speakerEl.textContent = '';
+                    speakerEl.classList.add('hidden');
+                } else if (step.speaker) {
+                    speakerEl.textContent = step.speaker.toUpperCase();
+                    speakerEl.classList.remove('hidden');
+                } else {
+                    speakerEl.textContent = (activeDialogueNpc ? activeDialogueNpc.name : 'DIALOGUE').toUpperCase();
+                    speakerEl.classList.remove('hidden');
+                }
+            }
             if (textEl) textEl.innerHTML = step.text || '';
             if (step.portrait) {
                 renderDialoguePortraitCanvas(step.portrait);
@@ -8695,7 +8766,10 @@
                 renderDialoguePortraitCanvas({ type: 'npc', npc: activeDialogueNpc });
             }
         } else {
-            if (speakerEl && activeDialogueNpc) speakerEl.textContent = activeDialogueNpc.name.toUpperCase();
+            if (speakerEl && activeDialogueNpc) {
+                speakerEl.textContent = activeDialogueNpc.name.toUpperCase();
+                speakerEl.classList.remove('hidden');
+            }
             if (textEl) textEl.innerHTML = step || '';
             if (activeDialogueNpc) renderDialoguePortraitCanvas({ type: 'npc', npc: activeDialogueNpc });
         }
@@ -8737,11 +8811,17 @@
             if (activeDialogueNpc && activeDialogueNpc.isQuestGiver) {
                 if (!player.questAccepted) {
                     player.questAccepted = true;
+                    if (player.zoneQuests && player.zoneQuests[currentMapIndex]) {
+                        player.zoneQuests[currentMapIndex].accepted = true;
+                    }
                     audio.sfxCure();
                     addFloatText(activeDialogueNpc.x, activeDialogueNpc.y - 35, 'QUEST ACCEPTED!', '#fde047');
                     checkQuestProgressState();
                 } else if (player.questReadyToTurnIn && !player.questTurnedIn) {
                     player.questTurnedIn = true;
+                    if (player.zoneQuests && player.zoneQuests[currentMapIndex]) {
+                        player.zoneQuests[currentMapIndex].completed = true;
+                    }
                     player.shards += 35;
                     gainExp(60);
                     audio.sfxPortal();
@@ -9174,7 +9254,7 @@
                     puzzleGoal: m.puzzleGoal || 0,
                     bossDefeated: false,
                     hasBoss: !!m.boss,
-                    accepted: true,
+                    accepted: false,
                     readyToTurnIn: false,
                     completed: false
                 };
@@ -9182,13 +9262,18 @@
         });
 
         const quests = Object.values(player.zoneQuests);
-        const activeQuests = quests.filter(q => !q.completed);
+        const activeQuests = quests.filter(q => q.accepted && !q.completed);
         if (badgeEl) {
             badgeEl.textContent = `${activeQuests.length} Active`;
         }
 
         listEl.innerHTML = '';
-        quests.forEach(q => {
+        if (activeQuests.length === 0) {
+            listEl.innerHTML = `<div class="text-[10px] text-slate-400 italic p-3 text-center bg-slate-900/60 rounded border border-amber-900/40">No active quests.<br><span class="text-amber-300 font-semibold">Speak with an NPC marked with [!] to accept an assignment.</span></div>`;
+            return;
+        }
+
+        activeQuests.forEach(q => {
             const meta = MAPS[q.mapIndex];
             const isCurrent = q.mapIndex === currentMapIndex;
             const qCard = document.createElement('div');
@@ -9242,7 +9327,7 @@
     }
 
     let toastTimer = null;
-    function showDeconstructToast(codexKey) {
+    function showDeconstructToast(codexKey, en = null) {
         const entry = CODEX_ENTRIES[codexKey];
         if (!entry) return;
         const item = entry.deconstructions[Math.floor(Math.random() * entry.deconstructions.length)];
@@ -9250,18 +9335,19 @@
         // Route combat epistemic insights through clean minimal 32-bit conversational dialogue box
         const mythClean = item.myth ? item.myth.replace(/^["']+|["']+$/g, '') : '';
         const truthClean = item.truth ? item.truth.replace(/^["']+|["']+$/g, '') : '';
-        const playerName = (player && player.name ? player.name.toUpperCase() : 'AURON');
+        const npcName = (en && en.name) ? en.name : 'LIBERATED CITIZEN';
+        const playerName = (player && player.name ? player.name : 'AURON');
 
-        activeDialogueNpc = { name: 'Liberated Citizen', role: 'citizen' };
+        activeDialogueNpc = { name: npcName, role: 'citizen' };
         activeDialogueList = [
             {
-                speaker: 'LIBERATED CITIZEN',
-                text: `"${mythClean}"`,
+                speaker: '',
+                text: `<div class="mb-1 text-rose-400 font-bold tracking-wide text-xs">${npcName.toUpperCase()}:</div><div class="italic text-slate-100 text-sm md:text-base leading-relaxed">"${mythClean}"</div>`,
                 portrait: { type: 'citizen' }
             },
             {
-                speaker: playerName,
-                text: `"${truthClean}"`,
+                speaker: '',
+                text: `<div class="mb-1 text-emerald-400 font-bold tracking-wide text-xs">${playerName.toUpperCase()}:</div><div class="text-white text-sm md:text-base font-semibold leading-relaxed">"${truthClean}"</div>`,
                 portrait: { type: 'player' }
             }
         ];

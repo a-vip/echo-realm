@@ -61,6 +61,7 @@ function loadGameEnvironment() {
         set appState(val) { appState = val; },
         updateStackedQuestHud,
         triggerInteraction,
+        advanceDialogue,
         findNearestInteractable,
         get activeDialogueList() { return activeDialogueList; },
         updateGameplay,

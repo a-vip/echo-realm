@@ -104,23 +104,65 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         assert.equal(env.appState, 'DIALOGUE');
         assert.equal(env.activeDialogueList.length, 2);
 
-        // Page 1: Liberated Citizen speaks their myth
+        // Page 1: Liberated Citizen speaks their myth with red NPC name header
         const page1 = env.activeDialogueList[0];
-        assert.equal(page1.speaker, 'LIBERATED CITIZEN');
+        assert.equal(page1.speaker, '', 'Speaker must be empty so no top yellow header text appears');
+        assert.ok(page1.text.includes('text-rose-400'), 'NPC name must be formatted in red text');
+        assert.ok(page1.text.includes('LIBERATED CITIZEN:'));
         assert.equal(page1.portrait.type, 'citizen');
         assert.ok(!page1.text.includes('💡'), 'Must not have yellow lightbulb header');
-        assert.ok(!page1.text.includes('PROPAGANDA'), 'Must not have red propaganda banner');
+        assert.ok(!page1.text.includes('PROPAGANDA DISTORTION'), 'Must not have old propaganda banner');
 
-        // Page 2: Auron responds with socratic antidote
+        // Page 2: Player responds with socratic antidote with green player name header
         const page2 = env.activeDialogueList[1];
-        assert.equal(page2.speaker, 'AURON');
+        assert.equal(page2.speaker, '', 'Speaker must be empty so no top yellow header text appears');
+        assert.ok(page2.text.includes('text-emerald-400'), 'Player name must be formatted in green text');
+        assert.ok(page2.text.includes('AURON:'));
         assert.equal(page2.portrait.type, 'player');
         assert.ok(!page2.text.includes('💡'));
-        assert.ok(!page2.text.includes('ANTIDOTE'));
+        assert.ok(!page2.text.includes('SOCRATIC ANTIDOTE'));
 
         // Dismiss dialogue
         env.dismissEpistemicRevelation();
         assert.equal(env.appState, 'PLAYING');
+    });
+
+    test('Questgivers display glowing exclamation mark [!] before interaction and quests only appear in log after acceptance', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(1); // Performative Valley with Commander Maya
+
+        // Initially unaccepted
+        assert.equal(env.player.questAccepted, false, 'Quest must start unaccepted');
+        assert.equal(env.player.zoneQuests[1].accepted, false, 'Zone quest must start unaccepted');
+
+        // Quest giver must have '!' marker
+        const maya = env.npcs.find(n => n.name === 'Commander Maya');
+        assert.ok(maya && maya.isQuestGiver, 'Commander Maya must be a quest giver');
+
+        // Update stacked HUD
+        env.updateStackedQuestHud();
+        const activeQuests = Object.values(env.player.zoneQuests).filter(q => q.accepted && !q.completed);
+        assert.equal(activeQuests.length, 0, 'Unaccepted quests must NOT appear in the active quest log');
+
+        // Accept quest via dialogue interaction
+        env.appState = 'PLAYING';
+        env.player.x = maya.x;
+        env.player.y = maya.y + 20;
+        env.triggerInteraction(); // triggers dialogue with Maya
+        assert.equal(env.appState, 'DIALOGUE');
+
+        // Advance through Maya's dialogue to completion
+        for (let i = 0; i < 5; i++) {
+            env.advanceDialogue ? env.advanceDialogue() : env.triggerInteraction();
+        }
+
+        assert.equal(env.player.questAccepted, true, 'Quest must be accepted after dialogue');
+        assert.equal(env.player.zoneQuests[1].accepted, true);
+
+        // Now quest appears in active quest log
+        env.updateStackedQuestHud();
+        const activeQuestsAfter = Object.values(env.player.zoneQuests).filter(q => q.accepted && !q.completed);
+        assert.equal(activeQuestsAfter.length, 1, 'Accepted quest must now appear in the active quest log');
     });
 
     test('Solid tree stumps provide physical collision that prevents player walking through them', () => {
