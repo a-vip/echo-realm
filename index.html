@@ -2316,6 +2316,8 @@
             rBase = '#1e3a8a'; rHi = '#2563eb'; rSh = '#172554'; rPeak = '#93c5fd';
         } else if (b.roofColor === 'slate') {
             rBase = '#0f766e'; rHi = '#0d9488'; rSh = '#134e4a'; rPeak = '#5eead4';
+        } else if (b.roofColor === 'wood' || b.roofColor === 'amber') {
+            rBase = '#78350f'; rHi = '#b45309'; rSh = '#451a03'; rPeak = '#fde68a';
         }
 
         // Main roof polygon
@@ -2411,57 +2413,88 @@
         const cx = (col + 0.5) * TILE_SIZE;
         const cy = (row + 0.5) * TILE_SIZE;
 
-        let drawn = false;
-        // Prioritize isolated clean transparent PNG with zero white box / background border artifacts
-        if (assets.hasImage('weathervane')) {
-            const dw = 56;
-            const dh = 72;
-            drawn = assets.drawImage(ctx, 'weathervane', cx - dw / 2, cy - dh / 2 - 10, dw, dh);
-        } else {
-            const rect = ALTTP_SPRITE_RECTS['weathervane'];
-            if (rect && assets.hasSpriteSheet('alttp_overworld')) {
-                const dw = 70;
-                const dh = 64;
-                drawn = assets.drawSubRect(ctx, 'alttp_overworld', rect.sx, rect.sy, rect.sw, rect.sh, cx - dw / 2, cy - dh / 2 - 8, dw, dh);
-            }
-        }
-        if (!drawn) {
-            ctx.save();
-            // Stepped stone base
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(cx - 26, cy + 8, 52, 16);
-            ctx.fillStyle = '#64748b';
-            ctx.fillRect(cx - 24, cy + 10, 48, 12);
-            ctx.fillStyle = '#94a3b8';
-            ctx.fillRect(cx - 18, cy - 2, 36, 12);
-            ctx.fillStyle = '#cbd5e1';
-            ctx.fillRect(cx - 14, cy - 12, 28, 10);
+        ctx.save();
+        // 1. Soft Ambient Drop Shadow on Cobblestone
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 14, 28, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-            // Iron shaft
-            ctx.fillStyle = '#1e293b';
-            ctx.fillRect(cx - 2, cy - 36, 4, 26);
+        // 2. Multi-tier Carved Stone Base
+        // Bottom stepped plinth
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(cx - 24, cy + 4, 48, 14);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(cx - 22, cy + 5, 44, 4);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(cx - 24, cy + 16, 48, 3);
 
-            // Weathercock bird
-            ctx.fillStyle = '#fbbf24';
-            ctx.beginPath();
-            ctx.arc(cx, cy - 40, 9, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#fde047';
-            ctx.beginPath();
-            ctx.moveTo(cx + 6, cy - 41);
-            ctx.lineTo(cx + 14, cy - 39);
-            ctx.lineTo(cx + 6, cy - 37);
-            ctx.closePath();
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(cx - 6, cy - 43);
-            ctx.lineTo(cx - 14, cy - 47);
-            ctx.lineTo(cx - 8, cy - 38);
-            ctx.closePath();
-            ctx.fill();
+        // Mid pedestal
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(cx - 16, cy - 8, 32, 14);
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(cx - 14, cy - 7, 28, 3);
 
-            ctx.restore();
-        }
+        // Capital capstone
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(cx - 18, cy - 14, 36, 6);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(cx - 16, cy - 13, 32, 2);
+
+        // 3. Wrought-Iron Spire Column
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(cx - 3, cy - 44, 6, 32);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(cx - 1, cy - 44, 2, 32);
+
+        // 4. Cardinal Crossarms (N, S, E, W)
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(cx - 20, cy - 36, 40, 3);
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('W', cx - 22, cy - 33);
+        ctx.fillText('E', cx + 22, cy - 33);
+
+        // 5. Golden Weathercock Rooster / Phoenix at Top with gentle wind sway
+        const sway = Math.sin(performance.now() * 0.003) * 3;
+        const topY = cy - 46;
+        ctx.save();
+        ctx.translate(cx, topY);
+        ctx.rotate(sway * Math.PI / 180);
+
+        // Golden bird body
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.ellipse(0, -6, 10, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bird head & crest
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(8, -10, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#dc2626'; // Red rooster comb
+        ctx.fillRect(7, -15, 3, 4);
+        ctx.fillStyle = '#fde047'; // Beak
+        ctx.beginPath();
+        ctx.moveTo(12, -10);
+        ctx.lineTo(16, -9);
+        ctx.lineTo(12, -7);
+        ctx.closePath();
+        ctx.fill();
+
+        // Feathery tail plumage
+        ctx.fillStyle = '#d97706';
+        ctx.beginPath();
+        ctx.moveTo(-8, -8);
+        ctx.quadraticCurveTo(-16, -14, -14, -2);
+        ctx.lineTo(-6, -4);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+        ctx.restore();
     }
 
     // =========================================================================
@@ -2532,7 +2565,7 @@
                 { id: 'cottage_n_plateau', col: 29, row: 5, wCols: 5, hRows: 3, spriteKey: 'red_cottage_2', roofColor: 'terracotta', name: "Elder's Hermitage" },
                 { id: 'cottage_ne', col: 37, row: 10, wCols: 4, hRows: 3, spriteKey: 'red_cottage_1', roofColor: 'terracotta', name: 'Apothecary of Clear Thought' },
                 { id: 'cottage_w_mid', col: 15, row: 24, wCols: 4, hRows: 3, spriteKey: 'blue_cottage_1', roofColor: 'blue', name: 'House of Dialogue' },
-                { id: 'cottage_s_mid', col: 29, row: 24, wCols: 4, hRows: 3, spriteKey: 'blue_cottage_2', roofColor: 'blue', name: 'Kakariko Clout Tavern' },
+                { id: 'cottage_s_mid', col: 29, row: 24, wCols: 4, hRows: 3, spriteKey: 'blue_cottage_2', roofColor: 'blue', name: 'Performative Clout Tavern' },
                 { id: 'cottage_e_mid', col: 37, row: 22, wCols: 4, hRows: 3, spriteKey: 'red_cottage_1', roofColor: 'terracotta', name: "Storyteller's Cottage" },
                 { id: 'shed_sw', col: 14, row: 34, wCols: 3, hRows: 2, spriteKey: 'shed', roofColor: 'wood', name: "Archivist's Workshop" },
                 { id: 'lodge_s', col: 29, row: 33, wCols: 5, hRows: 4, spriteKey: 'long_tavern', roofColor: 'terracotta', name: 'Grand Fellowship Hall' },
@@ -2593,7 +2626,7 @@
                 col: 21, row: 16,
                 tunicColor: '#0284c7',
                 dialogues: [
-                    'Just like the ancient switches of Hyrule, those 3 Crystal Orbs along the riverbank respond to your [Q] Prism Beam or [E] Axiom Strike! Light all three to lower the wooden bridge!'
+                    'Just like ancient dialectic conduits, those 3 Crystal Orbs along the riverbank respond to your [Q] Prism Beam or [E] Axiom Strike! Light all three to lower the wooden bridge!'
                 ]
             },
             boss: null
@@ -2895,15 +2928,15 @@
     ];
 
     const MAP_OVERWORLD_POS = {
-        0: { row: 2, col: 1, name: 'The Quiet Archive', alttpName: "Link's House & Sanctuary", icon: '📚' },
-        1: { row: 1, col: 0, name: 'Performative Valley', alttpName: 'Kakariko Village', icon: '🎭' },
-        2: { row: 0, col: 2, name: 'Sunlit Riverfront of Nuance', alttpName: "Zora's River & Waterfall", icon: '🌊' },
-        3: { row: 2, col: 0, name: 'The Iron & Velvet Divide', alttpName: 'Desert of Mystery & Canyon', icon: '🏜️' },
-        4: { row: 0, col: 1, name: 'The Dogma Catacombs', alttpName: 'Death Mountain & Catacombs', icon: '⛰️' },
-        5: { row: 0, col: 0, name: 'Whispering Woods of Inquiry', alttpName: 'Lost Woods', icon: '🌲' },
-        6: { row: 1, col: 2, name: 'Borderland of Scapegoats', alttpName: 'Eastern Ruins & Labyrinth', icon: '🏛️' },
-        7: { row: 2, col: 2, name: 'Highland Oasis of Solidarity', alttpName: 'Lake Hylia & Waterfalls', icon: '🏝️' },
-        8: { row: 1, col: 1, name: 'The Obsidian Reich-Citadel', alttpName: 'Hyrule Castle Citadel', icon: '🏰' }
+        0: { row: 2, col: 1, name: 'The Quiet Archive', regionTitle: 'Archival Sanctuary', alttpName: 'Archival Sanctuary', icon: '📚' },
+        1: { row: 1, col: 0, name: 'Performative Valley', regionTitle: 'The Agora of Validation', alttpName: 'The Agora of Validation', icon: '🎭' },
+        2: { row: 0, col: 2, name: 'Sunlit Riverfront of Nuance', regionTitle: 'River of Nuance & Socratic Bridge', alttpName: 'River of Nuance', icon: '🌊' },
+        3: { row: 2, col: 0, name: 'The Iron & Velvet Divide', regionTitle: 'Polarized Dunes & Canyon', alttpName: 'Polarized Dunes', icon: '🏜️' },
+        4: { row: 0, col: 1, name: 'The Dogma Catacombs', regionTitle: 'Gothic Purity Catacombs', alttpName: 'Gothic Purity Catacombs', icon: '⛰️' },
+        5: { row: 0, col: 0, name: 'Whispering Woods of Inquiry', regionTitle: 'Labyrinth of Reflection', alttpName: 'Labyrinth of Reflection', icon: '🌲' },
+        6: { row: 1, col: 2, name: 'Borderland of Scapegoats', regionTitle: 'Scapegoat Citadel Ruins', alttpName: 'Scapegoat Citadel Ruins', icon: '🏛️' },
+        7: { row: 2, col: 2, name: 'Highland Oasis of Solidarity', regionTitle: 'Sanctuary Oasis & Springs', alttpName: 'Sanctuary Oasis', icon: '🏝️' },
+        8: { row: 1, col: 1, name: 'The Obsidian Reich-Citadel', regionTitle: 'Totalitarian Sovereign Citadel', alttpName: 'Sovereign Citadel', icon: '🏰' }
     };
 
     let devMode = false;
@@ -4107,7 +4140,7 @@
     // =========================================================================
     // 9. MAP GENERATION, CHESTS, PROFESSOR AVI & ALTTP RIVER PUZZLES
     // =========================================================================
-    function generateKakarikoVillageTerrain(cols, rows) {
+    function generatePerformativeValleyTerrain(cols, rows) {
         const grid = [];
         for (let r = 0; r < rows; r++) {
             grid[r] = [];
@@ -4288,7 +4321,7 @@
                 if (r === 0 || r === rows - 1 || c === 0 || c === cols - 1) {
                     grid[r][c] = 2; // Outer Stone Wall
                 } else if ((r < 7 || r > rows - 7) && (c < 8 || c > cols - 9)) {
-                    grid[r][c] = 6; // Monolith Pillars
+                    grid[r][c] = 5; // Open Sanctuary Stone Tiles
                 } else if (Math.abs(c - midC) <= 2 || Math.abs(r - midR) <= 2) {
                     grid[r][c] = 1; // Grand Central Stone Walkway
                 } else if ((r + c) % 5 === 0 && r > 8 && r < rows - 8) {
@@ -4363,14 +4396,9 @@
                     continue;
                 }
 
-                // Stepped cliff ledges with stone stairs connecting elevations (Zelda ALttP style)
-                if ((r === ledgeRow1 || r === ledgeRow2) && c > 4 && c < cols - 5) {
-                    // Stair ramps opening
-                    if ((c >= midC - 6 && c <= midC - 4) || (c >= midC + 4 && c <= midC + 6) || Math.abs(c - nsTrail) <= 2) {
-                        grid[r][c] = 1; // Stepped Stone Stair Ramp
-                    } else {
-                        grid[r][c] = 2; // Cliff Ledge
-                    }
+                // Open, unobstructed terrain: remove all barrier cliff blocks
+                if ((r === ledgeRow1 || r === ledgeRow2) && Math.abs(c - nsTrail) <= 3) {
+                    grid[r][c] = 1; // Natural walkable pathway connecting sectors
                     continue;
                 }
 
@@ -4393,7 +4421,7 @@
                 } else if (mapMeta.isBrightAlttpZone && clusterNoise < -0.40) {
                     grid[r][c] = 9; // Sunlit Wildflower Meadow
                 } else if (!mapMeta.isBrightAlttpZone && clusterNoise < -0.50) {
-                    grid[r][c] = 6; // Sector stone obelisks
+                    grid[r][c] = 0; // Natural open terrain
                 } else {
                     grid[r][c] = 0; // Natural open grass
                 }
@@ -4552,7 +4580,7 @@
         const rows = getMapRows(mapIndex);
 
         if (mapIndex === 1) {
-            mapGrid = generateKakarikoVillageTerrain(cols, rows);
+            mapGrid = generatePerformativeValleyTerrain(cols, rows);
         } else if (mapIndex === 0) {
             mapGrid = generateQuietArchiveTerrain(cols, rows);
         } else {
@@ -5734,28 +5762,27 @@
     }
 
     // =========================================================================
-    // 10.5. CLEAN BUILDING INTERIORS & PHYSICAL OBJECTS SYSTEM
+    // 10.5. 100% PROCEDURAL CANVAS BUILDING INTERIORS & PHYSICAL OBJECTS
     // =========================================================================
     let currentInterior = null;
     let activePotProjectiles = []; // maintained for backward compatibility
 
     function enterBuildingInterior(building) {
-        const scale = 3.5;
-        const roomW = 784;
-        const roomH = 616;
+        const roomW = 760;
+        const roomH = 580;
 
         const prop = getBuildingNarrativeProp(building);
         // Physical interactive chest using the user's lone chest asset
         const chest = {
-            x: 615, y: 475,
-            w: 42, h: 42,
+            x: roomW - 120, y: 220,
+            w: 44, h: 44,
             opened: !!building.interiorChestOpened
         };
 
-        // Physical wooden table using user's table asset
+        // Physical wooden table
         const table = {
-            x: 520, y: 340,
-            w: 110, h: 72
+            x: Math.floor(roomW / 2) - 60, y: 310,
+            w: 120, h: 80
         };
 
         currentInterior = {
@@ -5763,21 +5790,20 @@
             name: building.name,
             cols: 15,
             rows: 13,
-            scale,
             roomW,
             roomH,
             table,
             chest,
             prop,
-            pots: [], // removed Link in bed & clay pots entirely per user request
+            pots: [], // pots completely eliminated
             returnX: player.x,
             returnY: player.y,
             mapIndex: currentMapIndex
         };
 
-        // Spawn player right inside the south doorway facing UP
-        player.x = 392;
-        player.y = 480;
+        // Spawn player right inside south doorway facing UP
+        player.x = Math.floor(roomW / 2);
+        player.y = roomH - 70;
         player.dir = 1; // Facing Up
         player.holdingPot = null;
 
@@ -5819,43 +5845,43 @@
         if (name.includes('Archive') || name.includes('Scriptoria') || name.includes('Hermitage')) {
             return {
                 name: "Scribe's Manuscript Desk",
-                x: 180, y: 470,
+                x: 138, y: 260,
                 text: "A parchment reads: 'The first weapon of demagogues is to replace nuanced debate with binary outrage. Protect your attention as your sharpest blade.'"
             };
         } else if (name.includes('Apothecary') || name.includes('Herbalist')) {
             return {
                 name: "Apothecary's Distillation Bench",
-                x: 180, y: 470,
+                x: 138, y: 260,
                 text: "Herbal vials are labeled 'Amygdala Soother'. A note explains: 'Fear shuts down logical reasoning. When emotional panic strikes, breathe before reacting.'"
             };
         } else if (name.includes('Tavern') || name.includes('Fellowship')) {
             return {
                 name: "Common Hearth & Chronicle",
-                x: 180, y: 470,
+                x: 138, y: 260,
                 text: "A traveler's ledger: 'In this hall, all factions break bread together. Face-to-face contact dissolves the stereotypes crafted by digital echo chambers.'"
             };
         } else if (name.includes('Workshop') || name.includes('Armory')) {
             return {
                 name: "Artisan's Anvil & Blueprints",
-                x: 180, y: 470,
+                x: 138, y: 260,
                 text: "Blueprints for epistemic shields. Note: 'Dogma fractures under pressure; dialectical inquiry grows stronger through challenge.'"
             };
         } else if (name.includes('Observatory') || name.includes('Academy') || name.includes('Nuance')) {
             return {
                 name: "Dialectic Orrery & Sky Chart",
-                x: 180, y: 470,
+                x: 138, y: 260,
                 text: "Constellations of Logical Fallacies are mapped: Ad Hominem, Strawman, False Equivalence. Understanding them grants immunity to manipulation."
             };
         } else if (name.includes('Safehouse') || name.includes('Refuge') || name.includes('Solidarity')) {
             return {
                 name: "Underground Solidarity Roster",
-                x: 180, y: 470,
+                x: 138, y: 260,
                 text: "A secret registry of brave neighbors hiding targeted out-groups from the Border Wardens. 'Solidarity over scapegoating.'"
             };
         } else {
             return {
                 name: "Philosopher's Reading Desk",
-                x: 180, y: 470,
+                x: 138, y: 260,
                 text: "A well-worn volume of Socratic Dialogues: 'I know that I know nothing—and in acknowledging that, the search for true wisdom begins.'"
             };
         }
@@ -5869,89 +5895,314 @@
     }
 
     function renderInterior(ctx, w, h) {
-        ctx.fillStyle = '#0b0908';
+        ctx.fillStyle = '#060504';
         ctx.fillRect(0, 0, w, h);
 
-        const scale = currentInterior.scale || 3.5;
-        const roomW = currentInterior.roomW || 784;
-        const roomH = currentInterior.roomH || 616;
+        const roomW = currentInterior.roomW || 760;
+        const roomH = currentInterior.roomH || 580;
         const offX = Math.floor((w - roomW) / 2);
         const offY = Math.floor((h - roomH) / 2);
 
         ctx.save();
 
-        // 1. Render Completely Blank Room Interior (Walls, Floorboards, Windows, Doorway)
-        if (assets.hasImage('zelda_blank_room')) {
-            ctx.imageSmoothingEnabled = false;
-            assets.drawImage(ctx, 'zelda_blank_room', offX, offY, roomW, roomH);
-        } else if (assets.hasImage('zelda_house_interior')) {
-            ctx.imageSmoothingEnabled = false;
-            assets.drawImage(ctx, 'zelda_house_interior', offX, offY, roomW, roomH);
+        // 1. Ambient Drop Shadow surrounding the room
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.fillRect(offX - 10, offY - 10, roomW + 20, roomH + 20);
+
+        // 2. Polished Hardwood Plank Flooring (100% procedural)
+        const plankH = 26;
+        const floorY = offY + 120;
+        const floorH = roomH - 120;
+        const woodTones = ['#4a2c17', '#54321b', '#5c381f', '#462814', '#58351d'];
+        for (let py = floorY; py < offY + roomH; py += plankH) {
+            const rowIdx = Math.floor((py - floorY) / plankH);
+            ctx.fillStyle = woodTones[rowIdx % woodTones.length];
+            ctx.fillRect(offX, py, roomW, plankH);
+            // Dark plank groove
+            ctx.fillStyle = '#26150b';
+            ctx.fillRect(offX, py + plankH - 2, roomW, 2);
+            // Subtle nail heads
+            ctx.fillStyle = '#1c0f08';
+            for (let nx = offX + 40 + (rowIdx % 3) * 35; nx < offX + roomW; nx += 90) {
+                ctx.fillRect(nx, py + 4, 2, 2);
+                ctx.fillRect(nx, py + plankH - 6, 2, 2);
+            }
         }
 
-        // 2. Animated Fireplace Flame in Hearth
-        const flameX = offX + 163 * scale;
-        const flameY = offY + 48 * scale;
-        const flameFlicker = Math.sin(performance.now() * 0.015) * 3;
-        ctx.fillStyle = '#ef4444';
+        // 3. Luxurious Area Rug in Room Center
+        const rugX = offX + 160;
+        const rugY = floorY + 60;
+        const rugW = roomW - 320;
+        const rugH = floorH - 140;
+        // Rug shadow
+        ctx.fillStyle = 'rgba(15, 10, 6, 0.45)';
+        ctx.fillRect(rugX - 4, rugY - 4, rugW + 8, rugH + 8);
+        // Rich Burgundy Carpet Body
+        ctx.fillStyle = '#7f1d1d';
+        ctx.fillRect(rugX, rugY, rugW, rugH);
+        // Golden Embroidered Borders
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(rugX + 8, rugY + 8, rugW - 16, rugH - 16);
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(rugX + 14, rugY + 14, rugW - 28, rugH - 28);
+        // Gold Medallion in Center of Rug
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.2)';
         ctx.beginPath();
-        ctx.arc(flameX, flameY, 7 * scale * 0.45, 0, Math.PI * 2);
+        ctx.ellipse(rugX + rugW / 2, rugY + rugH / 2, 60, 40, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#f97316';
-        ctx.beginPath();
-        ctx.arc(flameX + flameFlicker, flameY - 2, 5 * scale * 0.45, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#fde047';
-        ctx.beginPath();
-        ctx.arc(flameX - flameFlicker * 0.5, flameY - 4, 3 * scale * 0.45, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.strokeStyle = '#fde047';
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
-        // 3. Physical Wooden Table Object (using user's table asset)
-        if (assets.hasImage('alttp_table_wood')) {
-            assets.drawImage(ctx, 'alttp_table_wood', offX + 475, offY + 310, 110, 74);
-        } else {
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(offX + 475, offY + 310, 110, 74);
+        // 4. Back Wall: Rich Wainscoted Wood Paneling & Crown Molding
+        const wallH = 120;
+        ctx.fillStyle = '#2a180e';
+        ctx.fillRect(offX, offY, roomW, wallH);
+        // Wainscot Vertical Panels
+        const panelW = 48;
+        for (let px = offX + 16; px < offX + roomW - 16; px += panelW) {
+            ctx.fillStyle = '#3a2215';
+            ctx.fillRect(px, offY + 18, panelW - 6, wallH - 26);
+            ctx.strokeStyle = '#1b0f08';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(px, offY + 18, panelW - 6, wallH - 26);
+            ctx.fillStyle = '#4a2c1c';
+            ctx.fillRect(px + 4, offY + 22, panelW - 14, wallH - 34);
         }
+        // Crown Molding at Ceiling
+        ctx.fillStyle = '#54321b';
+        ctx.fillRect(offX, offY, roomW, 14);
+        ctx.fillStyle = '#6b4024';
+        ctx.fillRect(offX, offY + 2, roomW, 4);
+        ctx.fillStyle = '#1b0f08';
+        ctx.fillRect(offX, offY + 14, roomW, 4);
+        // Baseboard rail
+        ctx.fillStyle = '#1b0f08';
+        ctx.fillRect(offX, offY + wallH - 8, roomW, 8);
 
-        // 4. Physical Chest Object (using user's lone chest asset)
-        const chestPx = offX + 595;
-        const chestPy = offY + 455;
-        const chestSprite = (currentInterior.chest && currentInterior.chest.opened) ? 'alttp_chest_lone_open' : 'alttp_chest_lone';
-        if (assets.hasImage(chestSprite)) {
-            assets.drawImage(ctx, chestSprite, chestPx, chestPy, 38, 38);
-        } else {
-            ctx.fillStyle = (currentInterior.chest && currentInterior.chest.opened) ? '#64748b' : '#b45309';
-            ctx.fillRect(chestPx, chestPy, 36, 32);
-        }
+        // 5. Grand Arched Windows with Warm Sunlight Shafts
+        const winPositions = [offX + 90, offX + roomW - 160];
+        winPositions.forEach((wx, wIdx) => {
+            // Window Frame
+            ctx.fillStyle = '#1b0f08';
+            ctx.fillRect(wx - 4, offY + 16, 78, 86);
+            // Amber Glass Glowing
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(wx, offY + 20, 70, 78);
+            // Window Mullions
+            ctx.fillStyle = '#2a180e';
+            ctx.fillRect(wx + 34, offY + 20, 4, 78);
+            ctx.fillRect(wx, offY + 54, 70, 4);
+            // Arched Top Header
+            ctx.fillStyle = '#1b0f08';
+            ctx.beginPath();
+            ctx.arc(wx + 35, offY + 20, 35, Math.PI, 0);
+            ctx.fill();
 
-        // 5. Narrative Reading Desk
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(offX + 160, offY + 460, 48, 36);
-        ctx.fillStyle = '#92400e';
-        ctx.fillRect(offX + 162, offY + 462, 44, 32);
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(offX + 172, offY + 468, 24, 16);
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(offX + 183, offY + 468, 2, 16);
-
-        // 6. Player character inside room
-        drawCharacterSprite(ctx, offX + player.x, offY + player.y, 2.3, {
-            role: 'player',
-            dir: player.dir,
-            frame: player.walkFrame || 0,
-            skinColor: player.skinColor || '#fdba74',
-            holdingItemOverhead: false
+            // Diagonal Sunlight Shaft projecting down onto the floor
+            const sunGrad = ctx.createLinearGradient(wx + 35, offY + 80, wx + (wIdx === 0 ? 80 : -40), floorY + 240);
+            sunGrad.addColorStop(0, 'rgba(254, 240, 138, 0.22)');
+            sunGrad.addColorStop(0.6, 'rgba(254, 240, 138, 0.08)');
+            sunGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+            ctx.fillStyle = sunGrad;
+            ctx.beginPath();
+            ctx.moveTo(wx, offY + 98);
+            ctx.lineTo(wx + 70, offY + 98);
+            ctx.lineTo(wx + (wIdx === 0 ? 170 : 10), floorY + 240);
+            ctx.lineTo(wx + (wIdx === 0 ? 30 : -130), floorY + 240);
+            ctx.closePath();
+            ctx.fill();
         });
 
-        // 7. Particles & Floating Text inside room
+        // 6. Central Stone Fireplace & Animated Hearth
+        const fpX = offX + Math.floor(roomW / 2) - 55;
+        const fpY = offY + 24;
+        const fpW = 110;
+        const fpH = 96;
+
+        // Chimney breast & stone bricks
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(fpX, fpY, fpW, fpH);
+        ctx.fillStyle = '#475569';
+        for (let by = fpY + 4; by < fpY + fpH - 16; by += 14) {
+            const rowShift = ((by - fpY) % 28 === 0) ? 0 : 12;
+            for (let bx = fpX + 4 + rowShift; bx < fpX + fpW - 14; bx += 24) {
+                ctx.fillRect(bx, by, 20, 10);
+            }
+        }
+        // Heavy Wood Mantel
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(fpX - 8, fpY, fpW + 16, 12);
+        ctx.fillStyle = '#92400e';
+        ctx.fillRect(fpX - 6, fpY + 2, fpW + 12, 4);
+
+        // Firebox Arch
+        const fbX = fpX + 22;
+        const fbY = fpY + 42;
+        const fbW = 66;
+        const fbH = 54;
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(fbX, fbY, fbW, fbH);
+
+        // Hearthstone Floor Slab
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(fbX - 8, fbY + fbH - 4, fbW + 16, 10);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(fbX - 6, fbY + fbH - 3, fbW + 12, 4);
+
+        // Wrought-iron grate
+        ctx.fillStyle = '#020617';
+        for (let gx = fbX + 8; gx < fbX + fbW - 8; gx += 10) {
+            ctx.fillRect(gx, fbY + fbH - 18, 4, 16);
+        }
+
+        // Layered Animated Flames & Rising Embers
+        const t = performance.now() / 150;
+        const flameCX = fbX + fbW / 2;
+        const flameBaseY = fbY + fbH - 8;
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.arc(flameCX + Math.sin(t) * 4, flameBaseY - 10, 16 + Math.cos(t * 1.5) * 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ea580c';
+        ctx.beginPath();
+        ctx.arc(flameCX - Math.sin(t * 1.2) * 3, flameBaseY - 14, 11 + Math.sin(t * 2) * 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(flameCX + Math.sin(t * 2.2) * 2, flameBaseY - 16, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 7. Library Bookshelves on Left Wall
+        const bsX = offX + 18;
+        const bsY = offY + 18;
+        const bsW = 54;
+        const bsH = 180;
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(bsX, bsY, bsW, bsH);
+        ctx.strokeStyle = '#260f02';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bsX, bsY, bsW, bsH);
+        const bookColors = ['#dc2626', '#2563eb', '#16a34a', '#ca8a04', '#9333ea', '#0284c7'];
+        for (let sy = bsY + 12; sy < bsY + bsH - 10; sy += 38) {
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(bsX, sy + 28, bsW, 6);
+            for (let bk = 0; bk < 5; bk++) {
+                ctx.fillStyle = bookColors[(bk + Math.floor(sy / 38)) % bookColors.length];
+                ctx.fillRect(bsX + 6 + bk * 9, sy + 6, 7, 22);
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(bsX + 6 + bk * 9, sy + 10, 7, 2);
+            }
+        }
+
+        // 8. Scriptorium Reading Desk on Left
+        const deskX = offX + 110;
+        const deskY = floorY + 120;
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(deskX, deskY, 56, 42);
+        ctx.fillStyle = '#92400e';
+        ctx.fillRect(deskX + 2, deskY + 2, 52, 38);
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(deskX + 8, deskY + 8, 40, 24);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(deskX + 26, deskY + 8, 2, 24);
+        ctx.fillStyle = '#92400e';
+        ctx.fillRect(deskX + 12, deskY + 12, 12, 2);
+        ctx.fillRect(deskX + 12, deskY + 18, 12, 2);
+        ctx.fillRect(deskX + 31, deskY + 12, 12, 2);
+        ctx.fillRect(deskX + 31, deskY + 18, 12, 2);
+
+        // 9. Physical Wooden Table & Chairs in Room Center (Using standalone asset)
+        const tblX = rugX + Math.floor(rugW / 2) - 60;
+        const tblY = rugY + Math.floor(rugH / 2) - 20;
+        [-34, 126].forEach(cxOffset => {
+            const chX = tblX + cxOffset;
+            const chY = tblY + 8;
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(chX, chY, 18, 28);
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(chX + 2, chY + 2, 14, 14);
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(chX + 2, chY + 18, 14, 8);
+        });
+        if (assets.hasImage('alttp_table_wood')) {
+            assets.drawImage(ctx, 'alttp_table_wood', tblX, tblY, 120, 80);
+        } else {
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(tblX, tblY, 120, 80);
+        }
+
+        // 10. Physical Lone Treasure Chest in Alcove (Using standalone asset)
+        const chX = offX + roomW - 140;
+        const chY = floorY + 80;
+        const chSprite = (currentInterior.chest && currentInterior.chest.opened) ? 'alttp_chest_lone_open' : 'alttp_chest_lone';
+        if (assets.hasImage(chSprite)) {
+            assets.drawImage(ctx, chSprite, chX, chY, 44, 44);
+        } else {
+            ctx.fillStyle = (currentInterior.chest && currentInterior.chest.opened) ? '#64748b' : '#b45309';
+            ctx.fillRect(chX, chY, 40, 36);
+        }
+        if (currentInterior.chest && !currentInterior.chest.opened) {
+            ctx.font = 'bold 10px monospace';
+            ctx.fillStyle = '#fde047';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎁 CHEST [SPACE]', chX + 22, chY - 12);
+        }
+
+        // 11. South Arched Doorway Exit Threshold
+        const doorW = 88;
+        const doorH = 26;
+        const doorX = offX + Math.floor(roomW / 2) - doorW / 2;
+        const doorY = offY + roomH - doorH;
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(doorX - 6, doorY - 4, doorW + 12, doorH + 4);
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(doorX, doorY, doorW, doorH);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(doorX + 6, doorY + 4, doorW - 12, 4);
+        ctx.font = 'bold 9px monospace';
+        ctx.fillStyle = '#fde047';
+        ctx.textAlign = 'center';
+        ctx.fillText('▼ OVERWORLD EXIT [SPACE]', doorX + doorW / 2, doorY + 18);
+
+        // 12. Player Character Inside Room
+        drawCharacterSprite(ctx, offX + player.x, offY + player.y, 2.3, {
+            role: 'player',
+            dir: itemFanfare.active ? 0 : player.dir,
+            frame: itemFanfare.active ? 0 : player.walkFrame || 0,
+            skinColor: player.skinColor || '#fdba74',
+            holdingItemOverhead: itemFanfare.active
+        });
+
+        // Item Fanfare Sunburst when looting chest inside room!
+        if (itemFanfare.active && itemFanfare.item) {
+            const iy = offY + player.y - 36;
+            const rot = performance.now() / 320;
+            ctx.save();
+            ctx.translate(offX + player.x, iy);
+            ctx.rotate(rot);
+            ctx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
+            ctx.lineWidth = 2.5;
+            for (let i = 0; i < 8; i++) {
+                ctx.rotate(Math.PI / 4);
+                ctx.beginPath();
+                ctx.moveTo(8, 0);
+                ctx.lineTo(24, 0);
+                ctx.stroke();
+            }
+            ctx.restore();
+            drawPixelRelicIcon(ctx, offX + player.x, iy, 24, itemFanfare.item);
+        }
+
+        // Floating texts & particles inside room
         particles.forEach(pt => {
             ctx.fillStyle = pt.color;
             ctx.beginPath();
             ctx.arc(offX + pt.x, offY + pt.y, pt.size || 3, 0, Math.PI * 2);
             ctx.fill();
         });
-
         floatingTexts.forEach(ft => {
             ctx.save();
             ctx.font = 'bold 12px "Space Grotesk", sans-serif';
@@ -5961,30 +6212,34 @@
             ctx.restore();
         });
 
-        // 8. Overhead Building Title Plaque & Controls Hint
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-        ctx.fillRect(w / 2 - 160, 12, 320, 26);
+        // Overhead Room Banner
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+        ctx.fillRect(w / 2 - 180, 10, 360, 26);
         ctx.strokeStyle = '#fbbf24';
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(w / 2 - 160, 12, 320, 26);
+        ctx.strokeRect(w / 2 - 180, 10, 360, 26);
         ctx.fillStyle = '#fde047';
         ctx.font = 'bold 11px "Space Grotesk", sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`${currentInterior.name} [INTERIOR] (ESC to Exit)`, w / 2, 29);
+        ctx.fillText(`${currentInterior.name} [INTERIOR] (ESC or Walk South to Exit)`, w / 2, 27);
 
         ctx.restore();
     }
 
     function findNearestInteractable() {
         if (currentInterior) {
+            const roomW = currentInterior.roomW || 760;
+            const roomH = currentInterior.roomH || 580;
             // South doorway exit threshold
-            if (player.y >= 450 && player.x >= 320 && player.x <= 464) {
+            if (player.y >= roomH - 65 && Math.abs(player.x - Math.floor(roomW / 2)) < 60) {
                 return { type: 'exit_door', obj: { name: 'Overworld' }, label: 'Exit to Overworld' };
             }
-            if (currentInterior.chest && !currentInterior.chest.opened && Math.hypot(player.x - 615, player.y - 475) < 65) {
+            // Chest in alcove
+            if (currentInterior.chest && !currentInterior.chest.opened && Math.hypot(player.x - (roomW - 120), player.y - 220) < 65) {
                 return { type: 'interior_chest', obj: currentInterior.chest, label: 'Open Treasure Chest' };
             }
-            if (currentInterior.prop && Math.hypot(player.x - 180, player.y - 470) < 65) {
+            // Reading desk
+            if (currentInterior.prop && Math.hypot(player.x - 138, player.y - 260) < 65) {
                 return { type: 'narrative_prop', obj: currentInterior.prop, label: 'Inspect Manuscript' };
             }
             return null;
@@ -6032,12 +6287,37 @@
         } else if (target.type === 'interior_chest') {
             target.obj.opened = true;
             if (currentInterior.building) currentInterior.building.interiorChestOpened = true;
-            audio.sfxChest();
-            player.shards += 50;
+            player.shards += 75;
             const tonic = player.inventory.find(i => i.id === 'tonic');
             if (tonic) tonic.count++;
-            addFloatText(player.x, player.y - 30, '+50💠 Shards & Logic Tonic Found!', '#fde047');
-            spawnBurst(player.x, player.y, '#fbbf24', 24);
+
+            // Trigger full Zelda-style fanfare!
+            audio.sfxItemFanfare();
+            appState = 'ITEM_FANFARE';
+            player.dir = 0;
+            itemFanfare.active = true;
+            itemFanfare.item = {
+                id: 'archive_logic_cache',
+                name: 'Archive Logic Cache',
+                icon: '💠',
+                slot: 'tome',
+                bonus: '+75💠 Shards & Logic Tonic',
+                desc: 'A hidden reserve of Socratic clarity preserved within the safehouse.'
+            };
+
+            activeDialogueList = [
+                `You opened the Archive Chest and acquired <span style="color: #38bdf8; font-weight: 800;">[Archive Logic Cache]</span>!<br><br><span class="text-amber-300 font-bold">+75💠 Shards & Logic Tonic added to your inventory!</span><br><br><span class="text-slate-300 italic">"Knowledge shared is knowledge multiplied."</span>`
+            ];
+            activeDialogueIndex = 0;
+            activeDialogueNpc = null;
+            renderDialoguePortraitCanvas({ type: 'item', item: itemFanfare.item });
+            document.getElementById('dialogueSpeaker').textContent = 'CHEST LOOTED // ARCHIVE CACHE';
+            document.getElementById('dialogueText').innerHTML = activeDialogueList[0];
+            document.getElementById('dialogueStepCounter').textContent = '[SPACE / CLICK] Continue »';
+            document.getElementById('dialogueModal').classList.remove('hidden');
+
+            addFloatText(player.x, player.y - 30, '+75💠 Shards & Logic Tonic!', '#fde047');
+            spawnBurst(player.x, player.y, '#fbbf24', 28);
             updateAllHud();
         } else if (target.type === 'narrative_prop') {
             startNpcDialogue({ name: target.obj.name, dialogues: [target.obj.text] });
@@ -6469,11 +6749,14 @@
                     });
 
                     if (en.state !== 'cured') {
-                        const bw = en.isBoss ? 56 : 36;
-                        ctx.fillStyle = '#090d16';
-                        ctx.fillRect(en.x - bw / 2, en.y - (en.isBoss ? 48 : 34), bw, 6);
-                        ctx.fillStyle = en.state === 'stunned' ? '#fde047' : '#38bdf8';
-                        ctx.fillRect(en.x - bw / 2 + 1, en.y - (en.isBoss ? 47 : 33), (bw - 2) * (en.clarity / 100), 4);
+                        // Only display clarity bar if illuminated / hit by [Q] (clarity > 0 or stunned)
+                        if (en.clarity > 0 || en.state === 'stunned') {
+                            const bw = en.isBoss ? 56 : 36;
+                            ctx.fillStyle = '#090d16';
+                            ctx.fillRect(en.x - bw / 2, en.y - (en.isBoss ? 48 : 34), bw, 6);
+                            ctx.fillStyle = en.state === 'stunned' ? '#fde047' : '#38bdf8';
+                            ctx.fillRect(en.x - bw / 2 + 1, en.y - (en.isBoss ? 47 : 33), (bw - 2) * (en.clarity / 100), 4);
+                        }
 
                         if (Math.hypot(player.x - en.x, player.y - en.y) < 220) {
                             ctx.font = '10px "Space Grotesk", sans-serif';

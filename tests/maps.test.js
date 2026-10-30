@@ -326,14 +326,14 @@ test('World & Map Validation Test Suite', async (t) => {
         const prevShards = game.player.shards;
 
         // Player near chest
-        game.player.x = 615;
-        game.player.y = 475;
+        game.player.x = 640;
+        game.player.y = 220;
         const target = game.findNearestInteractable();
         assert.ok(target && target.type === 'interior_chest');
 
         game.triggerInteraction();
         assert.strictEqual(chest.opened, true, 'Chest must be marked opened');
-        assert.strictEqual(game.player.shards, prevShards + 50, 'Must award 50 shards');
+        assert.strictEqual(game.player.shards, prevShards + 75, 'Must award 75 shards');
 
         game.exitBuildingInterior();
     });
