@@ -371,5 +371,80 @@ test('World & Map Validation Test Suite', async (t) => {
         assert.strictEqual(game.player.zoneQuests[2].cured, 3);
         assert.strictEqual(game.player.zoneQuests[1].cured, 2);
     });
-});
 
+    await t.test('Clean critter, potion, stump, and signpost sprites are registered in AssetManager', () => {
+        const expectedSprites = [
+            'critter_chicken',
+            'critter_squirrel',
+            'stump',
+            'signpost',
+            'potion_red',
+            'potion_blue'
+        ];
+        expectedSprites.forEach(spriteKey => {
+            assert.ok(game.assets.images.has(spriteKey), `Sprite '${spriteKey}' must be registered in AssetManager`);
+            const entry = game.assets.images.get(spriteKey);
+            assert.ok(entry.src.endsWith('.png'), `Sprite '${spriteKey}' src must be a PNG file (${entry.src})`);
+        });
+    });
+
+    await t.test('Critters spawn appropriately across town, archive, and wilderness sectors', () => {
+        // Town (Map 1) spawns chickens
+        game.loadMap(1);
+        assert.ok(game.critters.length > 0, 'Map 1 must spawn active critters');
+        assert.ok(game.critters.every(c => c.type === 'chicken'), 'Map 1 critters must be chickens');
+
+        // Forest (Map 5) spawns squirrels
+        game.loadMap(5);
+        assert.ok(game.critters.length > 0, 'Map 5 must spawn active critters');
+        assert.ok(game.critters.every(c => c.type === 'squirrel'), 'Map 5 critters must be squirrels');
+    });
+
+    await t.test('All mentors and NPCs have a guaranteed 3x3 open clearing free from trees across maps', () => {
+        // Test all maps 0 through 8
+        for (let m = 0; m < 9; m++) {
+            game.loadMap(m);
+            game.npcs.forEach(npc => {
+                const nc = Math.floor(npc.x / game.TILE_SIZE);
+                const nr = Math.floor(npc.y / game.TILE_SIZE);
+                // NPC coordinate itself must be walkable
+                assert.notStrictEqual(game.mapGrid[nr][nc], 3, `NPC ${npc.name} on Map ${m} cannot be placed on a tree (tile 3)`);
+                assert.notStrictEqual(game.mapGrid[nr][nc], 2, `NPC ${npc.name} on Map ${m} cannot be placed inside boundary wall (tile 2)`);
+                // Check 3x3 surrounding radius
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        const r = nr + dr;
+                        const c = nc + dc;
+                        if (game.mapGrid[r] && game.mapGrid[r][c] !== undefined) {
+                            assert.notStrictEqual(game.mapGrid[r][c], 3, `Surrounding tile (${c},${r}) around NPC ${npc.name} on Map ${m} cannot be a tree`);
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    await t.test('Both Red and Blue potions are consumable and restore clarity/cooldowns', () => {
+        game.player.hp = 50;
+        game.player.cdE = 5;
+        // Use Red Tonic
+        const redTonic = game.player.inventory.find(i => i.id === 'tonic');
+        assert.ok(redTonic && redTonic.count > 0, 'Must have red tonic');
+        const prevRed = redTonic.count;
+        game.useQuickTonic();
+        assert.strictEqual(redTonic.count, prevRed - 1, 'Red tonic count must decrease by 1');
+        assert.strictEqual(game.player.hp, 110, 'Red tonic must heal 60 HP');
+
+        // Deplete remaining red tonics to test blue elixir
+        redTonic.count = 0;
+        const blueElixir = game.player.inventory.find(i => i.id === 'tonic_blue');
+        assert.ok(blueElixir && blueElixir.count > 0, 'Must have blue elixir');
+        const prevBlue = blueElixir.count;
+        game.player.hp = 20;
+        game.player.cdE = 8;
+        game.useQuickTonic();
+        assert.strictEqual(blueElixir.count, prevBlue - 1, 'Blue elixir count must decrease by 1');
+        assert.strictEqual(game.player.hp, 120, 'Blue elixir must heal and cap at max HP');
+        assert.strictEqual(game.player.cdE, 0, 'Blue elixir must reset ability cooldowns');
+    });
+});

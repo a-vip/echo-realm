@@ -47,6 +47,8 @@ function loadGameEnvironment() {
         getItemRarity,
         checkQuestProgressState,
         get npcs() { return npcs; },
+        get critters() { return critters; },
+        useQuickTonic,
         get portals() { return portals; },
         get currentInterior() { return currentInterior; },
         enterBuildingInterior,

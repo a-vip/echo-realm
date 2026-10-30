@@ -510,9 +510,9 @@
                 <div class="h-10 w-[1px] bg-slate-800 mx-1"></div>
 
                 <!-- Quick Potion Slot [1] -->
-                <button id="btnQuickPotion" class="relative w-14 h-14 rounded-xl bg-slate-900 border border-slate-700 flex flex-col items-center justify-center hover:bg-slate-800" title="Drink Logic Tonic [Key 1]">
-                    <span class="text-lg">🧪</span>
-                    <span id="quickPotionCount" class="text-[10px] font-bold text-emerald-300 mono-font">x3</span>
+                <button id="btnQuickPotion" class="relative w-14 h-14 rounded-xl bg-slate-900 border border-slate-700 flex flex-col items-center justify-center hover:bg-slate-800 p-1 transition-all" title="Drink Logic Tonic / Elixir [Key 1]">
+                    <img id="quickPotionImg" src="assets/sprites/potion_red.png" alt="Potion" class="w-7 h-7 object-contain image-rendering-pixelated drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                    <span id="quickPotionCount" class="text-[10px] font-bold text-emerald-300 mono-font mt-0.5">x3</span>
                     <span class="absolute -top-2 -left-2 bg-slate-700 text-white font-bold text-[10px] px-1.5 rounded mono-font">1</span>
                 </button>
             </div>
@@ -1526,6 +1526,12 @@
     }
     const assets = new AssetManager();
     // 100% Cleaned Transparent PNG Sprites (Eliminates all white-box / border artifacts)
+    assets.registerImage('stump', 'assets/sprites/stump.png');
+    assets.registerImage('critter_chicken', 'assets/sprites/critter_chicken.png');
+    assets.registerImage('chicken', 'assets/sprites/chicken.png');
+    assets.registerImage('critter_squirrel', 'assets/sprites/critter_squirrel.png');
+    assets.registerImage('squirrel', 'assets/sprites/squirrel.png');
+    assets.registerImage('signpost', 'assets/sprites/signpost.png');
     assets.registerImage('alttp_tree', 'assets/sprites/alttp_tree.png');
     assets.registerImage('red_cottage_1', 'assets/sprites/red_cottage_1.png');
     assets.registerImage('red_cottage_2', 'assets/sprites/red_cottage_2.png');
@@ -2996,6 +3002,7 @@
     let hazardCleanseProgress = {}; // Key: `${r}_${c}` -> float progress (0.0 to 1.0)
     let portals = [];
     let npcs = [];
+    let critters = [];
     let chests = [];
     let puzzleNodes = []; // Zelda ALTTP-style Crystal Switches, Push Blocks & Socratic Pedestals
     let enemies = [];
@@ -3056,7 +3063,8 @@
         zoneQuests: {},
         // Inventory & 8-Slot 32-Bit Paper-Doll Equipment
         inventory: [
-            { id: 'tonic', name: 'Logic Tonic', icon: '🧪', type: 'consumable', count: 3, heal: 60, desc: 'Restores 60 Epistemic Clarity (HP) instantly.' },
+            { id: 'tonic', name: 'Logic Tonic (Red)', icon: 'potion_red', sprite: 'potion_red', type: 'consumable', count: 3, heal: 60, desc: 'Restores 60 Epistemic Clarity (HP) instantly.' },
+            { id: 'tonic_blue', name: 'Axiom Elixir (Blue)', icon: 'potion_blue', sprite: 'potion_blue', type: 'consumable', count: 2, resetCd: true, desc: 'Calms algorithmic agitation, restores 100 Epistemic Clarity and resets cooldowns.' },
             { id: 'tea', name: 'Grounded Chamomile', icon: '🍵', type: 'consumable', count: 2, resetCd: true, desc: 'Calms algorithmic agitation and resets all ability cooldowns.' }
         ],
         equipment: {
@@ -4228,41 +4236,41 @@
             grid[44][c] = 1;
         }
 
-        // 5. Hedges (Tile 7) & Fences (Tile 13)
-        // Northwest hermitage hedge courtyard
+        // 5. Natural Open Courtyards, Gardens & Walkways (No obstructing block squares!)
+        // Northwest hermitage garden plot (Wildflowers 9 & Open Walkway 1)
         for (let c = 7; c <= 13; c++) {
-            grid[7][c] = 7;
-            grid[11][c] = 7;
+            grid[7][c] = 9;
+            grid[11][c] = 9;
         }
         for (let r = 7; r <= 11; r++) {
-            grid[r][7] = 7;
-            grid[r][13] = 7;
+            grid[r][7] = 9;
+            grid[r][13] = 9;
         }
-        grid[11][10] = 1; // Southern gate into garden
+        grid[11][10] = 1;
 
         // West Long Garden Plot (cols 8..12, rows 15..21)
         for (let r = 15; r <= 21; r++) {
-            grid[r][8] = 7;
-            grid[r][12] = 7;
+            grid[r][8] = 9;
+            grid[r][12] = 9;
             for (let c = 9; c <= 11; c++) {
                 grid[r][c] = (r % 2 === 0) ? 9 : 0;
             }
         }
 
-        // Plaza decorative corner hedges
-        grid[18][20] = 7; grid[18][31] = 7;
-        grid[28][20] = 7; grid[28][31] = 7;
+        // Plaza decorative open corners
+        grid[18][20] = 9; grid[18][31] = 9;
+        grid[28][20] = 9; grid[28][31] = 9;
 
-        // Cucco Pen with Wooden Fences (Tile 13)
+        // Cucco / Critter Meadow
         for (let c = 14; c <= 18; c++) {
-            grid[13][c] = 13;
-            grid[16][c] = 13;
+            grid[13][c] = 9;
+            grid[16][c] = 9;
         }
         for (let r = 13; r <= 16; r++) {
-            grid[r][14] = 13;
-            grid[r][18] = 13;
+            grid[r][14] = 9;
+            grid[r][18] = 9;
         }
-        grid[16][16] = 1; // Open gate
+        grid[16][16] = 1;
 
         // 6. Buildings Footprint (Tile 12 = Solid)
         if (MAPS[1].buildings) {
@@ -4408,7 +4416,27 @@
                     continue;
                 }
 
-                // Safe open clearing around chest
+                // Guarantee clear open walkable plazas around Mentor & Professor Avi
+        if (mapMeta.ally) {
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    const ar = mapMeta.ally.row + dr;
+                    const ac = mapMeta.ally.col + dc;
+                    if (grid[ar] && ac > 0 && ac < cols - 1) grid[ar][ac] = 1;
+                }
+            }
+        }
+        const aviCol = Math.floor(cols / 2) - 4;
+        const aviRow = rows - 4;
+        for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+                const ar = aviRow + dr;
+                const ac = aviCol + dc;
+                if (grid[ar] && ac > 0 && ac < cols - 1) grid[ar][ac] = 1;
+            }
+        }
+
+        // Safe open clearing around chest
                 if (mapMeta.chest && Math.hypot(c - mapMeta.chest.col, r - mapMeta.chest.row) <= 2) {
                     grid[r][c] = 0;
                     continue;
@@ -4851,6 +4879,61 @@
                 fogGrid[r][c] = false;
             }
         }
+        // Clear 3x3 open radius around every NPC across all maps so they are never clipped by trees
+        npcs.forEach(npc => {
+            const nc = Math.floor(npc.x / TILE_SIZE);
+            const nr = Math.floor(npc.y / TILE_SIZE);
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    const r = nr + dr;
+                    const c = nc + dc;
+                    if (mapGrid[r] && mapGrid[r][c] !== undefined) {
+                        if (mapGrid[r][c] === 3 || mapGrid[r][c] === 2 || mapGrid[r][c] === 7 || mapGrid[r][c] === 12 || mapGrid[r][c] === 13) {
+                            mapGrid[r][c] = 1;
+                        }
+                    }
+                }
+            }
+        });
+
+        // Spawn Active Critters (Chickens in Village/Archive, Squirrels in Forests & Valleys)
+        critters = [];
+        if (mapIndex === 1 || mapIndex === 0) {
+            const chickenCount = mapIndex === 1 ? 5 : 3;
+            for (let i = 0; i < chickenCount; i++) {
+                const spot = findOpenTileSpot(15 + i * 4, 18 + (i % 3) * 6);
+                critters.push({
+                    type: 'chicken',
+                    x: spot.x,
+                    y: spot.y,
+                    vx: 0,
+                    vy: 0,
+                    dir: Math.random() < 0.5 ? 'left' : 'right',
+                    state: 'idle',
+                    timer: 1.0 + Math.random() * 2.0,
+                    peckTimer: 0,
+                    animTimer: Math.random() * 10
+                });
+            }
+        }
+        if ([2, 3, 5, 7].includes(mapIndex)) {
+            for (let i = 0; i < 5; i++) {
+                const spot = findOpenTileSpot(12 + i * 5, 14 + (i % 3) * 5);
+                critters.push({
+                    type: 'squirrel',
+                    x: spot.x,
+                    y: spot.y,
+                    vx: 0,
+                    vy: 0,
+                    dir: Math.random() < 0.5 ? 'left' : 'right',
+                    state: 'idle',
+                    timer: 0.8 + Math.random() * 2.0,
+                    twitchTimer: 0,
+                    animTimer: Math.random() * 10
+                });
+            }
+        }
+
         revealFogAround(player.x, player.y, 6);
         hazardCleanseProgress = {};
 
@@ -4965,7 +5048,7 @@
         }
         if (!mapGrid[row]) return true;
         const t = mapGrid[row][col];
-        return t === 2 || t === 3 || t === 4 || t === 6 || t === 7 || t === 12 || t === 13;
+        return t === 2 || t === 3 || t === 4 || t === 6 || t === 12;
     }
 
     function moveEntityWithCollision(ent, dx, dy) {
@@ -5758,7 +5841,80 @@
             if (ft.life <= 0) floatingTexts.splice(i, 1);
         }
 
-        updateCooldownOverlays();
+            function updateCritters(dt) {
+        if (!critters || critters.length === 0) return;
+        critters.forEach(c => {
+            c.timer -= dt;
+            c.animTimer += dt;
+            const distToPlayer = Math.hypot(player.x - c.x, player.y - c.y);
+
+            // React to player proximity: flee if Auron steps close!
+            if (distToPlayer < 45 && c.state !== 'flee') {
+                c.state = 'flee';
+                c.timer = 1.2;
+                const angle = Math.atan2(c.y - player.y, c.x - player.x) + (Math.random() - 0.5) * 0.4;
+                const speed = c.type === 'chicken' ? 55 : 80;
+                c.vx = Math.cos(angle) * speed;
+                c.vy = Math.sin(angle) * speed;
+                c.dir = c.vx < 0 ? 'left' : 'right';
+            }
+
+            if (c.state === 'flee') {
+                const nextX = c.x + c.vx * dt;
+                const nextY = c.y + c.vy * dt;
+                if (!isTileBlocked(Math.floor(nextX / TILE_SIZE), Math.floor(nextY / TILE_SIZE))) {
+                    c.x = nextX;
+                    c.y = nextY;
+                }
+                if (c.timer <= 0) {
+                    c.state = 'idle';
+                    c.timer = 1.5 + Math.random() * 2.0;
+                    c.vx = 0;
+                    c.vy = 0;
+                }
+            } else if (c.state === 'walk') {
+                const nextX = c.x + c.vx * dt;
+                const nextY = c.y + c.vy * dt;
+                if (!isTileBlocked(Math.floor(nextX / TILE_SIZE), Math.floor(nextY / TILE_SIZE))) {
+                    c.x = nextX;
+                    c.y = nextY;
+                } else {
+                    c.state = 'idle';
+                    c.timer = 1.0 + Math.random() * 1.5;
+                }
+                if (c.timer <= 0) {
+                    c.state = 'idle';
+                    c.timer = 1.2 + Math.random() * 2.0;
+                    c.vx = 0;
+                    c.vy = 0;
+                }
+            } else {
+                c.vx = 0;
+                c.vy = 0;
+                if (c.type === 'chicken') c.peckTimer += dt;
+                else c.twitchTimer += dt;
+
+                if (c.timer <= 0) {
+                    if (Math.random() < 0.55) {
+                        c.state = 'walk';
+                        c.timer = 0.8 + Math.random() * 1.6;
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = c.type === 'chicken' ? 24 : 38;
+                        c.vx = Math.cos(angle) * speed;
+                        c.vy = Math.sin(angle) * speed;
+                        c.dir = c.vx < 0 ? 'left' : 'right';
+                    } else {
+                        c.state = 'idle';
+                        c.timer = 1.2 + Math.random() * 2.0;
+                        if (Math.random() < 0.4) c.dir = c.dir === 'left' ? 'right' : 'left';
+                    }
+                }
+            }
+        });
+    }
+
+    updateCooldownOverlays();
+        updateCritters(dt);
     }
 
     // =========================================================================
@@ -5956,6 +6112,21 @@
         ctx.lineWidth = 1;
         ctx.stroke();
 
+        // Rug Fringe Tassels along top and bottom
+        for (let fx = rugX + 6; fx < rugX + rugW - 6; fx += 8) {
+            ctx.fillStyle = (Math.floor(fx / 8) % 2 === 0) ? '#fef3c7' : '#ca8a04';
+            ctx.fillRect(fx, rugY - 4, 4, 4);
+            ctx.fillRect(fx, rugY + rugH, 4, 4);
+        }
+        // Corner Filigree Brackets
+        [[rugX + 8, rugY + 8], [rugX + rugW - 24, rugY + 8], [rugX + 8, rugY + rugH - 24], [rugX + rugW - 24, rugY + rugH - 24]].forEach(([cx, cy]) => {
+            ctx.strokeStyle = '#fde047';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(cx, cy, 16, 16);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(cx + 6, cy + 6, 4, 4);
+        });
+
         // 4. Back Wall: Rich Wainscoted Wood Paneling & Crown Molding
         const wallH = 120;
         ctx.fillStyle = '#2a180e';
@@ -5982,6 +6153,84 @@
         ctx.fillStyle = '#1b0f08';
         ctx.fillRect(offX, offY + wallH - 8, roomW, 8);
 
+        // Framed Paintings on Wainscoted Wall
+        const paintings = [
+            { x: offX + 175, y: offY + 28, title: 'Athenian Peaks' },
+            { x: offX + roomW - 235, y: offY + 28, title: 'Dialectic Sun' }
+        ];
+        paintings.forEach((p, pIdx) => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+            ctx.fillRect(p.x - 2, p.y - 2, 44, 34);
+            ctx.fillStyle = '#ca8a04';
+            ctx.fillRect(p.x, p.y, 40, 30);
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(p.x, p.y, 40, 30);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(p.x + 1, p.y + 1, 3, 3);
+            ctx.fillRect(p.x + 36, p.y + 1, 3, 3);
+            ctx.fillRect(p.x + 1, p.y + 26, 3, 3);
+            ctx.fillRect(p.x + 36, p.y + 26, 3, 3);
+            if (pIdx === 0) {
+                ctx.fillStyle = '#1e1b4b';
+                ctx.fillRect(p.x + 4, p.y + 4, 32, 22);
+                ctx.fillStyle = '#f472b6';
+                ctx.fillRect(p.x + 4, p.y + 14, 32, 4);
+                ctx.fillStyle = '#0f172a';
+                ctx.beginPath();
+                ctx.moveTo(p.x + 4, p.y + 26);
+                ctx.lineTo(p.x + 18, p.y + 10);
+                ctx.lineTo(p.x + 28, p.y + 26);
+                ctx.fill();
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(p.x + 24, p.y + 6, 4, 4);
+            } else {
+                ctx.fillStyle = '#064e3b';
+                ctx.fillRect(p.x + 4, p.y + 4, 32, 22);
+                ctx.fillStyle = '#fbbf24';
+                ctx.beginPath();
+                ctx.arc(p.x + 20, p.y + 11, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#065f46';
+                ctx.fillRect(p.x + 18, p.y + 16, 4, 10);
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath();
+                ctx.arc(p.x + 20, p.y + 15, 8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        });
+
+        // Wall Sconces & Torches with flickering ambient glow
+        const tInterior = performance.now() / 150;
+        [offX + 70, offX + roomW - 90].forEach((scX, scIdx) => {
+            const scY = offY + 45;
+            const sconceGrad = ctx.createRadialGradient(scX, scY, 4, scX, scY, 55);
+            sconceGrad.addColorStop(0, 'rgba(254, 240, 138, 0.28)');
+            sconceGrad.addColorStop(0.5, 'rgba(251, 191, 36, 0.10)');
+            sconceGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = sconceGrad;
+            ctx.beginPath();
+            ctx.arc(scX, scY, 55, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#92400e';
+            ctx.fillRect(scX - 4, scY - 6, 8, 18);
+            ctx.fillStyle = '#ca8a04';
+            ctx.fillRect(scX - 6, scY + 4, 12, 6);
+            const fShift = Math.sin((tInterior * 2) + scIdx * 2.5) * 1.5;
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.arc(scX + fShift, scY - 2, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ea580c';
+            ctx.beginPath();
+            ctx.arc(scX - fShift, scY - 4, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.arc(scX, scY - 6, 3, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
         // 5. Grand Arched Windows with Warm Sunlight Shafts
         const winPositions = [offX + 90, offX + roomW - 160];
         winPositions.forEach((wx, wIdx) => {
@@ -6000,6 +6249,21 @@
             ctx.beginPath();
             ctx.arc(wx + 35, offY + 20, 35, Math.PI, 0);
             ctx.fill();
+
+            // Velvet Window Drapery with Gold Tiebacks
+            ctx.fillStyle = '#991b1b';
+            ctx.fillRect(wx - 10, offY + 16, 10, 86);
+            ctx.fillRect(wx + 70, offY + 16, 10, 86);
+            ctx.fillStyle = '#7f1d1d';
+            ctx.fillRect(wx - 8, offY + 18, 6, 82);
+            ctx.fillRect(wx + 72, offY + 18, 6, 82);
+            ctx.fillStyle = '#991b1b';
+            ctx.fillRect(wx - 12, offY + 12, 94, 8);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(wx - 12, offY + 20, 94, 2);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(wx - 12, offY + 60, 14, 4);
+            ctx.fillRect(wx + 68, offY + 60, 14, 4);
 
             // Diagonal Sunlight Shaft projecting down onto the floor
             const sunGrad = ctx.createLinearGradient(wx + 35, offY + 80, wx + (wIdx === 0 ? 80 : -40), floorY + 240);
@@ -6037,6 +6301,27 @@
         ctx.fillRect(fpX - 8, fpY, fpW + 16, 12);
         ctx.fillStyle = '#92400e';
         ctx.fillRect(fpX - 6, fpY + 2, fpW + 12, 4);
+
+        // Mantel Brass Clock & Candlestick
+        const clkX = fpX + Math.floor(fpW / 2) - 10;
+        ctx.fillStyle = '#ca8a04';
+        ctx.fillRect(clkX, fpY - 14, 20, 14);
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(clkX + 10, fpY - 7, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#020617';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        const cndX = fpX + 12;
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(cndX - 2, fpY - 10, 4, 10);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(cndX - 1, fpY - 18, 2, 8);
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(cndX, fpY - 21, 2.5, 0, Math.PI * 2);
+        ctx.fill();
 
         // Firebox Arch
         const fbX = fpX + 22;
@@ -6114,25 +6399,65 @@
         ctx.fillRect(deskX + 31, deskY + 12, 12, 2);
         ctx.fillRect(deskX + 31, deskY + 18, 12, 2);
 
-        // 9. Physical Wooden Table & Chairs in Room Center (Using standalone asset)
+        // 9. Physical Wooden Table & Chairs in Room Center (Using standalone asset & fine props)
         const tblX = rugX + Math.floor(rugW / 2) - 60;
         const tblY = rugY + Math.floor(rugH / 2) - 20;
-        [-34, 126].forEach(cxOffset => {
+        [-36, 128].forEach(cxOffset => {
             const chX = tblX + cxOffset;
-            const chY = tblY + 8;
+            const chY = tblY + 6;
             ctx.fillStyle = '#451a03';
-            ctx.fillRect(chX, chY, 18, 28);
+            ctx.fillRect(chX, chY, 20, 32);
             ctx.fillStyle = '#78350f';
-            ctx.fillRect(chX + 2, chY + 2, 14, 14);
-            ctx.fillStyle = '#b45309';
-            ctx.fillRect(chX + 2, chY + 18, 14, 8);
+            ctx.fillRect(chX + 2, chY + 2, 16, 4);
+            ctx.fillRect(chX + 2, chY + 12, 16, 2);
+            ctx.fillStyle = '#991b1b';
+            ctx.fillRect(chX + 2, chY + 18, 16, 10);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(chX + 2, chY + 27, 16, 1.5);
+            ctx.fillStyle = '#270e02';
+            ctx.fillRect(chX + 2, chY + 28, 3, 10);
+            ctx.fillRect(chX + 15, chY + 28, 3, 10);
         });
+
         if (assets.hasImage('alttp_table_wood')) {
             assets.drawImage(ctx, 'alttp_table_wood', tblX, tblY, 120, 80);
         } else {
             ctx.fillStyle = '#78350f';
             ctx.fillRect(tblX, tblY, 120, 80);
         }
+
+        // Detailed Props on Table: Open Manuscript, Scholar's Inkwell, Steaming Goblet
+        ctx.fillStyle = '#fef3c7';
+        ctx.fillRect(tblX + 18, tblY + 24, 32, 22);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(tblX + 33, tblY + 24, 2, 22);
+        ctx.fillStyle = '#78350f';
+        for (let ly = tblY + 27; ly < tblY + 44; ly += 4) {
+            ctx.fillRect(tblX + 21, ly, 10, 1.5);
+            ctx.fillRect(tblX + 37, ly, 10, 1.5);
+        }
+        ctx.fillStyle = '#1e3a8a';
+        ctx.fillRect(tblX + 56, tblY + 26, 6, 8);
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.moveTo(tblX + 59, tblY + 26);
+        ctx.lineTo(tblX + 66, tblY + 14);
+        ctx.lineTo(tblX + 68, tblY + 15);
+        ctx.lineTo(tblX + 60, tblY + 28);
+        ctx.fill();
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(tblX + 82, tblY + 28, 10, 14);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(tblX + 84, tblY + 30, 6, 10);
+        const steam1 = Math.sin(t * 1.5) * 2;
+        const steam2 = Math.cos(t * 1.8) * 2;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.beginPath();
+        ctx.arc(tblX + 86 + steam1, tblY + 22, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(tblX + 87 + steam2, tblY + 16, 2, 0, Math.PI * 2);
+        ctx.fill();
 
         // 10. Physical Lone Treasure Chest in Alcove (Using standalone asset)
         const chX = offX + roomW - 140;
@@ -6473,13 +6798,80 @@
                 }
 
                 if (t === 1) {
-                    // Cobblestone / Golden-Stone Highway Path
-                    ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#a16207' : '#334155';
-                    ctx.fillRect(tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                    ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#ca8a04' : '#334155';
-                    ctx.fillRect(tx + 5, ty + 5, TILE_SIZE - 10, TILE_SIZE - 10);
-                    ctx.strokeStyle = mapMeta.isBrightAlttpZone ? '#713f12' : '#1e293b';
-                    ctx.strokeRect(tx + 5, ty + 5, TILE_SIZE - 10, TILE_SIZE - 10);
+                    // Contiguous 32-Bit Cobblestone Highway (Organic, connected road without square boxes)
+                    const isBright = mapMeta.isBrightAlttpZone;
+                    const roadBed = isBright ? '#d4b276' : '#334155';
+                    const stoneLight = isBright ? '#f3e2b8' : '#64748b';
+                    const stoneMid = isBright ? '#dfc48c' : '#475569';
+                    const stoneDark = isBright ? '#9c7841' : '#1e293b';
+
+                    // 1. Full-bleed road foundation connecting smoothly with neighbors
+                    ctx.fillStyle = roadBed;
+                    ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
+
+                    // 2. Neighbor Adjacency
+                    const hasN = r > 0 && mapGrid[r - 1] && mapGrid[r - 1][c] === 1;
+                    const hasS = r < curRows - 1 && mapGrid[r + 1] && mapGrid[r + 1][c] === 1;
+                    const hasW = c > 0 && mapGrid[r][c - 1] === 1;
+                    const hasE = c < curCols - 1 && mapGrid[r][c + 1] === 1;
+
+                    // 3. Nestled Organic Cobblestones (4-5 stones per tile, offset by coordinate hash)
+                    const seed = (r * 37 + c * 59) % 100;
+                    const ox1 = (seed % 3) - 1;
+                    const oy1 = ((seed * 7) % 3) - 1;
+                    const stones = [
+                        { sx: tx + 3 + ox1, sy: ty + 3 + oy1, sw: 16, sh: 14 },
+                        { sx: tx + 22, sy: ty + 4 - oy1, sw: 18, sh: 13 },
+                        { sx: tx + 4 - ox1, sy: ty + 21, sw: 15, sh: 18 },
+                        { sx: tx + 23 + ox1, sy: ty + 21 + oy1, sw: 17, sh: 17 },
+                        { sx: tx + 14, sy: ty + 14, sw: 14, sh: 12 }
+                    ];
+
+                    stones.forEach(st => {
+                        // Stone shadow / mortar
+                        ctx.fillStyle = stoneDark;
+                        ctx.beginPath();
+                        ctx.roundRect(st.sx, st.sy, st.sw, st.sh, 4);
+                        ctx.fill();
+
+                        // Stone surface
+                        ctx.fillStyle = stoneMid;
+                        ctx.beginPath();
+                        ctx.roundRect(st.sx + 1, st.sy + 1, st.sw - 2, st.sh - 2, 3);
+                        ctx.fill();
+
+                        // Top-left highlight
+                        ctx.fillStyle = stoneLight;
+                        ctx.fillRect(st.sx + 2, st.sy + 1, Math.max(2, st.sw - 6), 2);
+                        ctx.fillRect(st.sx + 1, st.sy + 2, 2, Math.max(2, st.sh - 6));
+                    });
+
+                    // 4. Natural blended curb / edge into grass on non-road borders
+                    const turfColor = isBright ? '#16a34a' : mapMeta.groundColor;
+                    if (!hasN) {
+                        ctx.fillStyle = stoneDark;
+                        ctx.fillRect(tx, ty, TILE_SIZE, 2);
+                        ctx.fillStyle = turfColor;
+                        ctx.fillRect(tx + 4 + (seed % 7), ty, 6, 2);
+                    }
+                    if (!hasS) {
+                        ctx.fillStyle = stoneDark;
+                        ctx.fillRect(tx, ty + TILE_SIZE - 2, TILE_SIZE, 2);
+                        ctx.fillStyle = turfColor;
+                        ctx.fillRect(tx + 8 + (seed % 9), ty + TILE_SIZE - 2, 6, 2);
+                    }
+                    if (!hasW) {
+                        ctx.fillStyle = stoneDark;
+                        ctx.fillRect(tx, ty, 2, TILE_SIZE);
+                        ctx.fillStyle = turfColor;
+                        ctx.fillRect(tx, ty + 6 + (seed % 7), 2, 6);
+                    }
+                    if (!hasE) {
+                        ctx.fillStyle = stoneDark;
+                        ctx.fillRect(tx + TILE_SIZE - 2, ty, 2, TILE_SIZE);
+                        ctx.fillStyle = turfColor;
+                        ctx.fillRect(tx + TILE_SIZE - 2, ty + 8 + (seed % 9), 2, 6);
+                    }
                 } else if (t === 2) {
                     // Perimeter Stone Wall / Cliff Ledge
                     ctx.fillStyle = '#0f172a';
@@ -6502,8 +6894,23 @@
 
                 // Scattered Tree Stumps & Clover Tufts on open meadows
                 if ((t === 0 || t === 9) && mapMeta.isBrightAlttpZone) {
-                    if ((r * 7 + c * 11) % 23 === 0 && assets.hasImage('alttp_stump')) {
-                        assets.drawImage(ctx, 'alttp_stump', tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                    if ((r * 7 + c * 11) % 23 === 0) {
+                        renderList.push({
+                            type: 'stump',
+                            baseY: ty + TILE_SIZE - 2,
+                            draw: () => {
+                                ctx.fillStyle = 'rgba(15, 23, 42, 0.3)';
+                                ctx.beginPath();
+                                ctx.ellipse(tx + TILE_SIZE / 2, ty + TILE_SIZE - 6, 16, 7, 0, 0, Math.PI * 2);
+                                ctx.fill();
+                                const sw = 36;
+                                const sh = 36;
+                                const sprite = assets.hasImage('stump') ? 'stump' : 'alttp_stump';
+                                if (assets.hasImage(sprite)) {
+                                    assets.drawImage(ctx, sprite, tx + (TILE_SIZE - sw) / 2, ty + TILE_SIZE - sh - 4, sw, sh);
+                                }
+                            }
+                        });
                     } else if ((r * 3 + c * 5) % 4 === 0 && assets.hasImage('alttp_tallgrass')) {
                         assets.drawImage(ctx, 'alttp_tallgrass', tx + 8, ty + 8, 28, 28);
                     }
@@ -7673,8 +8080,12 @@
             btn.style.boxShadow = `0 0 8px ${rarity.bg}`;
             btn.title = `${item.name} (${rarity.name})`;
 
+            const isSpriteIcon = item.sprite || (item.icon && (item.icon.startsWith('potion') || item.icon.startsWith('critter')));
+            const iconHtml = isSpriteIcon
+                ? `<img src="assets/sprites/${item.sprite || item.icon}.png" class="w-7 h-7 object-contain image-rendering-pixelated drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] mt-0.5">`
+                : `<div class="text-2xl mt-0.5">${item.icon || '🔮'}</div>`;
             btn.innerHTML = `
-                <div class="text-2xl mt-0.5">${item.icon || '🔮'}</div>
+                ${iconHtml}
                 <div class="text-[10px] font-bold truncate max-w-[95%] text-center" style="color: ${rarity.color}; text-shadow: ${rarity.textGlow};">${item.name}</div>
                 <div class="text-[8px] font-bold px-1.5 py-0.5 rounded uppercase" style="color: ${rarity.color}; background: ${rarity.bg}; border: 1px solid ${rarity.border}44;">${rarity.name}</div>
                 ${item.count ? `<span class="absolute top-1 right-1.5 text-[10px] mono-font font-bold text-amber-300">x${item.count}</span>` : ''}
@@ -7711,7 +8122,7 @@
                 detail.innerHTML = `
                     <div class="flex items-center gap-2.5 mb-2.5 pb-2 border-b border-slate-800">
                         <div class="w-10 h-10 rounded-lg flex items-center justify-center text-2xl shrink-0" style="background: ${rarity.bg}; border: 1px solid ${rarity.border};">
-                            ${item.icon || '🔮'}
+                            ${isSpriteIcon ? `<img src="assets/sprites/${item.sprite || item.icon}.png" class="w-8 h-8 object-contain image-rendering-pixelated drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">` : (item.icon || '🔮')}
                         </div>
                         <div class="min-w-0">
                             <div class="font-extrabold text-sm truncate" style="color: ${rarity.color}; text-shadow: ${rarity.textGlow};">${item.name}</div>
@@ -7998,8 +8409,19 @@
             qText.textContent = 'Enter the Glowing North Portal [SPACE]';
         }
 
-        const tonic = player.inventory.find(i => i.id === 'tonic');
-        document.getElementById('quickPotionCount').textContent = `x${tonic ? tonic.count : 0}`;
+        const tonicRed = player.inventory.find(i => i.id === 'tonic');
+        const tonicBlue = player.inventory.find(i => i.id === 'tonic_blue');
+        const redCount = tonicRed ? tonicRed.count : 0;
+        const blueCount = tonicBlue ? tonicBlue.count : 0;
+        const totalPotions = redCount + blueCount;
+        const qCountEl = document.getElementById('quickPotionCount');
+        const qImgEl = document.getElementById('quickPotionImg');
+        if (qCountEl) qCountEl.textContent = `x${totalPotions}`;
+        if (qImgEl) {
+            if (redCount > 0) qImgEl.src = 'assets/sprites/potion_red.png';
+            else if (blueCount > 0) qImgEl.src = 'assets/sprites/potion_blue.png';
+            else qImgEl.src = 'assets/sprites/potion_red.png';
+        }
 
         updateStackedQuestHud();
     }
@@ -8321,15 +8743,24 @@
     });
 
     function useQuickTonic() {
-        const tonic = player.inventory.find(i => i.id === 'tonic');
-        if (!tonic || tonic.count <= 0) {
-            addFloatText(player.x, player.y - 24, 'No Logic Tonics Left!', '#fb7185');
+        let tonic = player.inventory.find(i => i.id === 'tonic' && i.count > 0);
+        let tonicBlue = player.inventory.find(i => i.id === 'tonic_blue' && i.count > 0);
+        if (!tonic && !tonicBlue) {
+            addFloatText(player.x, player.y - 24, 'No Potions Left!', '#fb7185');
             return;
         }
-        tonic.count--;
-        player.hp = Math.min(getTotalMaxHp(), player.hp + 60);
-        audio.sfxCure();
-        addFloatText(player.x, player.y - 24, '+60 HP (Logic Tonic)', '#34d399');
+        if (tonic) {
+            tonic.count--;
+            player.hp = Math.min(getTotalMaxHp(), player.hp + 60);
+            audio.sfxCure();
+            addFloatText(player.x, player.y - 24, '+60 HP (Red Tonic)', '#f87171');
+        } else if (tonicBlue) {
+            tonicBlue.count--;
+            player.hp = Math.min(getTotalMaxHp(), player.hp + 100);
+            player.cdE = 0; player.cdR = 0; player.cdF = 0;
+            audio.sfxCure();
+            addFloatText(player.x, player.y - 24, '+100 HP & Cooldowns Reset! (Blue Elixir)', '#38bdf8');
+        }
         updateAllHud();
     }
 
