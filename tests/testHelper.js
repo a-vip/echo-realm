@@ -59,7 +59,8 @@ function loadGameEnvironment() {
         set appState(val) { appState = val; },
         updateStackedQuestHud,
         triggerInteraction,
-        findNearestInteractable
+        findNearestInteractable,
+        get activeDialogueList() { return activeDialogueList; }
     };`;
 
     const mockElem = {

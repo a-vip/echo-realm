@@ -295,7 +295,7 @@ test('World & Map Validation Test Suite', async (t) => {
         }
     });
 
-    await t.test('Interactive building doors open Link’s house style furnished interior with authentic props and exits', () => {
+    await t.test('Blank room interior opens with physical table, physical interactive chest, narrative prop, and safe exit', () => {
         game.loadMap(1);
         const cottage = game.MAPS[1].buildings[0];
         assert.ok(cottage, 'Map 1 must have cottages');
@@ -305,44 +305,45 @@ test('World & Map Validation Test Suite', async (t) => {
         assert.strictEqual(game.currentInterior.name, cottage.name);
         assert.strictEqual(game.currentInterior.cols, 15);
         assert.strictEqual(game.currentInterior.rows, 13);
-        assert.strictEqual(game.currentInterior.pots.length, 3, 'Must have 3 clay pots along the wall');
+        assert.strictEqual(game.currentInterior.pots.length, 0, 'No baked pots or Link in bed per user requirement');
+        assert.ok(game.currentInterior.table, 'Must have physical table object');
+        assert.ok(game.currentInterior.chest, 'Must have physical lone chest object');
         assert.ok(game.currentInterior.prop, 'Must have narrative inspectable prop');
-        assert.ok(game.currentInterior.chest, 'Must have interior chest');
 
         // Test exiting back to overworld
         game.exitBuildingInterior();
         assert.strictEqual(game.currentInterior, null, 'Current interior must be cleared after exiting');
     });
 
-    await t.test('Clay pots can be picked up, carried overhead, and thrown to shatter into loot', () => {
+    await t.test('Interior physical chest opens on interaction, granting shards and items', () => {
         game.loadMap(1);
         const cottage = game.MAPS[1].buildings[0];
+        cottage.interiorChestOpened = false;
         game.enterBuildingInterior(cottage);
 
-        const pot = game.currentInterior.pots[0];
-        assert.strictEqual(pot.lifted, false);
-        assert.strictEqual(game.player.holdingPot, null);
+        const chest = game.currentInterior.chest;
+        assert.strictEqual(chest.opened, false);
+        const prevShards = game.player.shards;
 
-        // Pick up pot
-        game.player.holdingPot = pot;
-        pot.lifted = true;
-        assert.strictEqual(game.player.holdingPot, pot);
+        // Player near chest
+        game.player.x = 615;
+        game.player.y = 475;
+        const target = game.findNearestInteractable();
+        assert.ok(target && target.type === 'interior_chest');
 
-        // Throw pot
-        const prevProjs = game.activePotProjectiles.length;
-        game.throwHeldPot();
-        assert.strictEqual(game.player.holdingPot, null, 'Holding pot must be cleared after throwing');
-        assert.strictEqual(game.activePotProjectiles.length, prevProjs + 1, 'Active pot projectile must be spawned');
-        assert.strictEqual(pot.broken, true, 'Pot must be marked broken');
+        game.triggerInteraction();
+        assert.strictEqual(chest.opened, true, 'Chest must be marked opened');
+        assert.strictEqual(game.player.shards, prevShards + 50, 'Must award 50 shards');
 
         game.exitBuildingInterior();
     });
 
-    await t.test('Centered 32-bit Epistemic Revelation modal pauses gameplay and stays until dismissed', () => {
+    await t.test('Combat epistemic insight opens bottom NPC dialogue chat box and stays until dismissed', () => {
         game.appState = 'PLAYING';
         game.showDeconstructToast('foundations');
 
-        assert.strictEqual(game.appState, 'REVELATION_POPUP', 'appState must be paused in REVELATION_POPUP');
+        assert.strictEqual(game.appState, 'DIALOGUE', 'appState must be in DIALOGUE for bottom chat box');
+        assert.strictEqual(game.activeDialogueList.length, 2, 'Must have 2 pages: distortion and antidote');
 
         // Dismiss modal
         game.dismissEpistemicRevelation();

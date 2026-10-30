@@ -1113,6 +1113,7 @@
                 this.resumeBgm();
             }, 1250);
         }
+        sfxChest() { this.sfxItemFanfare(); }
         sfxHit() { this.playNote(130, 'sawtooth', 0.2, 0.15, 55); }
         sfxDialog() { this.playNote(540 + Math.random() * 120, 'square', 0.04, 0.04); }
         sfxPortal() {
@@ -1557,6 +1558,11 @@
     assets.registerImage('alttp_tree_olive', 'assets/sprites/alttp_tree_olive.png');
     assets.registerImage('alttp_tent', 'assets/sprites/alttp_tent.png');
     assets.registerImage('alttp_desert_ruin', 'assets/sprites/alttp_desert_ruin.png');
+    assets.registerImage('alttp_chest_lone', 'assets/sprites/alttp_chest_lone.png');
+    assets.registerImage('alttp_chest_lone_open', 'assets/sprites/alttp_chest_lone_open.png');
+    assets.registerImage('alttp_tree_lone', 'assets/sprites/alttp_tree_lone.png');
+    assets.registerImage('alttp_table_wood', 'assets/sprites/alttp_table_wood.png');
+    assets.registerImage('zelda_blank_room', 'assets/sprites/zelda_blank_room.png');
 
     // Legacy spritesheet registration for fallback
     assets.registerSpriteSheet('alttp_overworld', 'assets/sprites/alttp_overworld_spritesheet.jpg', 16, 16);
@@ -2239,29 +2245,17 @@
         const w = b.wCols * TILE_SIZE;
         const h = b.hRows * TILE_SIZE;
 
-        let drawnFromSheet = false;
-        // Prioritize isolated clean transparent PNG with zero white box / background border artifacts
-        if (assets.hasImage(b.spriteKey)) {
-            drawnFromSheet = assets.drawImage(ctx, b.spriteKey, x, y, w, h);
-        } else {
-            const rect = ALTTP_SPRITE_RECTS[b.spriteKey];
-            if (rect && assets.hasSpriteSheet('alttp_overworld')) {
-                drawnFromSheet = assets.drawSubRect(ctx, 'alttp_overworld', rect.sx, rect.sy, rect.sw, rect.sh, x, y, w, h);
-            }
-        }
+        // Render clean, cohesive high-definition 16-bit pixel-art building
+        drawAuthenticAlttpBuilding(ctx, b, x, y, w, h);
 
-        if (!drawnFromSheet) {
-            drawProceduralBuilding(ctx, b, x, y, w, h);
-        }
-
-        // Overhead Building Name Plaque / Signboard on proximity
+        // Overhead Building Name Plaque on proximity
         if (b.name && typeof player !== 'undefined' && Number.isFinite(player.x)) {
             const distToPlayer = Math.hypot(player.x - (x + w / 2), player.y - (y + h / 2));
             if (distToPlayer < 180) {
                 ctx.save();
                 ctx.font = 'bold 11px "Space Grotesk", sans-serif';
                 const textWidth = (ctx.measureText && ctx.measureText(b.name)) ? ctx.measureText(b.name).width : 70;
-                ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
                 ctx.fillRect(x + w / 2 - textWidth / 2 - 8, y - 22, textWidth + 16, 20);
                 ctx.strokeStyle = '#fbbf24';
                 ctx.lineWidth = 1.5;
@@ -2272,6 +2266,145 @@
                 ctx.restore();
             }
         }
+    }
+
+    function drawAuthenticAlttpBuilding(ctx, b, x, y, w, h) {
+        ctx.save();
+
+        // 1. Soft Ambient Drop Shadow underneath building
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(x + w / 2, y + h - 2, w / 2 + 6, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const wallH = Math.floor(h * 0.46);
+        const wallY = y + h - wallH;
+
+        // 2. Stone Foundation Plinth
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x + 4, wallY + wallH - 8, w - 8, 8);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(x + 6, wallY + wallH - 7, w - 12, 4);
+
+        // 3. Stucco / Plaster Facade Walls
+        ctx.fillStyle = '#fef3c7';
+        ctx.fillRect(x + 6, wallY, w - 12, wallH - 8);
+
+        // Dark Timber Framing Corner Posts & Lintel
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(x + 6, wallY, 8, wallH - 8);
+        ctx.fillRect(x + w - 14, wallY, 8, wallH - 8);
+        ctx.fillRect(x + 6, wallY, w - 12, 6);
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(x + 8, wallY + 2, 4, wallH - 10);
+        ctx.fillRect(x + w - 12, wallY + 2, 4, wallH - 10);
+
+        // Intermediate vertical timber posts for wider buildings
+        if (w >= 160) {
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(x + Math.floor(w * 0.32), wallY, 6, wallH - 8);
+            ctx.fillRect(x + Math.floor(w * 0.68), wallY, 6, wallH - 8);
+        }
+
+        // 4. Shingled 3D Hip Roof with Eaves Overhang
+        const roofH = h - wallH + 8;
+        const eX = x - 6;
+        const eW = w + 12;
+
+        let rBase = '#991b1b', rHi = '#dc2626', rSh = '#7f1d1d', rPeak = '#fca5a5';
+        if (b.roofColor === 'blue') {
+            rBase = '#1e3a8a'; rHi = '#2563eb'; rSh = '#172554'; rPeak = '#93c5fd';
+        } else if (b.roofColor === 'slate') {
+            rBase = '#0f766e'; rHi = '#0d9488'; rSh = '#134e4a'; rPeak = '#5eead4';
+        }
+
+        // Main roof polygon
+        ctx.fillStyle = rBase;
+        ctx.beginPath();
+        ctx.moveTo(eX, wallY + 4);
+        ctx.lineTo(x + 18, y + 2);
+        ctx.lineTo(x + w - 18, y + 2);
+        ctx.lineTo(eX + eW, wallY + 4);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shingle highlight bands
+        ctx.fillStyle = rHi;
+        const shingleStep = 8;
+        for (let sy = y + 8; sy < wallY; sy += shingleStep) {
+            const frac = (sy - (y + 2)) / (wallY - (y + 2));
+            const leftX = (x + 18) - frac * 24;
+            const rightX = (x + w - 18) + frac * 24;
+            ctx.fillRect(leftX + 2, sy, rightX - leftX - 4, 3);
+        }
+
+        // Eaves shadow bevel
+        ctx.fillStyle = rSh;
+        ctx.fillRect(eX, wallY + 2, eW, 4);
+
+        // Ridge cap at peak
+        ctx.fillStyle = rPeak;
+        ctx.fillRect(x + 16, y, w - 32, 4);
+
+        // 5. Arched Wooden Plank Door (Center-bottom)
+        const doorW = 28;
+        const doorH = 36;
+        const doorX = x + Math.floor((w - doorW) / 2);
+        const doorY = y + h - doorH - 4;
+
+        // Door frame
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(doorX - 3, doorY - 3, doorW + 6, doorH + 3);
+        // Wood planks
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(doorX, doorY, doorW, doorH);
+        ctx.fillStyle = '#92400e';
+        ctx.fillRect(doorX + 8, doorY, 2, doorH);
+        ctx.fillRect(doorX + 18, doorY, 2, doorH);
+        // Brass knocker & handle
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(doorX + 19, doorY + 16, 4, 4);
+        // Stone doorstep
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(doorX - 4, y + h - 4, doorW + 8, 4);
+
+        // 6. Glowing Lattice Windows
+        const winY = wallY + 8;
+        const winSize = 18;
+        const leftWinX = x + 20;
+        const rightWinX = x + w - 38;
+
+        [leftWinX, rightWinX].forEach(wx => {
+            // Window frame
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(wx - 2, winY - 2, winSize + 4, winSize + 4);
+            // Amber warm glow
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(wx, winY, winSize, winSize);
+            // Cyan glass reflection & dark mullions
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(wx + winSize / 2 - 1, winY, 2, winSize);
+            ctx.fillRect(wx, winY + winSize / 2 - 1, winSize, 2);
+        });
+
+        // 7. Stone Masonry Chimney with Animated Smoke
+        const chimX = x + w - 24;
+        const chimY = y - 10;
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(chimX, chimY, 14, 20);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(chimX + 2, chimY + 2, 10, 16);
+        ctx.fillStyle = '#dc2626'; // brick lip
+        ctx.fillRect(chimX - 2, chimY - 3, 18, 4);
+
+        // Smoke puff
+        const smokeShift = (performance.now() / 300) % 20;
+        ctx.fillStyle = 'rgba(241, 245, 249, 0.45)';
+        ctx.beginPath();
+        ctx.arc(chimX + 7 + Math.sin(performance.now() / 200) * 4, chimY - 8 - smokeShift, 5 + smokeShift * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
     }
 
     function drawWeatherVaneMonument(ctx, col, row) {
@@ -5601,27 +5734,28 @@
     }
 
     // =========================================================================
-    // 10.5. BUILDING INTERIORS & CLAY POT SYSTEM (ZELDA: ALttP LINK'S HOUSE STYLE)
+    // 10.5. CLEAN BUILDING INTERIORS & PHYSICAL OBJECTS SYSTEM
     // =========================================================================
     let currentInterior = null;
-    let activePotProjectiles = [];
+    let activePotProjectiles = []; // maintained for backward compatibility
 
     function enterBuildingInterior(building) {
         const scale = 3.5;
         const roomW = 784;
         const roomH = 616;
 
-        // 3 Authentic ALttP Clay pots on shelf beside the bed
-        const pots = [
-            { id: 1, x: 126, y: 273, lifted: false, broken: false },
-            { id: 2, x: 126, y: 329, lifted: false, broken: false },
-            { id: 3, x: 126, y: 385, lifted: false, broken: false }
-        ];
-
         const prop = getBuildingNarrativeProp(building);
+        // Physical interactive chest using the user's lone chest asset
         const chest = {
-            x: 620, y: 490,
+            x: 615, y: 475,
+            w: 42, h: 42,
             opened: !!building.interiorChestOpened
+        };
+
+        // Physical wooden table using user's table asset
+        const table = {
+            x: 520, y: 340,
+            w: 110, h: 72
         };
 
         currentInterior = {
@@ -5632,9 +5766,10 @@
             scale,
             roomW,
             roomH,
-            pots,
+            table,
             chest,
             prop,
+            pots: [], // removed Link in bed & clay pots entirely per user request
             returnX: player.x,
             returnY: player.y,
             mapIndex: currentMapIndex
@@ -5662,7 +5797,6 @@
         const doorCol = b.col + Math.floor(b.wCols / 2);
         const doorRow = b.row + b.hRows;
 
-        // Guarantee path is open below building
         if (mapGrid[doorRow]) mapGrid[doorRow][doorCol] = 1;
         if (mapGrid[doorRow + 1]) mapGrid[doorRow + 1][doorCol] = 1;
         if (mapGrid[doorRow + 2]) mapGrid[doorRow + 2][doorCol] = 1;
@@ -5671,13 +5805,10 @@
         player.y = (doorRow + 1.2) * TILE_SIZE;
         player.dir = 0; // Facing Down
 
-        // Anti-stuck safety check: if spawn tile is somehow blocked, nudge to open tile
         if (isTileBlocked(doorCol, doorRow + 1)) {
             player.y = (doorRow + 2.2) * TILE_SIZE;
         }
 
-        if (player.holdingPot) player.holdingPot = null;
-        currentInterior = null;
         audio.playFootstep('stone');
         addFloatText(player.x, player.y - 30, `Exited ${bName}`, '#94a3b8');
         updateAllHud();
@@ -5688,43 +5819,43 @@
         if (name.includes('Archive') || name.includes('Scriptoria') || name.includes('Hermitage')) {
             return {
                 name: "Scribe's Manuscript Desk",
-                x: 180, y: 490,
+                x: 180, y: 470,
                 text: "A parchment reads: 'The first weapon of demagogues is to replace nuanced debate with binary outrage. Protect your attention as your sharpest blade.'"
             };
         } else if (name.includes('Apothecary') || name.includes('Herbalist')) {
             return {
                 name: "Apothecary's Distillation Bench",
-                x: 180, y: 490,
+                x: 180, y: 470,
                 text: "Herbal vials are labeled 'Amygdala Soother'. A note explains: 'Fear shuts down logical reasoning. When emotional panic strikes, breathe before reacting.'"
             };
         } else if (name.includes('Tavern') || name.includes('Fellowship')) {
             return {
                 name: "Common Hearth & Chronicle",
-                x: 180, y: 490,
+                x: 180, y: 470,
                 text: "A traveler's ledger: 'In this hall, all factions break bread together. Face-to-face contact dissolves the stereotypes crafted by digital echo chambers.'"
             };
         } else if (name.includes('Workshop') || name.includes('Armory')) {
             return {
                 name: "Artisan's Anvil & Blueprints",
-                x: 180, y: 490,
+                x: 180, y: 470,
                 text: "Blueprints for epistemic shields. Note: 'Dogma fractures under pressure; dialectical inquiry grows stronger through challenge.'"
             };
         } else if (name.includes('Observatory') || name.includes('Academy') || name.includes('Nuance')) {
             return {
                 name: "Dialectic Orrery & Sky Chart",
-                x: 180, y: 490,
+                x: 180, y: 470,
                 text: "Constellations of Logical Fallacies are mapped: Ad Hominem, Strawman, False Equivalence. Understanding them grants immunity to manipulation."
             };
         } else if (name.includes('Safehouse') || name.includes('Refuge') || name.includes('Solidarity')) {
             return {
                 name: "Underground Solidarity Roster",
-                x: 180, y: 490,
+                x: 180, y: 470,
                 text: "A secret registry of brave neighbors hiding targeted out-groups from the Border Wardens. 'Solidarity over scapegoating.'"
             };
         } else {
             return {
                 name: "Philosopher's Reading Desk",
-                x: 180, y: 490,
+                x: 180, y: 470,
                 text: "A well-worn volume of Socratic Dialogues: 'I know that I know nothing—and in acknowledging that, the search for true wisdom begins.'"
             };
         }
@@ -5732,72 +5863,9 @@
 
     function throwHeldPot() {
         if (!player.holdingPot) return;
-        const pot = player.holdingPot;
         player.holdingPot = null;
-        pot.broken = true;
-
-        const ang = getFacingAngle(player.dir);
-        activePotProjectiles.push({
-            x: player.x,
-            y: player.y - 12,
-            vx: Math.cos(ang) * 260,
-            vy: Math.sin(ang) * 260,
-            distTraveled: 0,
-            maxDist: 110,
-            rotation: 0
-        });
+        activePotProjectiles.push({ x: player.x, y: player.y - 12, vx: 200, vy: 0, distTraveled: 0, maxDist: 100, rotation: 0 });
         audio.sfxSlash();
-    }
-
-    function drawClayPot(ctx, x, y, scale = 1.0) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(scale, scale);
-
-        // Soft drop shadow
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
-        ctx.beginPath();
-        ctx.ellipse(0, 8, 12, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Base ceramic body
-        ctx.fillStyle = '#b45309';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 11, 10, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Terracotta highlights & shading
-        ctx.fillStyle = '#d97706';
-        ctx.beginPath();
-        ctx.ellipse(-2, -1, 8, 7, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#f59e0b';
-        ctx.beginPath();
-        ctx.ellipse(-4, -3, 4, 3, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Bottom shadow
-        ctx.fillStyle = '#78350f';
-        ctx.beginPath();
-        ctx.ellipse(0, 6, 9, 3, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Pot rim lip
-        ctx.fillStyle = '#92400e';
-        ctx.fillRect(-8, -10, 16, 4);
-        ctx.fillStyle = '#fde68a';
-        ctx.fillRect(-7, -9, 14, 1.5);
-
-        // Side handles
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(-12, -4, 3, 6);
-        ctx.fillRect(9, -4, 3, 6);
-        ctx.fillStyle = '#b45309';
-        ctx.fillRect(-11, -3, 2, 4);
-        ctx.fillRect(9, -3, 2, 4);
-
-        ctx.restore();
     }
 
     function renderInterior(ctx, w, h) {
@@ -5812,13 +5880,16 @@
 
         ctx.save();
 
-        // 1. Render Authentic SNES Zelda Room Backdrop
-        if (assets.hasImage('zelda_house_interior')) {
+        // 1. Render Completely Blank Room Interior (Walls, Floorboards, Windows, Doorway)
+        if (assets.hasImage('zelda_blank_room')) {
+            ctx.imageSmoothingEnabled = false;
+            assets.drawImage(ctx, 'zelda_blank_room', offX, offY, roomW, roomH);
+        } else if (assets.hasImage('zelda_house_interior')) {
             ctx.imageSmoothingEnabled = false;
             assets.drawImage(ctx, 'zelda_house_interior', offX, offY, roomW, roomH);
         }
 
-        // 2. Animated Hearth Fireplace Flame
+        // 2. Animated Fireplace Flame in Hearth
         const flameX = offX + 163 * scale;
         const flameY = offY + 48 * scale;
         const flameFlicker = Math.sin(performance.now() * 0.015) * 3;
@@ -5835,35 +5906,34 @@
         ctx.arc(flameX - flameFlicker * 0.5, flameY - 4, 3 * scale * 0.45, 0, Math.PI * 2);
         ctx.fill();
 
-        // 3. Chest (Draw opened sprite if chest opened)
-        const chestPx = offX + 176 * scale;
-        const chestPy = offY + 128 * scale;
-        if (currentInterior.chest && currentInterior.chest.opened) {
-            if (assets.hasImage('chest_small_open')) {
-                assets.drawImage(ctx, 'chest_small_open', chestPx, chestPy, 16 * scale, 16 * scale);
-            }
+        // 3. Physical Wooden Table Object (using user's table asset)
+        if (assets.hasImage('alttp_table_wood')) {
+            assets.drawImage(ctx, 'alttp_table_wood', offX + 475, offY + 310, 110, 74);
+        } else {
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(offX + 475, offY + 310, 110, 74);
         }
 
-        // 4. Pot shelf slots: if pot lifted or broken, patch over the slot
-        currentInterior.pots.forEach(pot => {
-            if (pot.lifted || pot.broken) {
-                const potPx = offX + (pot.x - 14);
-                const potPy = offY + (pot.y - 14);
-                ctx.fillStyle = '#5c4328';
-                ctx.fillRect(potPx, potPy, 28, 28);
-                ctx.fillStyle = '#4a3622';
-                ctx.fillRect(potPx + 2, potPy + 2, 24, 24);
-            }
-        });
+        // 4. Physical Chest Object (using user's lone chest asset)
+        const chestPx = offX + 595;
+        const chestPy = offY + 455;
+        const chestSprite = (currentInterior.chest && currentInterior.chest.opened) ? 'alttp_chest_lone_open' : 'alttp_chest_lone';
+        if (assets.hasImage(chestSprite)) {
+            assets.drawImage(ctx, chestSprite, chestPx, chestPy, 38, 38);
+        } else {
+            ctx.fillStyle = (currentInterior.chest && currentInterior.chest.opened) ? '#64748b' : '#b45309';
+            ctx.fillRect(chestPx, chestPy, 36, 32);
+        }
 
-        // 5. Thrown Pot Projectiles in flight
-        activePotProjectiles.forEach(proj => {
-            ctx.save();
-            ctx.translate(offX + proj.x, offY + proj.y);
-            ctx.rotate(proj.rotation);
-            drawClayPot(ctx, 0, 0, 0.9);
-            ctx.restore();
-        });
+        // 5. Narrative Reading Desk
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(offX + 160, offY + 460, 48, 36);
+        ctx.fillStyle = '#92400e';
+        ctx.fillRect(offX + 162, offY + 462, 44, 32);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(offX + 172, offY + 468, 24, 16);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(offX + 183, offY + 468, 2, 16);
 
         // 6. Player character inside room
         drawCharacterSprite(ctx, offX + player.x, offY + player.y, 2.3, {
@@ -5871,12 +5941,8 @@
             dir: player.dir,
             frame: player.walkFrame || 0,
             skinColor: player.skinColor || '#fdba74',
-            holdingItemOverhead: !!player.holdingPot
+            holdingItemOverhead: false
         });
-
-        if (player.holdingPot) {
-            drawClayPot(ctx, offX + player.x, offY + player.y - 28, 0.85);
-        }
 
         // 7. Particles & Floating Text inside room
         particles.forEach(pt => {
@@ -5911,22 +5977,14 @@
 
     function findNearestInteractable() {
         if (currentInterior) {
-            // Exit doorway threshold
-            if (player.y >= 450 && player.x >= 300 && player.x <= 480) {
+            // South doorway exit threshold
+            if (player.y >= 450 && player.x >= 320 && player.x <= 464) {
                 return { type: 'exit_door', obj: { name: 'Overworld' }, label: 'Exit to Overworld' };
             }
-            if (player.holdingPot) {
-                return { type: 'throw_pot', obj: { name: 'Throw Pot' }, label: 'Throw Clay Pot' };
+            if (currentInterior.chest && !currentInterior.chest.opened && Math.hypot(player.x - 615, player.y - 475) < 65) {
+                return { type: 'interior_chest', obj: currentInterior.chest, label: 'Open Treasure Chest' };
             }
-            for (const pot of currentInterior.pots) {
-                if (!pot.broken && !pot.lifted && Math.hypot(player.x - pot.x, player.y - pot.y) < 58) {
-                    return { type: 'pot', obj: pot, label: 'Lift Clay Pot' };
-                }
-            }
-            if (currentInterior.chest && !currentInterior.chest.opened && Math.hypot(player.x - currentInterior.chest.x, player.y - currentInterior.chest.y) < 62) {
-                return { type: 'interior_chest', obj: currentInterior.chest, label: 'Open Chest' };
-            }
-            if (currentInterior.prop && Math.hypot(player.x - currentInterior.prop.x, player.y - currentInterior.prop.y) < 62) {
+            if (currentInterior.prop && Math.hypot(player.x - 180, player.y - 470) < 65) {
                 return { type: 'narrative_prop', obj: currentInterior.prop, label: 'Inspect Manuscript' };
             }
             return null;
@@ -5971,22 +6029,15 @@
             enterBuildingInterior(target.obj);
         } else if (target.type === 'exit_door') {
             exitBuildingInterior();
-        } else if (target.type === 'pot') {
-            player.holdingPot = target.obj;
-            target.obj.lifted = true;
-            audio.sfxPickup();
-            addFloatText(player.x, player.y - 25, 'Lifted Clay Pot!', '#f59e0b');
-        } else if (target.type === 'throw_pot') {
-            throwHeldPot();
         } else if (target.type === 'interior_chest') {
             target.obj.opened = true;
-            currentInterior.building.interiorChestOpened = true;
+            if (currentInterior.building) currentInterior.building.interiorChestOpened = true;
             audio.sfxChest();
             player.shards += 50;
             const tonic = player.inventory.find(i => i.id === 'tonic');
             if (tonic) tonic.count++;
             addFloatText(player.x, player.y - 30, '+50💠 Shards & Logic Tonic Found!', '#fde047');
-            spawnBurst(player.x, player.y, '#fbbf24', 20);
+            spawnBurst(player.x, player.y, '#fbbf24', 24);
             updateAllHud();
         } else if (target.type === 'narrative_prop') {
             startNpcDialogue({ name: target.obj.name, dialogues: [target.obj.text] });
@@ -6123,7 +6174,7 @@
         ctx.scale(ZOOM, ZOOM);
         ctx.translate(-camX, -camY);
 
-        // 1. Render Tile Map (including Trees, Tree Stumps, Tall Grass & Sparkling Water)
+        // PASS 1: GROUND TILES ONLY (Background terrain - cannot clip trees or buildings)
         const waterWaveShift = Math.floor(performance.now() / 260) % 2;
         for (let r = 0; r < curRows; r++) {
             for (let c = 0; c < curCols; c++) {
@@ -6131,7 +6182,7 @@
                 const ty = r * TILE_SIZE;
                 const t = mapGrid[r] ? mapGrid[r][c] : 0;
 
-                // Base ground color: vibrant Hyrule meadow green
+                // Base ground terrain
                 ctx.fillStyle = t === 5 ? '#162436' : (mapMeta.isBrightAlttpZone ? '#16a34a' : mapMeta.groundColor);
                 ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
 
@@ -6142,7 +6193,7 @@
                 }
 
                 if (t === 1) {
-                    // Cobblestone / ALTTP Golden-Stone Highway Path
+                    // Cobblestone / Golden-Stone Highway Path
                     ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#a16207' : '#334155';
                     ctx.fillRect(tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
                     ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#ca8a04' : '#334155';
@@ -6150,25 +6201,13 @@
                     ctx.strokeStyle = mapMeta.isBrightAlttpZone ? '#713f12' : '#1e293b';
                     ctx.strokeRect(tx + 5, ty + 5, TILE_SIZE - 10, TILE_SIZE - 10);
                 } else if (t === 2) {
-                    // Perimeter Stone Wall / ALTTP Cliff Ledge
+                    // Perimeter Stone Wall / Cliff Ledge
                     ctx.fillStyle = '#0f172a';
                     ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
                     ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#14532d' : '#1e293b';
                     ctx.fillRect(tx + 4, ty + 4, TILE_SIZE - 8, TILE_SIZE - 12);
-                } else if (t === 3) {
-                    // Zelda: A Link to the Past Authentic Tree with drop shadow
-                    if (assets.hasImage('alttp_tree')) {
-                        ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
-                        ctx.beginPath();
-                        ctx.ellipse(tx + TILE_SIZE / 2, ty + TILE_SIZE - 4, 20, 8, 0, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        const dw = 56;
-                        const dh = 72;
-                        assets.drawImage(ctx, 'alttp_tree', tx + (TILE_SIZE - dw) / 2, ty + TILE_SIZE - dh, dw, dh);
-                    }
                 } else if (t === 4) {
-                    // River water
+                    // River water with animated ripples
                     ctx.fillStyle = '#0284c7';
                     ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
                     ctx.fillStyle = '#38bdf8';
@@ -6181,18 +6220,12 @@
                     ctx.fillRect(tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
                 }
 
-                // Scattered Tree Stumps & Tall Grass / Clover Tufts on open meadows
+                // Scattered Tree Stumps & Clover Tufts on open meadows
                 if ((t === 0 || t === 9) && mapMeta.isBrightAlttpZone) {
-                    // Tree stump placed organically
-                    if ((r * 7 + c * 11) % 23 === 0) {
-                        if (assets.hasImage('alttp_stump')) {
-                            assets.drawImage(ctx, 'alttp_stump', tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                        }
-                    } else if ((r * 3 + c * 5) % 4 === 0) {
-                        // 4-leaf Tall Grass & Clover Tuft
-                        if (assets.hasImage('alttp_tallgrass')) {
-                            assets.drawImage(ctx, 'alttp_tallgrass', tx + 8, ty + 8, 28, 28);
-                        }
+                    if ((r * 7 + c * 11) % 23 === 0 && assets.hasImage('alttp_stump')) {
+                        assets.drawImage(ctx, 'alttp_stump', tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                    } else if ((r * 3 + c * 5) % 4 === 0 && assets.hasImage('alttp_tallgrass')) {
+                        assets.drawImage(ctx, 'alttp_tallgrass', tx + 8, ty + 8, 28, 28);
                     }
                 }
             }
@@ -6201,15 +6234,7 @@
         // Render Clear Highway Gateways & Navigational Indicators connecting adjacent zones
         renderHighwayBorderIndicators(ctx, mapMeta, curCols, curRows);
 
-        // Render Buildings & Landmarks
-        if (mapMeta.buildings && Array.isArray(mapMeta.buildings)) {
-            mapMeta.buildings.forEach(b => drawBuilding(ctx, b));
-        }
-        if (mapMeta.weatherVane) {
-            drawWeatherVaneMonument(ctx, mapMeta.weatherVane.col, mapMeta.weatherVane.row);
-        }
-
-        // 2. Render Portals
+        // Ground Level: Portals
         portals.forEach(p => {
             const isLocked = p.targetMap > currentMapIndex && !player.questTurnedIn;
             ctx.save();
@@ -6228,9 +6253,18 @@
             ctx.restore();
         });
 
-        // 2.5 Render Zelda ALTTP Puzzle Nodes (Crystal Orb Switches, Push Blocks & Socratic Pedestals)
+        // Ground Level: Push Block Targets & Crystal Orbs
         puzzleNodes.forEach(node => {
-            if (node.type === 'crystal_orb') {
+            if (node.type === 'push_block') {
+                ctx.save();
+                ctx.translate(node.targetX, node.targetY);
+                ctx.strokeStyle = node.solved ? '#34d399' : '#fbbf24';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(-16, -16, 32, 32);
+                ctx.fillStyle = node.solved ? 'rgba(52, 211, 153, 0.25)' : 'rgba(251, 191, 36, 0.2)';
+                ctx.fillRect(-14, -14, 28, 28);
+                ctx.restore();
+            } else if (node.type === 'crystal_orb') {
                 ctx.save();
                 ctx.translate(node.x, node.y);
                 ctx.fillStyle = '#1e293b';
@@ -6253,70 +6287,276 @@
                 ctx.textAlign = 'center';
                 ctx.fillText(node.solved ? '✓ ALIGNED' : '🔮 Hit with [Q]/[E]', 0, -24);
                 ctx.restore();
-            } else if (node.type === 'push_block') {
-                ctx.save();
-                ctx.translate(node.targetX, node.targetY);
-                ctx.strokeStyle = node.solved ? '#34d399' : '#fbbf24';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(-16, -16, 32, 32);
-                ctx.fillStyle = node.solved ? 'rgba(52, 211, 153, 0.25)' : 'rgba(251, 191, 36, 0.2)';
-                ctx.fillRect(-14, -14, 28, 28);
-                ctx.restore();
+            }
+        });
 
-                ctx.save();
-                ctx.translate(node.x, node.y);
-                ctx.fillStyle = '#0f172a';
-                ctx.fillRect(-17, -17, 34, 34);
-                ctx.fillStyle = node.solved ? '#059669' : '#475569';
-                ctx.fillRect(-14, -14, 28, 28);
-                ctx.fillStyle = node.solved ? '#34d399' : '#94a3b8';
-                ctx.fillRect(-8, -8, 16, 16);
-                if (!node.solved) {
-                    ctx.font = 'bold 9px "JetBrains Mono", monospace';
+        // PASS 2: Y-SORTED FOREGROUND ENTITIES & PHYSICAL OBJECTS (Depth sorting)
+        const renderList = [];
+
+        // 1. Trees as physical objects
+        for (let r = 0; r < curRows; r++) {
+            for (let c = 0; c < curCols; c++) {
+                if (mapGrid[r] && mapGrid[r][c] === 3) {
+                    const tx = c * TILE_SIZE;
+                    const ty = r * TILE_SIZE;
+                    const treeW = 64;
+                    const treeH = 80;
+                    renderList.push({
+                        type: 'tree',
+                        baseY: ty + TILE_SIZE,
+                        draw: () => {
+                            ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+                            ctx.beginPath();
+                            ctx.ellipse(tx + TILE_SIZE / 2, ty + TILE_SIZE - 4, 22, 8, 0, 0, Math.PI * 2);
+                            ctx.fill();
+                            if (assets.hasImage('alttp_tree_lone')) {
+                                assets.drawImage(ctx, 'alttp_tree_lone', tx + (TILE_SIZE - treeW) / 2, ty + TILE_SIZE - treeH, treeW, treeH);
+                            } else if (assets.hasImage('alttp_tree')) {
+                                assets.drawImage(ctx, 'alttp_tree', tx + (TILE_SIZE - treeW) / 2, ty + TILE_SIZE - treeH, treeW, treeH);
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        // 2. Buildings as physical objects
+        if (mapMeta.buildings && Array.isArray(mapMeta.buildings)) {
+            mapMeta.buildings.forEach(b => {
+                const bBaseY = (b.row + b.hRows) * TILE_SIZE;
+                renderList.push({
+                    type: 'building',
+                    baseY: bBaseY,
+                    draw: () => drawBuilding(ctx, b)
+                });
+            });
+        }
+
+        // 3. Weathervane monument in Kakariko Village
+        if (mapMeta.weatherVane) {
+            const wvBaseY = (mapMeta.weatherVane.row + 1) * TILE_SIZE;
+            renderList.push({
+                type: 'monument',
+                baseY: wvBaseY,
+                draw: () => drawWeatherVaneMonument(ctx, mapMeta.weatherVane.col, mapMeta.weatherVane.row)
+            });
+        }
+
+        // 4. Physical Push Blocks & Socratic Pedestals
+        puzzleNodes.forEach(node => {
+            if (node.type === 'push_block') {
+                renderList.push({
+                    type: 'push_block',
+                    baseY: node.y + 16,
+                    draw: () => {
+                        ctx.save();
+                        ctx.translate(node.x, node.y);
+                        ctx.fillStyle = '#0f172a';
+                        ctx.fillRect(-17, -17, 34, 34);
+                        ctx.fillStyle = node.solved ? '#059669' : '#475569';
+                        ctx.fillRect(-14, -14, 28, 28);
+                        ctx.fillStyle = node.solved ? '#34d399' : '#94a3b8';
+                        ctx.fillRect(-8, -8, 16, 16);
+                        if (!node.solved) {
+                            ctx.font = 'bold 9px "JetBrains Mono", monospace';
+                            ctx.fillStyle = '#fde047';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('⬆ Push Block', 0, -22);
+                        }
+                        ctx.restore();
+                    }
+                });
+            } else if (node.type === 'socratic_pedestal') {
+                renderList.push({
+                    type: 'pedestal',
+                    baseY: node.y + 16,
+                    draw: () => {
+                        ctx.save();
+                        ctx.translate(node.x, node.y);
+                        ctx.fillStyle = '#0f172a';
+                        ctx.fillRect(-15, -18, 30, 34);
+                        ctx.fillStyle = node.solved ? '#10b981' : '#d97706';
+                        ctx.fillRect(-12, -15, 24, 28);
+                        ctx.fillStyle = '#fde68a';
+                        ctx.fillRect(-8, -10, 16, 4);
+                        ctx.fillRect(-8, -2, 16, 4);
+                        ctx.font = 'bold 9px "JetBrains Mono", monospace';
+                        ctx.fillStyle = node.solved ? '#34d399' : '#fde047';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(node.solved ? '✓ SOLVED' : `📜 ${node.label} [SPACE]`, 0, -24);
+                        ctx.restore();
+                    }
+                });
+            }
+        });
+
+        // 5. Chests as physical objects (using Lone Chest asset)
+        chests.forEach(ch => {
+            renderList.push({
+                type: 'chest',
+                baseY: ch.y + 12,
+                draw: () => {
+                    ctx.save();
+                    ctx.translate(ch.x, ch.y);
+                    const spriteKey = ch.opened ? 'alttp_chest_lone_open' : 'alttp_chest_lone';
+                    if (assets.hasImage(spriteKey)) {
+                        assets.drawImage(ctx, spriteKey, -18, -18, 36, 36);
+                    } else {
+                        ctx.fillStyle = ch.opened ? '#475569' : '#b45309';
+                        ctx.fillRect(-14, -11, 28, 22);
+                    }
+                    if (!ch.opened) {
+                        ctx.font = 'bold 9px "JetBrains Mono", monospace';
+                        ctx.fillStyle = '#fde047';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('🎁 CHEST [SPACE]', 0, -22);
+                    }
+                    ctx.restore();
+                }
+            });
+        });
+
+        // 6. NPCs & Socratic Mentors
+        const bobOffset = Math.sin(performance.now() / 180) * 3;
+        npcs.forEach(npc => {
+            renderList.push({
+                type: 'npc',
+                baseY: npc.y + 14,
+                draw: () => {
+                    drawCharacterSprite(ctx, npc.x, npc.y, 2.3, {
+                        role: npc.role,
+                        dir: 0,
+                        frame: 0,
+                        skinColor: npc.role === 'avi' ? '#b87747' : '#e0ac69',
+                        tunicColor: npc.tunicColor || '#059669'
+                    });
+                    ctx.font = 'bold 11px "Space Grotesk", sans-serif';
                     ctx.fillStyle = '#fde047';
                     ctx.textAlign = 'center';
-                    ctx.fillText('⬆ Push Block', 0, -22);
+                    ctx.fillText(npc.name, npc.x, npc.y + 28);
+
+                    if (npc.isQuestGiver && !player.questTurnedIn) {
+                        let markerChar = '!';
+                        let symbolColor = '#fbbf24';
+                        if (player.questAccepted && !player.questReadyToTurnIn) {
+                            markerChar = '?';
+                            symbolColor = '#94a3b8';
+                        } else if (player.questReadyToTurnIn) {
+                            markerChar = '?';
+                            symbolColor = '#fde047';
+                        }
+                        const my = npc.y - 44 + bobOffset;
+                        drawPixelQuestSymbol(ctx, npc.x, my, markerChar, symbolColor);
+                    }
                 }
-                ctx.restore();
-            } else if (node.type === 'socratic_pedestal') {
-                ctx.save();
-                ctx.translate(node.x, node.y);
-                ctx.fillStyle = '#0f172a';
-                ctx.fillRect(-15, -18, 30, 34);
-                ctx.fillStyle = node.solved ? '#10b981' : '#d97706';
-                ctx.fillRect(-12, -15, 24, 28);
-                ctx.fillStyle = '#fde68a';
-                ctx.fillRect(-8, -10, 16, 4);
-                ctx.fillRect(-8, -2, 16, 4);
-                ctx.font = 'bold 9px "JetBrains Mono", monospace';
-                ctx.fillStyle = node.solved ? '#34d399' : '#fde047';
-                ctx.textAlign = 'center';
-                ctx.fillText(node.solved ? '✓ SOLVED' : `📜 ${node.label} [SPACE]`, 0, -24);
-                ctx.restore();
+            });
+        });
+
+        // 7. Enemies, Zealots & Bosses
+        enemies.forEach(en => {
+            renderList.push({
+                type: 'enemy',
+                baseY: en.y + 14,
+                draw: () => {
+                    const scale = en.isBoss ? 3.2 : 2.2;
+                    drawCharacterSprite(ctx, en.x, en.y, scale, {
+                        role: en.state === 'cured' ? 'player' : en.role,
+                        dir: en.dir,
+                        frame: en.frame,
+                        skinColor: '#e0ac69',
+                        tunicColor: '#10b981',
+                        isStunned: en.state === 'stunned'
+                    });
+
+                    if (en.state !== 'cured') {
+                        const bw = en.isBoss ? 56 : 36;
+                        ctx.fillStyle = '#090d16';
+                        ctx.fillRect(en.x - bw / 2, en.y - (en.isBoss ? 48 : 34), bw, 6);
+                        ctx.fillStyle = en.state === 'stunned' ? '#fde047' : '#38bdf8';
+                        ctx.fillRect(en.x - bw / 2 + 1, en.y - (en.isBoss ? 47 : 33), (bw - 2) * (en.clarity / 100), 4);
+
+                        if (Math.hypot(player.x - en.x, player.y - en.y) < 220) {
+                            ctx.font = '10px "Space Grotesk", sans-serif';
+                            ctx.fillStyle = '#fca5a5';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(en.quote, en.x, en.y - (en.isBoss ? 54 : 40));
+                        }
+                    } else {
+                        ctx.font = 'bold 10px "JetBrains Mono", monospace';
+                        ctx.fillStyle = '#34d399';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('✓ MIND FREED', en.x, en.y - 32);
+                    }
+                }
+            });
+        });
+
+        // 8. Player Sprite & Combat Auras
+        renderList.push({
+            type: 'player',
+            baseY: player.y + 14,
+            draw: () => {
+                if (player.aegisTimer > 0) {
+                    ctx.save();
+                    ctx.strokeStyle = '#34d399';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(player.x, player.y, 28 + Math.sin(performance.now() * 0.01) * 3, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                drawCharacterSprite(ctx, player.x, player.y, 2.3, {
+                    role: 'player',
+                    dir: itemFanfare.active ? 0 : player.dir,
+                    frame: itemFanfare.active ? 0 : player.animFrame,
+                    skinColor: DIFFICULTY_PROFILES[player.skinIndex].skinHex,
+                    hairStyle: player.hairStyle,
+                    hairColor: player.hairColor,
+                    tunicColor: player.tunicColor,
+                    holdingItemOverhead: itemFanfare.active,
+                    equipment: player.equipment
+                });
+
+                // Authentic Zelda Overhead Item-Get Sunburst & Relic Icon
+                if (itemFanfare.active && itemFanfare.item) {
+                    const iy = player.y - 36;
+                    const rot = performance.now() / 320;
+                    ctx.save();
+                    ctx.translate(player.x, iy);
+                    ctx.rotate(rot);
+                    ctx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
+                    ctx.lineWidth = 2.5;
+                    for (let i = 0; i < 8; i++) {
+                        ctx.rotate(Math.PI / 4);
+                        ctx.beginPath();
+                        ctx.moveTo(8, 0);
+                        ctx.lineTo(24, 0);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                    drawPixelRelicIcon(ctx, player.x, iy, 24, itemFanfare.item);
+                }
+
+                // [E] Axiom Blade Sweep Arc
+                if (player.slashAnimTimer > 0) {
+                    const ang = getFacingAngle(player.dir);
+                    ctx.save();
+                    ctx.strokeStyle = '#fbbf24';
+                    ctx.lineWidth = 6;
+                    ctx.beginPath();
+                    ctx.arc(player.x, player.y, 52, ang - 0.85, ang + 0.85);
+                    ctx.stroke();
+                    ctx.restore();
+                }
             }
         });
 
-        // 3. Render Treasure Chests
-        chests.forEach(ch => {
-            ctx.save();
-            ctx.translate(ch.x, ch.y);
-            ctx.fillStyle = '#090d16';
-            ctx.fillRect(-16, -13, 32, 26);
-            ctx.fillStyle = ch.opened ? '#475569' : '#b45309';
-            ctx.fillRect(-14, -11, 28, 22);
-            ctx.fillStyle = ch.opened ? '#94a3b8' : '#fbbf24';
-            ctx.fillRect(-14, -2, 28, 4);
-            ctx.fillRect(-3, -4, 6, 8);
-            if (!ch.opened) {
-                ctx.font = 'bold 9px "JetBrains Mono", monospace';
-                ctx.fillStyle = '#fde047';
-                ctx.textAlign = 'center';
-                ctx.fillText('🎁 CHEST [SPACE]', 0, -18);
-            }
-            ctx.restore();
-        });
+        // Depth sorting: Back-to-front rendering of all physical objects
+        renderList.sort((a, b) => a.baseY - b.baseY);
+        renderList.forEach(item => item.draw());
 
-        // 4. Render [Q] Prism Beam Cone
+        // [Q] Prism Beam Cone
         if (player.isChannelingQ) {
             const ang = getFacingAngle(player.dir);
             ctx.save();
@@ -6330,125 +6570,6 @@
             ctx.arc(player.x, player.y, 215, ang - 0.48, ang + 0.48);
             ctx.closePath();
             ctx.fill();
-            ctx.restore();
-        }
-
-        // 5. Render Professor Avi & Resistance Allies + Overhead ! / ? Markers
-        const bobOffset = Math.sin(performance.now() / 180) * 3;
-        npcs.forEach(npc => {
-            drawCharacterSprite(ctx, npc.x, npc.y, 2.3, {
-                role: npc.role,
-                dir: 0,
-                frame: 0,
-                skinColor: npc.role === 'avi' ? '#b87747' : '#e0ac69',
-                tunicColor: npc.tunicColor || '#059669'
-            });
-            ctx.font = 'bold 11px "Space Grotesk", sans-serif';
-            ctx.fillStyle = '#fde047';
-            ctx.textAlign = 'center';
-            ctx.fillText(npc.name, npc.x, npc.y + 28);
-
-            // Overhead 32-Bit Pixel Quest Marker for Professor Avi (NO BOXES! Pure 32-bit pixel '!' and '?')
-            if (npc.isQuestGiver && !player.questTurnedIn) {
-                let markerChar = '!';
-                let symbolColor = '#fbbf24';
-                if (player.questAccepted && !player.questReadyToTurnIn) {
-                    markerChar = '?';
-                    symbolColor = '#94a3b8'; // Grey '?' while incomplete
-                } else if (player.questReadyToTurnIn) {
-                    markerChar = '?';
-                    symbolColor = '#fde047'; // Glowing yellow '?' when ready to turn in
-                }
-                const my = npc.y - 44 + bobOffset;
-                drawPixelQuestSymbol(ctx, npc.x, my, markerChar, symbolColor);
-            }
-        });
-
-        // 6. Render Enemies, Zealots & Bosses
-        enemies.forEach(en => {
-            const scale = en.isBoss ? 3.2 : 2.2;
-            drawCharacterSprite(ctx, en.x, en.y, scale, {
-                role: en.state === 'cured' ? 'player' : en.role,
-                dir: en.dir,
-                frame: en.frame,
-                skinColor: '#e0ac69',
-                tunicColor: '#10b981',
-                isStunned: en.state === 'stunned'
-            });
-
-            if (en.state !== 'cured') {
-                const bw = en.isBoss ? 56 : 36;
-                ctx.fillStyle = '#090d16';
-                ctx.fillRect(en.x - bw / 2, en.y - (en.isBoss ? 48 : 34), bw, 6);
-                ctx.fillStyle = en.state === 'stunned' ? '#fde047' : '#38bdf8';
-                ctx.fillRect(en.x - bw / 2 + 1, en.y - (en.isBoss ? 47 : 33), (bw - 2) * (en.clarity / 100), 4);
-
-                if (Math.hypot(player.x - en.x, player.y - en.y) < 220) {
-                    ctx.font = '10px "Space Grotesk", sans-serif';
-                    ctx.fillStyle = '#fca5a5';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(en.quote, en.x, en.y - (en.isBoss ? 54 : 40));
-                }
-            } else {
-                ctx.font = 'bold 10px "JetBrains Mono", monospace';
-                ctx.fillStyle = '#34d399';
-                ctx.textAlign = 'center';
-                ctx.fillText('✓ MIND FREED', en.x, en.y - 32);
-            }
-        });
-
-        // 7. Render Player Sprite & Combat Auras
-        if (player.aegisTimer > 0) {
-            ctx.save();
-            ctx.strokeStyle = '#34d399';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, 28 + Math.sin(performance.now() * 0.01) * 3, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        drawCharacterSprite(ctx, player.x, player.y, 2.3, {
-            role: 'player',
-            dir: itemFanfare.active ? 0 : player.dir,
-            frame: itemFanfare.active ? 0 : player.animFrame,
-            skinColor: DIFFICULTY_PROFILES[player.skinIndex].skinHex,
-            hairStyle: player.hairStyle,
-            hairColor: player.hairColor,
-            tunicColor: player.tunicColor,
-            holdingItemOverhead: itemFanfare.active,
-            equipment: player.equipment
-        });
-
-        // Authentic Zelda Overhead Item-Get Sunburst & Relic Icon
-        if (itemFanfare.active && itemFanfare.item) {
-            const iy = player.y - 36;
-            const rot = performance.now() / 320;
-            ctx.save();
-            ctx.translate(player.x, iy);
-            ctx.rotate(rot);
-            ctx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
-            ctx.lineWidth = 2.5;
-            for (let i = 0; i < 8; i++) {
-                ctx.rotate(Math.PI / 4);
-                ctx.beginPath();
-                ctx.moveTo(8, 0);
-                ctx.lineTo(24, 0);
-                ctx.stroke();
-            }
-            ctx.restore();
-            drawPixelRelicIcon(ctx, player.x, iy, 24, itemFanfare.item);
-        }
-
-        // [E] Axiom Blade Sweep Arc
-        if (player.slashAnimTimer > 0) {
-            const ang = getFacingAngle(player.dir);
-            ctx.save();
-            ctx.strokeStyle = '#fbbf24';
-            ctx.lineWidth = 6;
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, 52, ang - 0.85, ang + 0.85);
-            ctx.stroke();
             ctx.restore();
         }
 
@@ -6968,7 +7089,7 @@
 
         ctx.save();
 
-        // 1. Render Authentic Full Stitched Connected Overworld Map
+        // 1. Render Clean Authentic ALttP Overworld Map (Zero colored overlay rectangles)
         if (assets.hasImage('alttp_world_map_full')) {
             ctx.imageSmoothingEnabled = true;
             assets.drawImage(ctx, 'alttp_world_map_full', innerX, innerY, innerW, innerH);
@@ -6980,9 +7101,9 @@
             ctx.fillRect(innerX, innerY, innerW, innerH);
         }
 
-        // 2. Translucent 3x3 Sector Grid Demarcation Lines
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
-        ctx.lineWidth = 1.5;
+        // 2. Subtle Translucent 3x3 Sector Grid Demarcation Lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 1;
         ctx.setLineDash([4, 4]);
         for (let i = 1; i < 3; i++) {
             ctx.beginPath();
@@ -6997,39 +7118,18 @@
         }
         ctx.setLineDash([]);
 
-        // 3. Sector Badges on Map
-        for (let r = 0; r < 3; r++) {
-            for (let c = 0; c < 3; c++) {
-                const mapIdx = OVERWORLD_GRID[r][c];
-                const meta = MAP_OVERWORLD_POS[mapIdx];
-                if (meta) {
-                    const sx = innerX + c * secW;
-                    const sy = innerY + r * secH;
-                    ctx.fillStyle = 'rgba(2, 6, 23, 0.75)';
-                    ctx.fillRect(sx + 4, sy + 4, secW - 8, 14);
-                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(sx + 4, sy + 4, secW - 8, 14);
-                    ctx.fillStyle = '#f8fafc';
-                    ctx.font = '7px "Press Start 2P", monospace';
-                    ctx.textAlign = 'left';
-                    ctx.fillText(`${meta.icon} ${meta.alttpName}`, sx + 8, sy + 14);
-                }
-            }
-        }
-
-        // 4. Sector Hover Highlight
+        // 3. Sector Hover Highlight (sleek gold outline, no giant opaque rectangles)
         if (mapHoverGridPos) {
             const hx = innerX + mapHoverGridPos.col * secW;
             const hy = innerY + mapHoverGridPos.row * secH;
-            ctx.fillStyle = devMode ? 'rgba(251, 191, 36, 0.16)' : 'rgba(56, 189, 248, 0.16)';
+            ctx.fillStyle = devMode ? 'rgba(251, 191, 36, 0.12)' : 'rgba(56, 189, 248, 0.12)';
             ctx.fillRect(hx, hy, secW, secH);
             ctx.strokeStyle = devMode ? '#fbbf24' : '#38bdf8';
             ctx.lineWidth = 2.5;
             ctx.strokeRect(hx + 1, hy + 1, secW - 2, secH - 2);
         }
 
-        // 5. Accurate Real-Time Player Location Beacon
+        // 4. Accurate Real-Time Player Location Beacon
         const curMeta = MAP_OVERWORLD_POS[currentMapIndex];
         if (curMeta) {
             const mCols = getMapCols(currentMapIndex);
@@ -7072,7 +7172,7 @@
             ctx.fillText('YOU ARE HERE', px, py - 26);
         }
 
-        // 6. Developer Teleport Target Cursor
+        // 5. Developer Teleport Target Cursor
         if (devMode && mapHoverGridPos) {
             ctx.strokeStyle = '#fbbf24';
             ctx.lineWidth = 1.5;
@@ -7096,7 +7196,7 @@
 
         ctx.restore();
 
-        // 7. Authentic Pixel Cloud Border Frame
+        // 6. Authentic Pixel Cloud Border Frame
         drawAlttpPixelCloudFrame(ctx, w, h, border);
     }
 
@@ -7714,26 +7814,36 @@
         if (!entry) return;
         const item = entry.deconstructions[Math.floor(Math.random() * entry.deconstructions.length)];
 
-        const modal = document.getElementById('epistemicRevelationModal');
-        const headerEl = document.getElementById('revelationHeader');
-        const mythEl = document.getElementById('revelationMyth');
-        const truthEl = document.getElementById('revelationTruth');
+        // Route combat epistemic insights through regular bottom NPC chat box
+        const speakerName = `💡 EPISTEMIC INSIGHT: ${entry.title.toUpperCase()}`;
+        const page1 = `<div class="mb-1 text-rose-300 font-bold tracking-wide text-xs">PROPAGANDA DISTORTION EXPOSED:</div><div class="italic text-slate-200 text-sm">"${item.myth}"</div>`;
+        const page2 = `<div class="mb-1 text-emerald-300 font-bold tracking-wide text-xs">CRITICAL SOCRATIC ANTIDOTE:</div><div class="text-white text-sm font-semibold">"${item.truth}"</div>`;
 
-        if (headerEl) headerEl.textContent = `${entry.icon} ${entry.title}`;
-        if (mythEl) mythEl.textContent = `"${item.myth}"`;
-        if (truthEl) truthEl.textContent = `"${item.truth}"`;
+        activeDialogueNpc = { name: `💡 ${entry.title}`, icon: entry.icon, role: 'mentor' };
+        activeDialogueList = [page1, page2];
+        activeDialogueIndex = 0;
 
-        if (modal) {
-            modal.classList.remove('hidden');
-            appState = 'REVELATION_POPUP';
-            audio.sfxPuzzleSolved();
-        }
+        appState = 'DIALOGUE';
+        renderDialoguePortraitCanvas({ type: 'mentor', npc: activeDialogueNpc });
+        const speakerEl = document.getElementById('dialogueSpeaker');
+        const textEl = document.getElementById('dialogueText');
+        const counterEl = document.getElementById('dialogueStepCounter');
+        const modalEl = document.getElementById('dialogueModal');
+
+        if (speakerEl) speakerEl.textContent = speakerName;
+        if (textEl) textEl.innerHTML = activeDialogueList[0];
+        if (counterEl) counterEl.textContent = `1 / ${activeDialogueList.length} [SPACE] »`;
+        if (modalEl) modalEl.classList.remove('hidden');
+
+        audio.sfxPuzzleSolved();
     }
 
     function dismissEpistemicRevelation() {
-        const modal = document.getElementById('epistemicRevelationModal');
-        if (modal) modal.classList.add('hidden');
-        if (appState === 'REVELATION_POPUP') {
+        const dModal = document.getElementById('dialogueModal');
+        if (dModal) dModal.classList.add('hidden');
+        const rModal = document.getElementById('epistemicRevelationModal');
+        if (rModal) rModal.classList.add('hidden');
+        if (appState === 'DIALOGUE' || appState === 'REVELATION_POPUP') {
             appState = 'PLAYING';
         }
     }
