@@ -91,9 +91,18 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
 
         assert.equal(env.isCitadelUnlocked(), false, 'Citadel should be locked initially');
 
-        // Satisfy requirements
-        env.player.freedTotal = 20;
-        assert.equal(env.isCitadelUnlocked(), true, 'Citadel should unlock once enough minds are freed');
+        // Incomplete progress keeps Citadel sealed
+        env.player.zoneQuests[0] = { completed: true, bossDefeated: true };
+        assert.equal(env.isCitadelUnlocked(), false, 'Citadel must remain sealed when only 1 sector is completed');
+
+        // Satisfy requirements: complete all prior sectors 0 through 7 and defeat their bosses
+        for (let i = 0; i <= 7; i++) {
+            env.player.zoneQuests[i] = {
+                completed: true,
+                bossDefeated: true
+            };
+        }
+        assert.equal(env.isCitadelUnlocked(), true, 'Citadel must unlock once all 8 outer sectors (0 through 7) are liberated');
     });
 
     test('Combat epistemic insight dialogue box is minimal 32-bit conversational dialogue without yellow headers or red banners', () => {
@@ -158,7 +167,7 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
 
         assert.equal(env.player.questAccepted, true, 'Quest must be accepted after dialogue');
         assert.equal(env.player.zoneQuests[1].accepted, true);
-
+        
         // Now quest appears in active quest log
         env.updateStackedQuestHud();
         const activeQuestsAfter = Object.values(env.player.zoneQuests).filter(q => q.accepted && !q.completed);
@@ -379,6 +388,102 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         env.updateGameplay(0.016);
         const prompt = env.document.getElementById('interactPrompt');
         assert.equal(prompt.textContent.trim(), 'Exit', 'Prompt must strictly say Exit');
+    });
+
+    test('Map 3 (Iron & Velvet Divide) contains zero interior giant grey monolith blocks (tile 2) and has open bridges', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(3);
+        const grid = env.mapGrid;
+        const rows = grid.length;
+        const cols = grid[0].length;
+
+        // Check inner area (away from outer border rows/cols) for any tile 2 (wall blocks)
+        let interiorWallBlocks = 0;
+        for (let r = 2; r < rows - 2; r++) {
+            for (let c = 2; c < cols - 2; c++) {
+                if (grid[r][c] === 2) {
+                    interiorWallBlocks++;
+                }
+            }
+        }
+        assert.equal(interiorWallBlocks, 0, 'Map 3 must contain zero giant grey monolith wall blocks in the interior');
+
+        // Check that bridge tiles (tile 8) exist crossing the central river
+        let bridgeTiles = 0;
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                if (grid[r][c] === 8) bridgeTiles++;
+            }
+        }
+        assert.ok(bridgeTiles > 0, 'Map 3 must have bridge causeways crossing the river');
+    });
+
+    test('Grand Archive Sanctuary uses archive_tower style and renders custom arcane library interior', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(0);
+        const archiveBuilding = env.MAPS[0].buildings.find(b => b.id === 'archive_sanctuary');
+        assert.ok(archiveBuilding, 'Archive Sanctuary must exist on Map 0');
+        assert.equal(archiveBuilding.style, 'archive_tower', 'Archive Sanctuary must use archive_tower style');
+
+        // Enter interior
+        env.enterBuildingInterior(archiveBuilding);
+        assert.equal(env.currentInterior.buildingId, 'archive_sanctuary');
+        assert.doesNotThrow(() => {
+            env.renderGameplay();
+        }, 'Archive tower arcane interior must render cleanly');
+    });
+
+    test('Socratic Cognitive Inoculation duel triggers minimal bottom dialog with [Q], [E], [R] choices at HP thresholds', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(3);
+        const boss = env.MAPS[3].boss;
+        assert.ok(boss, 'Map 3 must have Alpha-Cynic Algorithm boss');
+        assert.ok(boss.duels && boss.duels.length > 0, 'Boss must define multi-stage duels');
+
+        // Trigger duel at 50% HP threshold
+        boss.hp = Math.floor(boss.maxHp * 0.49);
+        env.triggerSocraticBossDuel(boss, 0.50);
+
+        assert.equal(env.appState, 'PAUSED', 'App state should pause during Socratic duel');
+        assert.ok(env.activeDuelBoss, 'Active duel boss must be set');
+        assert.equal(env.activeDuelOptions.length, 3, 'Duel must present 3 dialectic choices');
+
+        // Verify options modal content
+        const duelModal = env.document.getElementById('socraticDuelModal');
+        const choices = env.document.getElementById('duelChoicesContainer');
+        assert.ok(choices.innerHTML.includes('>Q<') || choices.innerHTML.includes('Q'), 'Duel UI must display [Q] shortcut badge');
+        assert.ok(choices.innerHTML.includes('>E<') || choices.innerHTML.includes('E'), 'Duel UI must display [E] shortcut badge');
+        assert.ok(choices.innerHTML.includes('>R<') || choices.innerHTML.includes('R'), 'Duel UI must display [R] shortcut badge');
+
+        // Select correct option with hotkey
+        const correctIndex = env.activeDuelOptions.findIndex(o => o.correct);
+        assert.ok(correctIndex >= 0);
+        const initialBossHp = boss.hp;
+        env.selectSocraticDuelOption(correctIndex);
+
+        assert.equal(env.appState, 'PLAYING', 'Game should resume playing after resolving duel');
+        assert.ok(boss.hp < initialBossHp, 'Boss HP must be damaged by correct Socratic refutation');
+    });
+
+    test('Citadel perimeter border guards prevent entry and trigger warning when outer sectors are incomplete', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(7); // Borderlands adjacent to Map 8 (Citadel)
+        env.appState = 'PLAYING';
+        assert.equal(env.isCitadelUnlocked(), false, 'Citadel must be locked initially');
+
+        // Move player close to the Citadel border gate
+        env.player.x = 20;
+        env.player.y = 800;
+        env.updateGameplay(0.016);
+
+        // Guard intercept should trigger warning dialog
+        assert.doesNotThrow(() => {
+            env.triggerCitadelGuardWarning();
+        });
+        assert.equal(env.appState, 'DIALOGUE');
+        const dialogueText = env.document.getElementById('dialogueText').textContent;
+        assert.ok(dialogueText.toLowerCase().includes('martial lockdown'),
+            'Guard warning dialogue must notify player of lockdown');
     });
 });
 

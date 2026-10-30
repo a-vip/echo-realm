@@ -73,7 +73,12 @@ function loadGameEnvironment() {
         get signposts() { return signposts; },
         get enemies() { return enemies; },
         get document() { return document; },
-        getSectorGrid
+        getSectorGrid,
+        triggerCitadelGuardWarning,
+        triggerSocraticBossDuel,
+        selectSocraticDuelOption,
+        get activeDuelBoss() { return activeDuelBoss; },
+        get activeDuelOptions() { return activeDuelOptions; }
     };`;
 
     function createMockElement(id = '') {
