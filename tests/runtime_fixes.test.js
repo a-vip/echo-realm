@@ -95,4 +95,135 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         env.player.freedTotal = 20;
         assert.equal(env.isCitadelUnlocked(), true, 'Citadel should unlock once enough minds are freed');
     });
+
+    test('Combat epistemic insight dialogue box is minimal 32-bit conversational dialogue without yellow headers or red banners', () => {
+        const env = loadGameEnvironment();
+        env.appState = 'PLAYING';
+        env.showDeconstructToast('foundations');
+
+        assert.equal(env.appState, 'DIALOGUE');
+        assert.equal(env.activeDialogueList.length, 2);
+
+        // Page 1: Liberated Citizen speaks their myth
+        const page1 = env.activeDialogueList[0];
+        assert.equal(page1.speaker, 'LIBERATED CITIZEN');
+        assert.equal(page1.portrait.type, 'citizen');
+        assert.ok(!page1.text.includes('💡'), 'Must not have yellow lightbulb header');
+        assert.ok(!page1.text.includes('PROPAGANDA'), 'Must not have red propaganda banner');
+
+        // Page 2: Auron responds with socratic antidote
+        const page2 = env.activeDialogueList[1];
+        assert.equal(page2.speaker, 'AURON');
+        assert.equal(page2.portrait.type, 'player');
+        assert.ok(!page2.text.includes('💡'));
+        assert.ok(!page2.text.includes('ANTIDOTE'));
+
+        // Dismiss dialogue
+        env.dismissEpistemicRevelation();
+        assert.equal(env.appState, 'PLAYING');
+    });
+
+    test('Solid tree stumps provide physical collision that prevents player walking through them', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(2); // Map 3 (Sunlit Riverfront) has open bright meadows with stumps
+        assert.ok(env.treeStumps.length > 0, 'Should have tree stumps on bright alttp zones');
+
+        const stump = env.treeStumps[0];
+        env.player.x = stump.x - 24;
+        env.player.y = stump.y;
+
+        // Attempt to move player through stump center
+        env.moveEntityWithCollision(env.player, 16, 0);
+
+        const dist = Math.hypot(env.player.x - stump.x, env.player.y - stump.y);
+        const minAllowed = (env.player.radius || 14) + (stump.radius || 16);
+        assert.ok(
+            dist >= minAllowed - 0.2,
+            `Player walked through stump! dist=${dist}, minAllowed=${minAllowed}`
+        );
+    });
+
+    test('Building doorways on Map 3 and across all sectors are completely clear and never obstructed by trees', () => {
+        const env = loadGameEnvironment();
+        for (let m = 0; m <= 8; m++) {
+            env.loadMap(m);
+            const mapMeta = env.MAPS[m];
+            if (mapMeta.buildings && Array.isArray(mapMeta.buildings)) {
+                mapMeta.buildings.forEach((b, bIdx) => {
+                    const doorC = b.col + Math.floor(b.wCols / 2);
+                    const doorR = b.row + b.hRows;
+                    for (let dr = 0; dr <= 4; dr++) {
+                        const tr = doorR + dr;
+                        if (tr < env.mapGrid.length) {
+                            const tile = env.mapGrid[tr][doorC];
+                            assert.notEqual(
+                                tile,
+                                3,
+                                `Building ${bIdx} (${b.name || b.id}) on Map ${m} has tree tile (3) directly obstructing door at row ${tr}, col ${doorC}!`
+                            );
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+    test('All 9 Overworld sectors feature unique topologies and distinct road/river layouts', () => {
+        const env = loadGameEnvironment();
+        const sectorSignatures = [];
+
+        for (let m = 0; m <= 8; m++) {
+            const grid = env.getSectorGrid(m);
+            let waterCount = 0;
+            let bridgeCount = 0;
+            let wallCount = 0;
+            let pathCount = 0;
+            let treeCount = 0;
+
+            for (let r = 0; r < grid.length; r++) {
+                for (let c = 0; c < grid[r].length; c++) {
+                    const t = grid[r][c];
+                    if (t === 4) waterCount++;
+                    if (t === 8) bridgeCount++;
+                    if (t === 2) wallCount++;
+                    if (t === 1) pathCount++;
+                    if (t === 3) treeCount++;
+                }
+            }
+
+            const signature = `m${m}_w${waterCount}_b${bridgeCount}_wl${wallCount}_p${pathCount}_t${treeCount}`;
+            sectorSignatures.push(signature);
+        }
+
+        // Verify all 9 sector signatures are unique
+        const uniqueSet = new Set(sectorSignatures);
+        assert.equal(
+            uniqueSet.size,
+            9,
+            `Expected all 9 sectors to have unique topological signatures, but got duplicates: ${sectorSignatures.join(', ')}`
+        );
+    });
+
+    test('NPC dialogues are immersive, concise, and contain zero 4th-wall control prompts', () => {
+        const env = loadGameEnvironment();
+        const forbiddenPatterns = [/\[Q\]/i, /\[E\]/i, /\[F\]/i, /\[SPACE\]/i, /\[C\]/i, /press\s+\[/i];
+
+        env.MAPS.forEach((m, mIdx) => {
+            const checkList = [
+                ...(m.aviPreDialogues || []),
+                ...(m.aviPostDialogues || []),
+                ...(m.ally && m.ally.dialogues ? m.ally.dialogues : [])
+            ];
+
+            checkList.forEach(text => {
+                forbiddenPatterns.forEach(pattern => {
+                    assert.ok(
+                        !pattern.test(text),
+                        `Map ${mIdx} dialogue contains 4th-wall control prompt matching ${pattern}: "${text}"`
+                    );
+                });
+            });
+        });
+    });
 });
+

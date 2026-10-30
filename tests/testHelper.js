@@ -67,7 +67,9 @@ function loadGameEnvironment() {
         renderGameplay,
         moveEntityWithCollision,
         isCitadelUnlocked,
-        get grassBushes() { return grassBushes; }
+        get grassBushes() { return grassBushes; },
+        get treeStumps() { return treeStumps; },
+        getSectorGrid
     };`;
 
     const mockElem = {
