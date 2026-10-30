@@ -419,6 +419,15 @@
                 <canvas id="minimapCanvas" width="102" height="72" class="rounded-lg border border-slate-700 bg-slate-950"></canvas>
             </div>
 
+            <!-- Location Name Banner (Below Minimap on UI) -->
+            <div id="locationHudBanner" class="w-full max-w-[290px] bg-slate-950/90 border border-cyan-500/40 rounded-xl px-3 py-1.5 flex items-center justify-between shadow-lg backdrop-blur-sm">
+                <div class="flex items-center gap-1.5 min-w-0">
+                    <span class="text-cyan-400 text-xs">📍</span>
+                    <span id="locationBannerText" class="text-[11px] font-extrabold text-white truncate pixel-font tracking-wide">Map 1: The Quiet Archive</span>
+                </div>
+                <span id="locationSectorBadge" class="text-[9px] font-bold text-amber-300 mono-font uppercase px-1.5 py-0.5 rounded bg-amber-950/60 border border-amber-600/40 shrink-0">SEC [2,1]</span>
+            </div>
+
             <!-- Stacked Active Quests Tracker Box (Below Minimap) -->
             <div id="stackedQuestBox" class="w-full max-w-[290px] bg-slate-950/95 border-2 border-slate-700 rounded-xl p-2.5 shadow-2xl flex flex-col gap-1.5 transition-all">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-1 mb-0.5">
@@ -1360,7 +1369,7 @@
             desc: 'Found in the Quiet Archive chest. Highlights logical fallacies and widens your Prism beam.'
         },
         cloak_grounding: {
-            id: 'cloak_grounding', name: 'Cloak of Grounding', slot: 'back', icon: '🧥', visualColor: '#6366f1',
+            id: 'cloak_grounding', name: 'Crimson Mantle of Grounding', slot: 'back', icon: '👘', sprite: 'magic_cape', visualColor: '#ef4444',
             stat: 'maxHp', val: 40, bonus: '+40 Max Clarity (HP)',
             desc: 'Found in Performative Valley. Shields the wearer from vanity metrics and clout storms.'
         },
@@ -1375,14 +1384,29 @@
             desc: 'Forged by the Resistance in the Iron & Velvet Divide. Restores cross-gender solidarity.'
         },
         boots_inquiry: {
-            id: 'boots_inquiry', name: 'Boots of Free Inquiry', slot: 'feet', icon: '🥾', visualColor: '#10b981',
+            id: 'boots_inquiry', name: 'Pegasus Boots of Free Inquiry', slot: 'feet', icon: '👢', sprite: 'boots_pegasus', visualColor: '#fbbf24',
             stat: 'speed', val: 32, bonus: '+32 Movement Speed',
             desc: 'Recovered from the Dogma Catacombs. Lets you outmaneuver purity spirals.'
         },
         raiment_solidarity: {
-            id: 'raiment_solidarity', name: 'Emerald Tunic of the Glade', slot: 'chest', icon: '👕', visualColor: '#10b981',
+            id: 'raiment_solidarity', name: 'Cerulean Mail of Solidarity', slot: 'chest', icon: '🥋', sprite: 'armor_blue_mail', visualColor: '#38bdf8',
             stat: 'maxHp', val: 65, bonus: '+65 Max Clarity (HP)',
             desc: 'Woven in the Whispering Woods of Inquiry. Radiates calm resilience like a classic hero’s tunic.'
+        },
+        armor_red_mail: {
+            id: 'armor_red_mail', name: 'Crimson Mail of Sovereign Valor', slot: 'chest', icon: '🥋', sprite: 'armor_red_mail', visualColor: '#ef4444',
+            stat: 'defense', val: 24, bonus: '+24 Epistemic Defense',
+            desc: 'Tempered in the Obsidian Citadel. Shields the bearer from peer pressure and ideological conformity.'
+        },
+        compass_nuance: {
+            id: 'compass_nuance', name: 'Compass of Nuance', slot: 'offHand', icon: '🧭', sprite: 'compass', visualColor: '#38bdf8',
+            stat: 'contextPower', val: 28, bonus: '+28 Context Power',
+            desc: 'A precision brass instrument that always points towards primary sources and structural context.'
+        },
+        map_realm: {
+            id: 'map_realm', name: "Cartographer's Overworld Map", slot: 'offHand', icon: '🗺️', sprite: 'map_item', visualColor: '#fbbf24',
+            stat: 'speed', val: 20, bonus: '+20 Exploration Speed',
+            desc: 'An authentic stitched survey of all 9 Echo Realm sectors. Press [M] to inspect the continent.'
         },
         gauntlets_solidarity: {
             id: 'gauntlets_solidarity', name: 'Gauntlets of Solidarity', slot: 'hands', icon: '🧤', visualColor: '#38bdf8',
@@ -1527,6 +1551,22 @@
     const assets = new AssetManager();
     // 100% Cleaned Transparent PNG Sprites (Eliminates all white-box / border artifacts)
     assets.registerImage('stump', 'assets/sprites/stump.png');
+    assets.registerImage('fireplace_fire', 'assets/sprites/fireplace_fire.png');
+    assets.registerImage('fire', 'assets/sprites/fire.png');
+    assets.registerImage('grass_bush', 'assets/sprites/grass_bush.png');
+    assets.registerImage('bush', 'assets/sprites/bush.png');
+    assets.registerImage('magic_cape', 'assets/sprites/magic_cape.png');
+    assets.registerImage('cape', 'assets/sprites/cape.png');
+    assets.registerImage('boots_pegasus', 'assets/sprites/boots_pegasus.png');
+    assets.registerImage('boots_gold', 'assets/sprites/boots_gold.png');
+    assets.registerImage('armor_blue_mail', 'assets/sprites/armor_blue_mail.png');
+    assets.registerImage('tunic_blue', 'assets/sprites/tunic_blue.png');
+    assets.registerImage('armor_red_mail', 'assets/sprites/armor_red_mail.png');
+    assets.registerImage('tunic_red', 'assets/sprites/tunic_red.png');
+    assets.registerImage('compass', 'assets/sprites/compass.png');
+    assets.registerImage('dungeon_compass', 'assets/sprites/dungeon_compass.png');
+    assets.registerImage('map_item', 'assets/sprites/map_item.png');
+    assets.registerImage('world_map_item', 'assets/sprites/world_map_item.png');
     assets.registerImage('critter_chicken', 'assets/sprites/critter_chicken.png');
     assets.registerImage('chicken', 'assets/sprites/chicken.png');
     assets.registerImage('critter_squirrel', 'assets/sprites/critter_squirrel.png');
@@ -1551,9 +1591,7 @@
     assets.registerImage('potion_blue', 'assets/sprites/potion_blue.png');
     assets.registerImage('alttp_stump', 'assets/sprites/alttp_stump.png');
     assets.registerImage('alttp_tallgrass', 'assets/sprites/alttp_tallgrass.png');
-    assets.registerImage('alttp_world_map_full', 'assets/sprites/alttp_world_map_full.jpg');
-    assets.registerImage('alttp_world_map_clouds', 'assets/sprites/alttp_world_map_clouds.jpg');
-    assets.registerImage('alttp_weathervane', 'assets/sprites/alttp_weathervane.png');
+            assets.registerImage('alttp_weathervane', 'assets/sprites/alttp_weathervane.png');
     assets.registerImage('alttp_village_well', 'assets/sprites/alttp_village_well.png');
     assets.registerImage('alttp_village_sign', 'assets/sprites/alttp_village_sign.png');
     assets.registerImage('alttp_house_red', 'assets/sprites/alttp_house_red.png');
@@ -1867,6 +1905,10 @@
 
     function drawPixelRelicIcon(ctx, cx, cy, size, item) {
         if (!item) return;
+        if (item.sprite && assets && assets.hasImage(item.sprite)) {
+            assets.drawImage(ctx, item.sprite, cx - size / 2, cy - size / 2, size, size);
+            return;
+        }
         const slot = item.slot || 'mainHand';
         const col = item.visualColor || '#38bdf8';
         drawPixelSlotSprite(ctx, cx, cy, size, slot, col, true);
@@ -3003,6 +3045,7 @@
     let portals = [];
     let npcs = [];
     let critters = [];
+    let grassBushes = [];
     let chests = [];
     let puzzleNodes = []; // Zelda ALTTP-style Crystal Switches, Push Blocks & Socratic Pedestals
     let enemies = [];
@@ -4489,9 +4532,10 @@
         return grid;
     }
 
-    function openPerimeterExits(cols, rows, mapIndex) {
+    function openPerimeterExits(cols, rows, mapIndex, targetGrid = null) {
         const overPos = MAP_OVERWORLD_POS[mapIndex];
         if (!overPos) return;
+        const g = targetGrid || mapGrid;
 
         const hasNorth = overPos.row > 0;
         const hasSouth = overPos.row < 2;
@@ -4503,61 +4547,61 @@
         // West & East highway: rows 10..18 across ALL sectors
         if (hasNorth) {
             for (let c = 0; c < 14; c++) {
-                if (mapGrid[0]) mapGrid[0][c] = 3;
-                if (mapGrid[1]) mapGrid[1][c] = 3;
+                if (g[0]) g[0][c] = 3;
+                if (g[1]) g[1][c] = 3;
             }
             for (let c = 23; c < cols; c++) {
-                if (mapGrid[0]) mapGrid[0][c] = 3;
-                if (mapGrid[1]) mapGrid[1][c] = 3;
+                if (g[0]) g[0][c] = 3;
+                if (g[1]) g[1][c] = 3;
             }
             for (let c = 14; c <= 22; c++) {
-                if (mapGrid[0]) mapGrid[0][c] = 1;
-                if (mapGrid[1]) mapGrid[1][c] = 1;
+                if (g[0]) g[0][c] = 1;
+                if (g[1]) g[1][c] = 1;
             }
         }
         if (hasSouth) {
             for (let c = 0; c < 14; c++) {
-                if (mapGrid[rows - 1]) mapGrid[rows - 1][c] = 3;
-                if (mapGrid[rows - 2]) mapGrid[rows - 2][c] = 3;
+                if (g[rows - 1]) g[rows - 1][c] = 3;
+                if (g[rows - 2]) g[rows - 2][c] = 3;
             }
             for (let c = 23; c < cols; c++) {
-                if (mapGrid[rows - 1]) mapGrid[rows - 1][c] = 3;
-                if (mapGrid[rows - 2]) mapGrid[rows - 2][c] = 3;
+                if (g[rows - 1]) g[rows - 1][c] = 3;
+                if (g[rows - 2]) g[rows - 2][c] = 3;
             }
             for (let c = 14; c <= 22; c++) {
-                if (mapGrid[rows - 1]) mapGrid[rows - 1][c] = 1;
-                if (mapGrid[rows - 2]) mapGrid[rows - 2][c] = 1;
-                if (mapGrid[MAP_ROWS - 1] && MAP_ROWS <= rows) mapGrid[MAP_ROWS - 1][c] = 1;
+                if (g[rows - 1]) g[rows - 1][c] = 1;
+                if (g[rows - 2]) g[rows - 2][c] = 1;
+                if (g[MAP_ROWS - 1] && MAP_ROWS <= rows) g[MAP_ROWS - 1][c] = 1;
             }
         }
         if (hasWest) {
             for (let r = 0; r < 10; r++) {
-                if (mapGrid[r]) mapGrid[r][0] = 3;
-                if (mapGrid[r]) mapGrid[r][1] = 3;
+                if (g[r]) g[r][0] = 3;
+                if (g[r]) g[r][1] = 3;
             }
             for (let r = 19; r < rows; r++) {
-                if (mapGrid[r]) mapGrid[r][0] = 3;
-                if (mapGrid[r]) mapGrid[r][1] = 3;
+                if (g[r]) g[r][0] = 3;
+                if (g[r]) g[r][1] = 3;
             }
             for (let r = 10; r <= 18; r++) {
-                if (mapGrid[r]) mapGrid[r][0] = 1;
-                if (mapGrid[r]) mapGrid[r][1] = 1;
+                if (g[r]) g[r][0] = 1;
+                if (g[r]) g[r][1] = 1;
             }
         }
         if (hasEast) {
             for (let r = 0; r < 10; r++) {
-                if (mapGrid[r]) mapGrid[r][cols - 1] = 3;
-                if (mapGrid[r]) mapGrid[r][cols - 2] = 3;
+                if (g[r]) g[r][cols - 1] = 3;
+                if (g[r]) g[r][cols - 2] = 3;
             }
             for (let r = 19; r < rows; r++) {
-                if (mapGrid[r]) mapGrid[r][cols - 1] = 3;
-                if (mapGrid[r]) mapGrid[r][cols - 2] = 3;
+                if (g[r]) g[r][cols - 1] = 3;
+                if (g[r]) g[r][cols - 2] = 3;
             }
             for (let r = 10; r <= 18; r++) {
-                if (mapGrid[r]) mapGrid[r][cols - 1] = 1;
-                if (mapGrid[r]) mapGrid[r][cols - 2] = 1;
-                if (mapGrid[r] && mapGrid[r][MAP_COLS - 1] !== undefined && MAP_COLS <= cols) {
-                    mapGrid[r][MAP_COLS - 1] = 1;
+                if (g[r]) g[r][cols - 1] = 1;
+                if (g[r]) g[r][cols - 2] = 1;
+                if (g[r] && g[r][MAP_COLS - 1] !== undefined && MAP_COLS <= cols) {
+                    g[r][MAP_COLS - 1] = 1;
                 }
             }
         }
@@ -4896,6 +4940,20 @@
             }
         });
 
+        // Spawn Interactive Grass Bushes across open meadow & forest tiles
+        grassBushes = [];
+        const bushCount = [0, 1].includes(mapIndex) ? 10 : 16;
+        for (let i = 0; i < bushCount; i++) {
+            const spot = findOpenTileSpot(10 + (i * 7) % (cols - 16), 8 + (i * 5) % (rows - 12));
+            grassBushes.push({
+                id: `bush_${mapIndex}_${i}`,
+                x: spot.x,
+                y: spot.y,
+                cut: false,
+                cutTimer: 0
+            });
+        }
+
         // Spawn Active Critters (Chickens in Village/Archive, Squirrels in Forests & Valleys)
         critters = [];
         if (mapIndex === 1 || mapIndex === 0) {
@@ -5095,59 +5153,52 @@
         const maxBoundY = (curRows - 1) * TILE_SIZE - r - 2;
 
         if (currentInterior) {
-            // Interior pixel boundaries (scaled Link's house interior 784x616)
-            const minX = 110;
-            const maxX = 674;
-            const minY = 125;
-            const maxY = 516;
-            const doorMinX = 330;
-            const doorMaxX = 454;
-            const doorMaxY = 575;
+            const minX = 42;
+            const maxX = 718;
+            const minY = 138;
+            const maxY = 525;
+            const doorMinX = 336;
+            const doorMaxX = 424;
+            const doorMaxY = 565;
 
+            // Solid Physical Interior Obstacle Boxes { x1, y1, x2, y2 }
+            // Zero walking through furniture, tables, chairs, bookshelves, desks, or chests!
+            const obstacles = [
+                // Bookshelves (left wall)
+                { x1: 0, y1: 0, x2: 76, y2: 215 },
+                // Reading desk (left side)
+                { x1: 96, y1: 232, x2: 172, y2: 286 },
+                // Dining Table & Turned-Wood Chairs (center room)
+                { x1: 276, y1: 278, x2: 476, y2: 366 },
+                // Treasure Chest (right alcove)
+                { x1: 610, y1: 190, x2: 672, y2: 250 },
+                // Central Fireplace hearth (back wall)
+                { x1: 318, y1: 0, x2: 442, y2: 140 }
+            ];
+
+            // Resolve X movement with obstacle box collision
             ent.x += dx;
-            // Bed collision
-            if (ent.x < 220 && ent.y < 255) {
-                if (dx > 0) ent.x = 220;
+            for (const ob of obstacles) {
+                if (ent.x + r > ob.x1 && ent.x - r < ob.x2 && ent.y + r > ob.y1 && ent.y - r < ob.y2) {
+                    if (dx > 0) ent.x = ob.x1 - r - 0.01;
+                    else if (dx < 0) ent.x = ob.x2 + r + 0.01;
+                }
             }
-            // Dining table collision
-            if (ent.x > 440 && ent.x < 635 && ent.y > 310 && ent.y < 450) {
-                if (dx > 0) ent.x = 440;
-                else if (dx < 0) ent.x = 635;
-            }
-            // Nightstand collision
-            if (ent.x < 250 && ent.y > 450) {
-                if (dx < 0) ent.x = 250;
-            }
-            // Treasure Chest collision
-            if (ent.x > 590 && ent.y > 450) {
-                if (dx > 0) ent.x = 590;
-            }
-
             ent.x = Math.max(minX, Math.min(maxX, ent.x));
 
+            // Resolve Y movement with obstacle box collision
             ent.y += dy;
-            // Bed collision
-            if (ent.x < 220 && ent.y < 255) {
-                if (dy < 0) ent.y = 255;
-            }
-            // Table collision
-            if (ent.x > 440 && ent.x < 635 && ent.y > 310 && ent.y < 450) {
-                if (dy > 0) ent.y = 310;
-                else if (dy < 0) ent.y = 450;
-            }
-            // Nightstand collision
-            if (ent.x < 250 && ent.y > 450) {
-                if (dy > 0) ent.y = 450;
-            }
-            // Chest collision
-            if (ent.x > 590 && ent.y > 450) {
-                if (dy > 0) ent.y = 450;
+            for (const ob of obstacles) {
+                if (ent.x + r > ob.x1 && ent.x - r < ob.x2 && ent.y + r > ob.y1 && ent.y - r < ob.y2) {
+                    if (dy > 0) ent.y = ob.y1 - r - 0.01;
+                    else if (dy < 0) ent.y = ob.y2 + r + 0.01;
+                }
             }
 
-            // Doorway exit detection
+            // Doorway and south threshold clamping
             if (ent.x >= doorMinX && ent.x <= doorMaxX) {
                 ent.y = Math.max(minY, Math.min(doorMaxY, ent.y));
-                if (ent === player && ent.y >= 528) {
+                if (ent === player && ent.y >= 538) {
                     exitBuildingInterior();
                     return;
                 }
@@ -5194,6 +5245,31 @@
         const strikeRange = 80;
         const mult = player.aegisTimer > 0 ? 1.8 : 1.0;
         const totalAtk = getTotalAxiomAttack() * mult;
+
+        // Cut interactive grass bushes within blade strike range!
+        if (grassBushes && grassBushes.length > 0) {
+            grassBushes.forEach(b => {
+                if (!b.cut && Math.hypot(b.x - player.x, b.y - player.y) <= strikeRange) {
+                    b.cut = true;
+                    b.cutTimer = 0.01;
+                    spawnBurst(b.x, b.y, '#22c55e', 16);
+                    spawnBurst(b.x, b.y, '#86efac', 8);
+                    audio.sfxSlash();
+                    // Drop chance (35% shards, 15% heart)
+                    const roll = Math.random();
+                    if (roll < 0.35) {
+                        const amt = Math.floor(Math.random() * 2) + 1;
+                        player.shards += amt;
+                        addFloatText(b.x, b.y - 18, `+${amt} Shards!`, '#fde047');
+                        spawnBurst(b.x, b.y, '#fbbf24', 8);
+                    } else if (roll < 0.50) {
+                        player.hp = Math.min(getTotalMaxHp(), player.hp + 20);
+                        addFloatText(b.x, b.y - 18, '+20 HP Heart', '#34d399');
+                    }
+                    updateAllHud();
+                }
+            });
+        }
 
         enemies.forEach(en => {
             if (en.state === 'cured') return;
@@ -5423,21 +5499,29 @@
     }
 
     function teleportPlayerTo(targetMapIndex, targetCol, targetRow) {
+        if (!Number.isFinite(targetMapIndex) || targetMapIndex < 0 || targetMapIndex >= MAPS.length) {
+            targetMapIndex = 0;
+        }
         const tCols = getMapCols(targetMapIndex);
         const tRows = getMapRows(targetMapIndex);
-        const clampedCol = Math.max(2, Math.min(tCols - 3, targetCol));
-        const clampedRow = Math.max(2, Math.min(tRows - 3, targetRow));
-        const targetX = (clampedCol + 0.5) * TILE_SIZE;
-        const targetY = (clampedRow + 0.5) * TILE_SIZE;
+        let col = Number.isFinite(targetCol) ? targetCol : Math.floor(tCols / 2);
+        let row = Number.isFinite(targetRow) ? targetRow : Math.floor(tRows / 2);
+        col = Math.max(2, Math.min(tCols - 3, col));
+        row = Math.max(2, Math.min(tRows - 3, row));
+
+        currentInterior = null;
+        closeAllMenus();
+
+        const targetX = (col + 0.5) * TILE_SIZE;
+        const targetY = (row + 0.5) * TILE_SIZE;
 
         loadMap(targetMapIndex, targetX, targetY);
+        player.x = targetX;
+        player.y = targetY;
+
         audio.sfxPortal();
-        addFloatText(player.x, player.y - 32, `⚡ WARPED TO ${MAPS[targetMapIndex].name}`, '#fbbf24');
+        addFloatText(player.x, player.y - 32, `WARPED TO ${MAPS[targetMapIndex].name}`, '#fbbf24');
         updateAllHud();
-        const wmModal = document.getElementById('worldMapModal');
-        if (wmModal && !wmModal.classList.contains('hidden')) {
-            renderWorldMap();
-        }
     }
 
     // =========================================================================
@@ -6343,22 +6427,38 @@
             ctx.fillRect(gx, fbY + fbH - 18, 4, 16);
         }
 
-        // Layered Animated Flames & Rising Embers
+        // Layered Animated Fireplace Hearth Flames (Using user's authentic 16x16 pixel fire asset)
         const t = performance.now() / 150;
         const flameCX = fbX + fbW / 2;
-        const flameBaseY = fbY + fbH - 8;
-        ctx.fillStyle = '#dc2626';
+        const flameBaseY = fbY + fbH - 4;
+
+        // Warm radial ambient hearth glow
+        const hearthGlow = ctx.createRadialGradient(flameCX, flameBaseY - 14, 6, flameCX, flameBaseY - 14, 55);
+        hearthGlow.addColorStop(0, 'rgba(254, 215, 170, 0.45)');
+        hearthGlow.addColorStop(0.4, 'rgba(249, 115, 22, 0.22)');
+        hearthGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = hearthGlow;
         ctx.beginPath();
-        ctx.arc(flameCX + Math.sin(t) * 4, flameBaseY - 10, 16 + Math.cos(t * 1.5) * 3, 0, Math.PI * 2);
+        ctx.arc(flameCX, flameBaseY - 14, 55, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#ea580c';
-        ctx.beginPath();
-        ctx.arc(flameCX - Math.sin(t * 1.2) * 3, flameBaseY - 14, 11 + Math.sin(t * 2) * 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#fef08a';
-        ctx.beginPath();
-        ctx.arc(flameCX + Math.sin(t * 2.2) * 2, flameBaseY - 16, 6, 0, Math.PI * 2);
-        ctx.fill();
+
+        const fireSprite = assets.hasImage('fireplace_fire') ? 'fireplace_fire' : 'fire';
+        const fShift = Math.sin(t * 2.2) * 2;
+        const fScale = 1 + Math.sin(t * 1.8) * 0.08;
+        const fSize = 34 * fScale;
+
+        if (assets.hasImage(fireSprite)) {
+            // Flanking flickering embers
+            assets.drawImage(ctx, fireSprite, flameCX - 22, flameBaseY - 26 + Math.sin(t * 2) * 2, 22, 22);
+            assets.drawImage(ctx, fireSprite, flameCX + 2, flameBaseY - 26 - Math.cos(t * 2) * 2, 22, 22);
+            // Main central blazing flame
+            assets.drawImage(ctx, fireSprite, flameCX - fSize / 2 + fShift, flameBaseY - fSize + 2, fSize, fSize);
+        } else {
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.arc(flameCX + Math.sin(t) * 4, flameBaseY - 10, 16, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         // 7. Library Bookshelves on Left Wall
         const bsX = offX + 18;
@@ -6763,8 +6863,13 @@
         const viewW = w / ZOOM;
         const viewH = h / ZOOM;
 
+        if (!Number.isFinite(player.x)) player.x = (Math.floor(curCols / 2) + 0.5) * TILE_SIZE;
+        if (!Number.isFinite(player.y)) player.y = (Math.floor(curRows / 2) + 0.5) * TILE_SIZE;
+
         let camX = Math.floor(player.x - viewW / 2);
         let camY = Math.floor(player.y - viewH / 2);
+        if (!Number.isFinite(camX)) camX = 0;
+        if (!Number.isFinite(camY)) camY = 0;
         if (worldW > viewW) camX = Math.max(0, Math.min(worldW - viewW, camX));
         else camX = Math.floor((worldW - viewW) / 2);
         if (worldH > viewH) camY = Math.max(0, Math.min(worldH - viewH, camY));
@@ -7102,6 +7207,65 @@
                 }
             });
         });
+
+        // 5b. Interactive Grass Bushes (Cuttable with [E] Axiom Strike)
+        if (grassBushes && grassBushes.length > 0) {
+            grassBushes.forEach(b => {
+                if (!b.cut) {
+                    renderList.push({
+                        type: 'bush',
+                        baseY: b.y + 10,
+                        draw: () => {
+                            ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+                            ctx.beginPath();
+                            ctx.ellipse(b.x, b.y + 8, 11, 4, 0, 0, Math.PI * 2);
+                            ctx.fill();
+                            const bSprite = assets.hasImage('grass_bush') ? 'grass_bush' : 'bush';
+                            if (assets.hasImage(bSprite)) {
+                                assets.drawImage(ctx, bSprite, b.x - 14, b.y - 14, 28, 28);
+                            } else {
+                                ctx.fillStyle = '#16a34a';
+                                ctx.beginPath();
+                                ctx.arc(b.x, b.y, 12, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // 5c. Active Critters (Chickens & Squirrels)
+        if (critters && critters.length > 0) {
+            critters.forEach(c => {
+                renderList.push({
+                    type: 'critter',
+                    baseY: c.y + 8,
+                    draw: () => {
+                        ctx.save();
+                        ctx.translate(c.x, c.y);
+                        ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+                        ctx.beginPath();
+                        ctx.ellipse(0, 6, 7, 3, 0, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        if (c.dir === 'left') {
+                            ctx.scale(-1, 1);
+                        }
+
+                        const spriteKey = c.type === 'chicken' ? 'critter_chicken' : 'critter_squirrel';
+                        if (assets.hasImage(spriteKey)) {
+                            const sz = c.type === 'chicken' ? 22 : 24;
+                            assets.drawImage(ctx, spriteKey, -sz / 2, -sz + 6, sz, sz);
+                        } else {
+                            ctx.fillStyle = c.type === 'chicken' ? '#f8fafc' : '#b45309';
+                            ctx.fillRect(-6, -8, 12, 10);
+                        }
+                        ctx.restore();
+                    }
+                });
+            });
+        }
 
         // 6. NPCs & Socratic Mentors
         const bobOffset = Math.sin(performance.now() / 180) * 3;
@@ -7451,312 +7615,172 @@
         }
     }
 
-    function drawCloudPuff(ctx, cx, cy, r) {
-        ctx.fillStyle = '#64748b';
-        ctx.beginPath(); ctx.arc(cx + 2, cy + 2, r, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#cbd5e1';
-        ctx.beginPath(); ctx.arc(cx + 1, cy + 1, r, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#f8fafc';
-        ctx.beginPath(); ctx.arc(cx - r * 0.15, cy - r * 0.15, r * 0.65, 0, Math.PI * 2); ctx.fill();
+    // =========================================================================
+    // 13.6. ACCURATE STITCHED OVERWORLD MAP SYSTEM
+    // Seamless 3x3 Continental Grid, True Bird's-Eye View, Real Buildings, Roads & Rivers
+    // =========================================================================
+    const cachedSectorGrids = {};
+    let stitchedWorldMapCanvas = null;
+    let stitchedWorldMapDirty = true;
+
+    function invalidateStitchedWorldMap() {
+        stitchedWorldMapDirty = true;
     }
 
-    function drawAlttpPixelCloudFrame(ctx, w, h, border) {
-        for (let x = 12; x <= w - 12; x += 32) {
-            const r = 24 + ((x % 7) * 2);
-            drawCloudPuff(ctx, x, border - 8 + ((x % 5) * 2), r);
-            drawCloudPuff(ctx, x + 16, border - 20, r * 0.85);
+    function getSectorGrid(mapIdx) {
+        if (mapIdx === currentMapIndex && mapGrid && mapGrid.length > 0) {
+            return mapGrid;
         }
-        for (let x = 12; x <= w - 12; x += 32) {
-            const r = 24 + ((x % 7) * 2);
-            drawCloudPuff(ctx, x, h - border + 8 - ((x % 5) * 2), r);
-            drawCloudPuff(ctx, x + 16, h - border + 20, r * 0.85);
+        if (cachedSectorGrids[mapIdx]) {
+            return cachedSectorGrids[mapIdx];
         }
-        for (let y = 12; y <= h - 12; y += 32) {
-            const r = 24 + ((y % 7) * 2);
-            drawCloudPuff(ctx, border - 8 + ((y % 5) * 2), y, r);
-            drawCloudPuff(ctx, border - 20, y + 16, r * 0.85);
+        const cols = getMapCols(mapIdx);
+        const rows = getMapRows(mapIdx);
+        let g;
+        if (mapIdx === 1) {
+            g = generatePerformativeValleyTerrain(cols, rows);
+        } else if (mapIdx === 0) {
+            g = generateQuietArchiveTerrain(cols, rows);
+        } else {
+            g = generateStandardSectorTerrain(mapIdx, cols, rows);
         }
-        for (let y = 12; y <= h - 12; y += 32) {
-            const r = 24 + ((y % 7) * 2);
-            drawCloudPuff(ctx, w - border + 8 - ((y % 5) * 2), y, r);
-            drawCloudPuff(ctx, w - border + 20, y + 16, r * 0.85);
-        }
-        const corners = [
-            [20, 20], [w - 20, 20], [20, h - 20], [w - 20, h - 20]
-        ];
-        corners.forEach(([cx, cy]) => {
-            drawCloudPuff(ctx, cx, cy, 38);
-            drawCloudPuff(ctx, cx + (cx < w / 2 ? 14 : -14), cy + (cy < h / 2 ? 14 : -14), 30);
-            drawCloudPuff(ctx, cx + (cx < w / 2 ? 22 : -22), cy, 26);
-            drawCloudPuff(ctx, cx, cy + (cy < h / 2 ? 22 : -22), 26);
-        });
+        openPerimeterExits(cols, rows, mapIdx, g);
+        cachedSectorGrids[mapIdx] = g;
+        return g;
     }
 
-    function drawAlttpSector(ctx, r, c, mapIdx, sx, sy, sw, sh) {
-        if (r === 0 && c === 0) {
-            // (0, 0) Map 5: Lost Woods (Whispering Woods of Inquiry)
-            ctx.fillStyle = '#14532d';
-            ctx.fillRect(sx, sy, sw, sh);
-            const trees = [
-                [20, 20, 24], [60, 25, 28], [110, 20, 25], [145, 30, 26],
-                [25, 70, 26], [140, 80, 30], [25, 120, 28], [70, 140, 26], [130, 135, 28]
-            ];
-            trees.forEach(([tx, ty, tr]) => {
-                ctx.fillStyle = '#166534';
-                ctx.beginPath(); ctx.arc(sx + tx, sy + ty, tr, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#15803d';
-                ctx.beginPath(); ctx.arc(sx + tx - 3, sy + ty - 3, tr * 0.75, 0, Math.PI * 2); ctx.fill();
-            });
-            ctx.fillStyle = '#a16207';
-            ctx.fillRect(sx + sw * 0.42, sy + sh * 0.38, sw * 0.22, sh * 0.24);
-            ctx.fillStyle = '#86efac';
-            ctx.beginPath(); ctx.arc(sx + sw * 0.53, sy + sh * 0.5, 14, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#fef08a';
-            ctx.fillRect(sx + sw * 0.51, sy + sh * 0.35, 6, 26);
-            ctx.fillStyle = '#e2e8f0';
-            ctx.fillRect(sx + sw * 0.49, sy + sh * 0.48, 10, 6);
-        } else if (r === 0 && c === 1) {
-            // (0, 1) Map 4: Death Mountain & Catacombs (The Dogma Catacombs)
-            ctx.fillStyle = '#7c2d12';
-            ctx.fillRect(sx, sy, sw, sh);
-            ctx.fillStyle = '#9a3412';
-            ctx.fillRect(sx, sy + 18, sw, sh * 0.28);
-            ctx.fillStyle = '#b45309';
-            ctx.fillRect(sx, sy + 58, sw, sh * 0.30);
-            ctx.fillStyle = '#451a03';
-            ctx.fillRect(sx, sy + 105, sw, sh * 0.32);
-            ctx.fillStyle = '#f8fafc';
-            for (let i = 0; i < 5; i++) {
-                ctx.beginPath();
-                ctx.moveTo(sx + i * 35, sy + 16);
-                ctx.lineTo(sx + i * 35 + 17, sy);
-                ctx.lineTo(sx + i * 35 + 35, sy + 16);
-                ctx.closePath();
-                ctx.fill();
+    function buildStitchedWorldMap(targetW, targetH) {
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = targetW;
+        offCanvas.height = targetH;
+        const octx = offCanvas.getContext('2d');
+
+        const secW = targetW / 3;
+        const secH = targetH / 3;
+
+        for (let gr = 0; gr < 3; gr++) {
+            for (let gc = 0; gc < 3; gc++) {
+                const mapIdx = OVERWORLD_GRID[gr][gc];
+                const mapMeta = MAPS[mapIdx];
+                const grid = getSectorGrid(mapIdx);
+                const mCols = getMapCols(mapIdx);
+                const mRows = getMapRows(mapIdx);
+                const sx = gc * secW;
+                const sy = gr * secH;
+                const tw = secW / mCols;
+                const th = secH / mRows;
+
+                // Base sector terrain tint
+                octx.fillStyle = mapMeta.groundColor || '#17253b';
+                octx.fillRect(sx, sy, secW, secH);
+
+                // Accurate zoomed-out bird's-eye view of every tile
+                for (let r = 0; r < mRows; r++) {
+                    if (!grid[r]) continue;
+                    for (let c = 0; c < mCols; c++) {
+                        const t = grid[r][c];
+                        const tx = sx + c * tw;
+                        const ty = sy + r * th;
+                        const wTile = tw + 0.6;
+                        const hTile = th + 0.6;
+
+                        if (t === 1) {
+                            // Authentic Cobblestone Highway / Path (Seamless across adjacent borders)
+                            octx.fillStyle = '#b49a6c';
+                            octx.fillRect(tx, ty, wTile, hTile);
+                        } else if (t === 2) {
+                            // Perimeter Mountain Cliff / Barrier Rock
+                            octx.fillStyle = '#1e293b';
+                            octx.fillRect(tx, ty, wTile, hTile);
+                        } else if (t === 3) {
+                            // Lush Tree Grove & Forest
+                            octx.fillStyle = '#065f46';
+                            octx.fillRect(tx, ty, wTile, hTile);
+                        } else if (t === 4) {
+                            // Sparkling Azure River & Waterway
+                            octx.fillStyle = '#0284c7';
+                            octx.fillRect(tx, ty, wTile, hTile);
+                        } else if (t === 8) {
+                            // Socratic Wooden Bridge
+                            octx.fillStyle = '#d97706';
+                            octx.fillRect(tx, ty, wTile, hTile);
+                        } else if (t === 9) {
+                            // Wildflower Meadow Glade
+                            octx.fillStyle = '#15803d';
+                            octx.fillRect(tx, ty, wTile, hTile);
+                        } else if (t === 10) {
+                            // Outrage Vent
+                            octx.fillStyle = '#e11d48';
+                            octx.fillRect(tx, ty, wTile, hTile);
+                        } else if (t === 11) {
+                            // Stasis Rune Pedestal
+                            octx.fillStyle = '#9333ea';
+                            octx.fillRect(tx, ty, wTile, hTile);
+                        }
+                    }
+                }
+
+                // Render Physical Buildings with true pitched roofs and footprints
+                if (mapMeta.buildings && Array.isArray(mapMeta.buildings)) {
+                    mapMeta.buildings.forEach(b => {
+                        const bx = sx + b.col * tw;
+                        const by = sy + b.row * th;
+                        const bw = Math.max(8, b.wCols * tw);
+                        const bh = Math.max(8, b.hRows * th);
+
+                        octx.fillStyle = '#0f172a';
+                        octx.fillRect(bx - 0.5, by - 0.5, bw + 1, bh + 1);
+                        octx.fillStyle = '#fef3c7';
+                        octx.fillRect(bx, by + bh * 0.45, bw, bh * 0.55);
+
+                        let roofCol = '#dc2626'; // default terracotta
+                        if (b.roofColor === 'blue') roofCol = '#2563eb';
+                        else if (b.roofColor === 'slate') roofCol = '#0891b2';
+                        else if (b.roofColor === 'wood') roofCol = '#78350f';
+
+                        octx.fillStyle = roofCol;
+                        octx.fillRect(bx, by, bw, bh * 0.5);
+                        octx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                        octx.fillRect(bx, by, bw, Math.max(1, bh * 0.15));
+                    });
+                }
+
+                // Weathervane Landmark (Performative Valley)
+                if (mapMeta.weatherVane) {
+                    const wx = sx + (mapMeta.weatherVane.col + 0.5) * tw;
+                    const wy = sy + (mapMeta.weatherVane.row + 0.5) * th;
+                    octx.fillStyle = '#fbbf24';
+                    octx.beginPath();
+                    octx.arc(wx, wy, 4.5, 0, Math.PI * 2);
+                    octx.fill();
+                    octx.fillStyle = '#ffffff';
+                    octx.fillRect(wx - 1, wy - 1, 2, 2);
+                }
+
+                // Mentors / Quests location
+                if (mapMeta.mentorName || mapMeta.ally) {
+                    const ac = mapMeta.ally ? mapMeta.ally.col : 18;
+                    const ar = mapMeta.ally ? mapMeta.ally.row : 12;
+                    const ax = sx + ac * tw;
+                    const ay = sy + ar * th;
+                    octx.fillStyle = '#fde047';
+                    octx.beginPath();
+                    octx.arc(ax, ay, 3.5, 0, Math.PI * 2);
+                    octx.fill();
+                }
+
+                // Treasure Chests
+                if (mapMeta.chest) {
+                    const cx = sx + (mapMeta.chest.col + 0.5) * tw;
+                    const cy = sy + (mapMeta.chest.row + 0.5) * th;
+                    const opened = isRelicOwned(mapMeta.chest.itemId);
+                    octx.fillStyle = opened ? '#64748b' : '#fbbf24';
+                    octx.fillRect(cx - 2.5, cy - 2.5, 5, 5);
+                }
             }
-            ctx.fillStyle = '#cbd5e1';
-            ctx.fillRect(sx + sw * 0.46, sy + 12, 18, 28);
-            ctx.fillStyle = '#dc2626';
-            ctx.beginPath();
-            ctx.moveTo(sx + sw * 0.43, sy + 12);
-            ctx.lineTo(sx + sw * 0.51, sy + 2);
-            ctx.lineTo(sx + sw * 0.59, sy + 12);
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = '#64748b';
-            [[30, 130], [55, 126], [75, 135], [115, 130], [140, 134]].forEach(([tx, ty]) => {
-                ctx.fillRect(sx + tx, sy + ty, 6, 9);
-            });
-        } else if (r === 0 && c === 2) {
-            // (0, 2) Map 2: Zora's River & Waterfall (Sunlit Riverfront of Nuance)
-            ctx.fillStyle = '#15803d';
-            ctx.fillRect(sx, sy, sw, sh);
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(sx + sw * 0.5, sy, sw * 0.5, sh * 0.45);
-            ctx.fillStyle = '#e0f2fe';
-            ctx.fillRect(sx + sw * 0.28, sy, 22, 38);
-            ctx.fillStyle = '#38bdf8';
-            ctx.fillRect(sx + sw * 0.30, sy + 2, 18, 36);
-            ctx.fillStyle = '#0284c7';
-            ctx.beginPath();
-            ctx.moveTo(sx + sw * 0.24, sy + 38);
-            ctx.bezierCurveTo(sx + sw * 0.1, sy + 70, sx + sw * 0.5, sy + 100, sx + sw * 0.45, sy + sh);
-            ctx.lineTo(sx + sw * 0.65, sy + sh);
-            ctx.bezierCurveTo(sx + sw * 0.68, sy + 90, sx + sw * 0.32, sy + 65, sx + sw * 0.42, sy + 38);
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = '#d97706';
-            ctx.fillRect(sx + sw * 0.26, sy + 82, 36, 8);
-        } else if (r === 1 && c === 0) {
-            // (1, 0) Map 1: Kakariko Village (Performative Valley)
-            ctx.fillStyle = '#16a34a';
-            ctx.fillRect(sx, sy, sw, sh);
-            ctx.fillStyle = '#cbd5e1';
-            ctx.fillRect(sx + 15, sy + sh * 0.46, sw - 30, 12);
-            ctx.fillRect(sx + sw * 0.48, sy + 12, 12, sh - 24);
-            const houses = [
-                [22, 20, '#dc2626'], [75, 18, '#2563eb'], [122, 22, '#dc2626'],
-                [24, 95, '#2563eb'], [120, 92, '#dc2626'], [75, 115, '#2563eb']
-            ];
-            houses.forEach(([hx, hy, roofColor]) => {
-                ctx.fillStyle = '#fef3c7';
-                ctx.fillRect(sx + hx, sy + hy + 10, 24, 16);
-                ctx.fillStyle = roofColor;
-                ctx.beginPath();
-                ctx.moveTo(sx + hx - 3, sy + hy + 10);
-                ctx.lineTo(sx + hx + 12, sy + hy);
-                ctx.lineTo(sx + hx + 27, sy + hy + 10);
-                ctx.closePath();
-                ctx.fill();
-                ctx.fillStyle = '#78350f';
-                ctx.fillRect(sx + hx + 9, sy + hy + 18, 6, 8);
-            });
-            ctx.fillStyle = '#64748b';
-            ctx.beginPath(); ctx.arc(sx + sw * 0.53, sy + sh * 0.52, 9, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#0284c7';
-            ctx.beginPath(); ctx.arc(sx + sw * 0.53, sy + sh * 0.52, 5, 0, Math.PI * 2); ctx.fill();
-        } else if (r === 1 && c === 1) {
-            // (1, 1) Map 8: Hyrule Castle & Moat (The Obsidian Reich-Citadel)
-            ctx.fillStyle = '#166534';
-            ctx.fillRect(sx, sy, sw, sh);
-            ctx.fillStyle = '#0284c7';
-            ctx.fillRect(sx + 18, sy + 18, sw - 36, sh - 36);
-            ctx.fillStyle = '#166534';
-            ctx.fillRect(sx + 34, sy + 34, sw - 68, sh - 68);
-
-            ctx.fillStyle = '#cbd5e1';
-            ctx.fillRect(sx + sw * 0.44, sy + 14, 20, 24);
-            ctx.fillRect(sx + sw * 0.44, sy + sh - 38, 20, 24);
-            ctx.fillRect(sx + 14, sy + sh * 0.44, 24, 20);
-            ctx.fillRect(sx + sw - 38, sy + sh * 0.44, 24, 20);
-
-            ctx.fillStyle = '#e2e8f0';
-            ctx.fillRect(sx + 44, sy + 44, sw - 88, sh - 88);
-            ctx.fillStyle = '#94a3b8';
-            ctx.strokeRect(sx + 44, sy + 44, sw - 88, sh - 88);
-
-            ctx.fillStyle = '#dc2626';
-            ctx.fillRect(sx + sw * 0.46, sy + 56, 14, sh - 112);
-
-            ctx.fillStyle = '#f8fafc';
-            ctx.fillRect(sx + sw * 0.36, sy + 52, sw * 0.28, sh * 0.28);
-            ctx.fillStyle = '#1e293b';
-            ctx.beginPath();
-            ctx.moveTo(sx + sw * 0.34, sy + 52);
-            ctx.lineTo(sx + sw * 0.5, sy + 32);
-            ctx.lineTo(sx + sw * 0.66, sy + 52);
-            ctx.closePath();
-            ctx.fill();
-        } else if (r === 1 && c === 2) {
-            // (1, 2) Map 6: Eastern Ruins & Labyrinth (Borderland of Scapegoats)
-            ctx.fillStyle = '#a16207';
-            ctx.fillRect(sx, sy, sw, sh);
-            ctx.fillStyle = '#b45309';
-            ctx.fillRect(sx + 10, sy + 10, sw - 20, sh - 20);
-            ctx.fillStyle = '#ca8a04';
-            ctx.fillRect(sx + 20, sy + 20, sw - 40, sh - 40);
-
-            ctx.strokeStyle = '#78350f';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(sx + 35, sy + 35); ctx.lineTo(sx + 120, sy + 35); ctx.lineTo(sx + 120, sy + 80);
-            ctx.moveTo(sx + 50, sy + 60); ctx.lineTo(sx + 50, sy + 120); ctx.lineTo(sx + 100, sy + 120);
-            ctx.moveTo(sx + 85, sy + 75); ctx.lineTo(sx + 135, sy + 75); ctx.lineTo(sx + 135, sy + 130);
-            ctx.stroke();
-
-            ctx.fillStyle = '#eab308';
-            ctx.fillRect(sx + sw * 0.62, sy + 22, 42, 34);
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(sx + sw * 0.68, sy + 40, 16, 16);
-        } else if (r === 2 && c === 0) {
-            // (2, 0) Map 3: Desert of Mystery & Canyon (The Iron & Velvet Divide)
-            ctx.fillStyle = '#d97706';
-            ctx.fillRect(sx, sy, sw, sh);
-            ctx.fillStyle = '#facc15';
-            ctx.beginPath();
-            ctx.moveTo(sx, sy + 30);
-            ctx.bezierCurveTo(sx + 40, sy + 15, sx + 80, sy + 45, sx + sw, sy + 20);
-            ctx.lineTo(sx + sw, sy + sh); ctx.lineTo(sx, sy + sh);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.fillStyle = '#451a03';
-            ctx.beginPath();
-            ctx.moveTo(sx + sw * 0.48, sy);
-            ctx.lineTo(sx + sw * 0.54, sy + 50);
-            ctx.lineTo(sx + sw * 0.46, sy + 110);
-            ctx.lineTo(sx + sw * 0.52, sy + sh);
-            ctx.lineTo(sx + sw * 0.58, sy + sh);
-            ctx.lineTo(sx + sw * 0.52, sy + 110);
-            ctx.lineTo(sx + sw * 0.60, sy + 50);
-            ctx.lineTo(sx + sw * 0.54, sy);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.fillStyle = '#b45309';
-            ctx.fillRect(sx + 18, sy + sh * 0.45, 36, 42);
-            ctx.fillStyle = '#fef08a';
-            ctx.fillRect(sx + 22, sy + sh * 0.48, 5, 32);
-            ctx.fillRect(sx + 34, sy + sh * 0.48, 5, 32);
-            ctx.fillRect(sx + 44, sy + sh * 0.48, 5, 32);
-        } else if (r === 2 && c === 1) {
-            // (2, 1) Map 0: Link's House & Sanctuary Grove (The Quiet Archive)
-            ctx.fillStyle = '#15803d';
-            ctx.fillRect(sx, sy, sw, sh);
-
-            ctx.fillStyle = '#0284c7';
-            ctx.beginPath();
-            ctx.ellipse(sx + sw * 0.5, sy + sh * 0.78, 48, 22, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#86efac';
-            [[40, 125], [75, 138], [110, 130]].forEach(([lx, ly]) => {
-                ctx.beginPath(); ctx.arc(sx + lx, sy + ly, 4, 0, Math.PI * 2); ctx.fill();
-            });
-
-            ctx.fillStyle = '#fef3c7';
-            ctx.fillRect(sx + sw * 0.42, sy + sh * 0.35, 32, 24);
-            ctx.fillStyle = '#92400e';
-            ctx.beginPath();
-            ctx.moveTo(sx + sw * 0.38, sy + sh * 0.35);
-            ctx.lineTo(sx + sw * 0.52, sy + sh * 0.24);
-            ctx.lineTo(sx + sw * 0.66, sy + sh * 0.35);
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillStyle = '#451a03';
-            ctx.fillRect(sx + sw * 0.50, sy + sh * 0.45, 8, 14);
-
-            ctx.fillStyle = '#cbd5e1';
-            ctx.fillRect(sx + sw * 0.45, sy, 18, sh * 0.35);
-        } else if (r === 2 && c === 2) {
-            // (2, 2) Map 7: Lake Hylia & Waterfalls (Highland Oasis of Solidarity)
-            ctx.fillStyle = '#0284c7';
-            ctx.fillRect(sx, sy, sw, sh);
-
-            ctx.fillStyle = '#15803d';
-            ctx.beginPath();
-            ctx.moveTo(sx, sy); ctx.lineTo(sx + sw * 0.3, sy); ctx.lineTo(sx, sy + sh * 0.4);
-            ctx.closePath(); ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(sx + sw, sy); ctx.lineTo(sx + sw, sy + sh * 0.6); ctx.lineTo(sx + sw * 0.7, sy);
-            ctx.closePath(); ctx.fill();
-
-            ctx.fillStyle = '#22c55e';
-            ctx.beginPath();
-            ctx.ellipse(sx + sw * 0.52, sy + sh * 0.52, 28, 22, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#fbbf24';
-            ctx.fillRect(sx + sw * 0.49, sy + sh * 0.44, 10, 16);
-
-            ctx.fillStyle = '#e2e8f0';
-            ctx.fillRect(sx + sw * 0.49, sy + sh * 0.62, 10, 36);
         }
 
-        const meta = MAP_OVERWORLD_POS[mapIdx];
-        if (meta) {
-            ctx.fillStyle = 'rgba(2, 6, 23, 0.78)';
-            ctx.fillRect(sx + 5, sy + 5, sw - 10, 16);
-            ctx.fillStyle = '#f8fafc';
-            ctx.font = '7px "Press Start 2P", monospace';
-            ctx.textAlign = 'left';
-            ctx.fillText(`${meta.icon} ${meta.alttpName}`, sx + 9, sy + 16);
-        }
-    }
-
-    function drawOverworldConnectingPaths(ctx, innerX, innerY, sw, sh) {
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(innerX + sw * 1.45, innerY + sh * 0.75, 18, sh * 0.55);
-        ctx.fillRect(innerX + sw * 1.45, innerY + sh * 1.75, 18, sh * 0.55);
-        ctx.fillRect(innerX + sw * 0.75, innerY + sh * 1.45, sw * 0.55, 18);
-        ctx.fillRect(innerX + sw * 1.75, innerY + sh * 1.45, sw * 0.55, 18);
-        ctx.fillRect(innerX + sw * 0.48, innerY + sh * 0.85, 16, sh * 0.35);
-        ctx.fillRect(innerX + sw * 0.48, innerY + sh * 1.85, 16, sh * 0.35);
-        ctx.fillStyle = '#0284c7';
-        ctx.fillRect(innerX + sw * 2.45, innerY + sh * 1.85, 20, sh * 0.35);
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(innerX + sw * 1.82, innerY + sh * 2.45, sw * 0.4, 16);
-        ctx.fillRect(innerX + sw * 0.82, innerY + sh * 2.45, sw * 0.4, 16);
+        return offCanvas;
     }
 
     function renderWorldMap() {
@@ -7769,7 +7793,7 @@
         ctx.fillStyle = '#060913';
         ctx.fillRect(0, 0, w, h);
 
-        const border = 36;
+        const border = 24;
         const innerX = border;
         const innerY = border;
         const innerW = w - border * 2;
@@ -7777,22 +7801,15 @@
         const secW = innerW / 3;
         const secH = innerH / 3;
 
-        ctx.save();
-
-        // 1. Render Clean Authentic ALttP Overworld Map (Zero colored overlay rectangles)
-        if (assets.hasImage('alttp_world_map_full')) {
-            ctx.imageSmoothingEnabled = true;
-            assets.drawImage(ctx, 'alttp_world_map_full', innerX, innerY, innerW, innerH);
-        } else if (assets.hasImage('alttp_world_map_clouds')) {
-            ctx.imageSmoothingEnabled = true;
-            assets.drawImage(ctx, 'alttp_world_map_clouds', 0, 0, w, h);
-        } else {
-            ctx.fillStyle = '#1e3a1f';
-            ctx.fillRect(innerX, innerY, innerW, innerH);
+        // 1. Draw 100% Accurate Stitched Overworld Continent
+        if (!stitchedWorldMapCanvas || stitchedWorldMapDirty) {
+            stitchedWorldMapCanvas = buildStitchedWorldMap(innerW, innerH);
+            stitchedWorldMapDirty = false;
         }
+        ctx.drawImage(stitchedWorldMapCanvas, innerX, innerY);
 
-        // 2. Subtle Translucent 3x3 Sector Grid Demarcation Lines
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        // 2. Translucent Sector Boundary Demarcation Lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 4]);
         for (let i = 1; i < 3; i++) {
@@ -7808,18 +7825,40 @@
         }
         ctx.setLineDash([]);
 
-        // 3. Sector Hover Highlight (sleek gold outline, no giant opaque rectangles)
+        // 3. Sector Header Badges (SEC [r, c] + Name)
+        for (let gr = 0; gr < 3; gr++) {
+            for (let gc = 0; gc < 3; gc++) {
+                const mapIdx = OVERWORLD_GRID[gr][gc];
+                const meta = MAP_OVERWORLD_POS[mapIdx];
+                if (meta) {
+                    const bx = innerX + gc * secW + 5;
+                    const by = innerY + gr * secH + 5;
+                    ctx.fillStyle = 'rgba(2, 6, 23, 0.88)';
+                    ctx.fillRect(bx, by, secW - 10, 16);
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(bx, by, secW - 10, 16);
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.font = '7px "Press Start 2P", monospace';
+                    ctx.textAlign = 'left';
+                    const shortName = meta.name.split(':')[0].replace('Map ', 'M');
+                    ctx.fillText(`${meta.icon} ${shortName}`, bx + 5, by + 11);
+                }
+            }
+        }
+
+        // 4. Sector Hover Highlight
         if (mapHoverGridPos) {
             const hx = innerX + mapHoverGridPos.col * secW;
             const hy = innerY + mapHoverGridPos.row * secH;
-            ctx.fillStyle = devMode ? 'rgba(251, 191, 36, 0.12)' : 'rgba(56, 189, 248, 0.12)';
+            ctx.fillStyle = devMode ? 'rgba(251, 191, 36, 0.16)' : 'rgba(56, 189, 248, 0.16)';
             ctx.fillRect(hx, hy, secW, secH);
             ctx.strokeStyle = devMode ? '#fbbf24' : '#38bdf8';
             ctx.lineWidth = 2.5;
             ctx.strokeRect(hx + 1, hy + 1, secW - 2, secH - 2);
         }
 
-        // 4. Accurate Real-Time Player Location Beacon
+        // 5. Accurate Real-Time Player Location Beacon
         const curMeta = MAP_OVERWORLD_POS[currentMapIndex];
         if (curMeta) {
             const mCols = getMapCols(currentMapIndex);
@@ -7828,7 +7867,7 @@
             const py = innerY + curMeta.row * secH + (player.y / (mRows * TILE_SIZE)) * secH;
             const pulse = 1 + 0.3 * Math.sin(performance.now() / 140);
 
-            // Animated radar ripple ring
+            // Radar ripple ring
             ctx.strokeStyle = 'rgba(56, 189, 248, 0.9)';
             ctx.lineWidth = 2.5;
             ctx.beginPath();
@@ -7849,7 +7888,7 @@
             ctx.stroke();
 
             // Overhead "YOU ARE HERE" Banner
-            ctx.fillStyle = 'rgba(2, 6, 23, 0.94)';
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.95)';
             ctx.strokeStyle = '#38bdf8';
             ctx.lineWidth = 1.5;
             const pillW = 86;
@@ -7862,7 +7901,7 @@
             ctx.fillText('YOU ARE HERE', px, py - 26);
         }
 
-        // 5. Developer Teleport Target Cursor
+        // 6. Developer Teleport Target Cursor
         if (devMode && mapHoverGridPos) {
             ctx.strokeStyle = '#fbbf24';
             ctx.lineWidth = 1.5;
@@ -7875,19 +7914,22 @@
             ctx.stroke();
 
             ctx.fillStyle = '#020617';
-            ctx.fillRect(mapHoverGridPos.mx + 10, mapHoverGridPos.my + 4, 62, 14);
+            ctx.fillRect(mapHoverGridPos.mx + 10, mapHoverGridPos.my + 4, 66, 14);
             ctx.strokeStyle = '#fbbf24';
-            ctx.strokeRect(mapHoverGridPos.mx + 10, mapHoverGridPos.my + 4, 62, 14);
+            ctx.strokeRect(mapHoverGridPos.mx + 10, mapHoverGridPos.my + 4, 66, 14);
             ctx.fillStyle = '#fbbf24';
             ctx.font = '7px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
             ctx.fillText('⚡ WARP', mapHoverGridPos.mx + 14, mapHoverGridPos.my + 14);
         }
 
-        ctx.restore();
-
-        // 6. Authentic Pixel Cloud Border Frame
-        drawAlttpPixelCloudFrame(ctx, w, h, border);
+        // 7. Outer Frame
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = border;
+        ctx.strokeRect(border / 2, border / 2, w - border, h - border);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(border - 1, border - 1, innerW + 2, innerH + 2);
     }
 
     function setupWorldMapEvents() {
@@ -7901,7 +7943,7 @@
             const mx = (e.clientX - rect.left) * scaleX;
             const my = (e.clientY - rect.top) * scaleY;
 
-            const border = 44;
+            const border = 24;
             const innerX = border, innerY = border;
             const innerW = wmCanvas.width - border * 2;
             const innerH = wmCanvas.height - border * 2;
@@ -7936,7 +7978,7 @@
             if (!mapHoverGridPos) return;
             const targetMapIdx = OVERWORLD_GRID[mapHoverGridPos.row][mapHoverGridPos.col];
             if (devMode) {
-                const border = 44;
+                const border = 24;
                 const innerX = border, innerY = border;
                 const innerW = wmCanvas.width - border * 2;
                 const innerH = wmCanvas.height - border * 2;
@@ -7947,8 +7989,8 @@
                 const secRelY = mapHoverGridPos.my - (innerY + mapHoverGridPos.row * secH);
                 const tCols = getMapCols(targetMapIdx);
                 const tRows = getMapRows(targetMapIdx);
-                const targetCol = Math.floor((secRelX / secW) * tCols);
-                const targetRow = Math.floor((secRelY / secH) * tRows);
+                const targetCol = Math.max(2, Math.min(tCols - 3, Math.floor((secRelX / secW) * tCols)));
+                const targetRow = Math.max(2, Math.min(tRows - 3, Math.floor((secRelY / secH) * tRows)));
 
                 teleportPlayerTo(targetMapIdx, targetCol, targetRow);
             } else {
@@ -8424,6 +8466,23 @@
         }
 
         updateStackedQuestHud();
+
+        // Update Location HUD Banner below Minimap
+        const locTextEl = document.getElementById('locationBannerText');
+        const locBadgeEl = document.getElementById('locationSectorBadge');
+        if (locTextEl) {
+            if (currentInterior) {
+                locTextEl.textContent = `${currentInterior.name} [INTERIOR]`;
+            } else {
+                locTextEl.textContent = MAPS[currentMapIndex].name;
+            }
+        }
+        if (locBadgeEl) {
+            const overPos = MAP_OVERWORLD_POS[currentMapIndex];
+            if (overPos) {
+                locBadgeEl.textContent = `SEC [${overPos.row},${overPos.col}]`;
+            }
+        }
     }
 
     
