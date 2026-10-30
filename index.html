@@ -100,6 +100,39 @@
             border: 3px solid #38bdf8;
             box-shadow: inset 0 0 0 3px #020617, 0 8px 20px rgba(0,0,0,0.8);
         }
+
+        /* 32-Bit Pixel RPG HUD & Quest Log Styling */
+        .pixel-border-gold {
+            border: 3px solid #78350f;
+            box-shadow: 
+                inset 2px 2px 0 #fbbf24,
+                inset -2px -2px 0 #451a03,
+                0 0 0 1px #000,
+                0 4px 12px rgba(0, 0, 0, 0.85);
+            background: linear-gradient(180deg, rgba(19, 23, 34, 0.94) 0%, rgba(9, 12, 20, 0.96) 100%);
+        }
+        .pixel-border-steel {
+            border: 2px solid #3f3f46;
+            box-shadow: 
+                inset 1px 1px 0 #71717a,
+                inset -2px -2px 0 #18181b,
+                0 0 0 1px #09090b,
+                0 3px 8px rgba(0, 0, 0, 0.7);
+            background: linear-gradient(180deg, rgba(24, 24, 27, 0.92) 0%, rgba(12, 12, 14, 0.96) 100%);
+        }
+        .pixel-rivet {
+            width: 5px;
+            height: 5px;
+            background: #ca8a04;
+            border-radius: 1px;
+            box-shadow: 
+                inset 1px 1px 0 #fef08a,
+                inset -1px -1px 0 #713f12,
+                0 1px 1px rgba(0, 0, 0, 0.9);
+            pointer-events: none;
+            position: absolute;
+        }
+
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -365,20 +398,10 @@
             </div>
         </div>
 
-        <!-- Top-Center: Minimal Non-Overlapping Quest Tracker Pill & Boss Bar -->
-        <div class="absolute top-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 w-[450px] max-w-[44vw]">
-            <div class="bg-slate-950/95 border-2 border-slate-700 px-3.5 py-1.5 rounded-full flex items-center gap-2.5 shadow-2xl w-full justify-between pointer-events-auto">
-                <div class="flex items-center gap-2 min-w-0">
-                    <span id="hudQuestMarkerIcon" class="pixel-font text-sm text-amber-400 font-bold shrink-0 animate-bounce" style="text-shadow: 0 2px 0 #000, 0 0 8px rgba(251,191,36,0.7);">!</span>
-                    <span id="hudQuestPillText" class="text-xs font-bold text-slate-100 truncate">Speak with Professor Avi [SPACE]</span>
-                </div>
-                <span id="hudMapTitle" class="text-[10px] mono-font text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/30 shrink-0">
-                    Map 1
-                </span>
-            </div>
-
+        <!-- Top-Center: Boss Health Bar (Only visible during overworld boss encounters, NEVER in houses) -->
+        <div class="absolute top-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 w-[450px] max-w-[44vw] pointer-events-none">
             <!-- Boss Health Bar -->
-            <div id="hudBossContainer" class="w-full bg-slate-950/95 border-2 border-rose-500 rounded-xl p-2.5 shadow-2xl hidden">
+            <div id="hudBossContainer" class="w-full bg-slate-950/95 border-2 border-rose-500 rounded-xl p-2.5 shadow-2xl hidden pointer-events-auto">
                 <div class="flex justify-between items-center mb-1">
                     <span id="hudBossName" class="text-xs font-bold text-rose-400 mono-font uppercase">BOSS</span>
                     <span id="hudBossPhase" class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">DELUSION SHIELD ACTIVE</span>
@@ -420,21 +443,25 @@
             </div>
 
             <!-- Location Name Banner (Below Minimap on UI) -->
-            <div id="locationHudBanner" class="w-full max-w-[290px] bg-slate-950/90 border border-cyan-500/40 rounded-xl px-3 py-1.5 flex items-center justify-between shadow-lg backdrop-blur-sm">
+            <div id="locationHudBanner" class="w-full max-w-[290px] pixel-border-steel rounded px-3 py-1.5 flex items-center justify-between shadow-lg relative">
                 <div class="flex items-center gap-1.5 min-w-0">
-                    <span class="text-cyan-400 text-xs">📍</span>
+                    <span class="text-amber-400 text-xs">📍</span>
                     <span id="locationBannerText" class="text-[11px] font-extrabold text-white truncate pixel-font tracking-wide">Map 1: The Quiet Archive</span>
                 </div>
-                <span id="locationSectorBadge" class="text-[9px] font-bold text-amber-300 mono-font uppercase px-1.5 py-0.5 rounded bg-amber-950/60 border border-amber-600/40 shrink-0">SEC [2,1]</span>
+                <span id="locationSectorBadge" class="text-[9px] font-bold text-amber-300 mono-font uppercase px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-600/50 shrink-0">SEC [2,1]</span>
             </div>
 
-            <!-- Stacked Active Quests Tracker Box (Below Minimap) -->
-            <div id="stackedQuestBox" class="w-full max-w-[290px] bg-slate-950/95 border-2 border-slate-700 rounded-xl p-2.5 shadow-2xl flex flex-col gap-1.5 transition-all">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-1 mb-0.5">
-                    <span class="pixel-font text-[9px] text-amber-400 font-bold flex items-center gap-1.5">
-                        <span>📜</span> <span>ACTIVE QUEST LOG</span>
+            <!-- Stacked Active Quests Tracker Box (32-Bit RPG Aesthetic) -->
+            <div id="stackedQuestBox" class="w-full max-w-[290px] pixel-border-gold rounded p-2.5 shadow-2xl flex flex-col gap-1.5 transition-all relative overflow-hidden">
+                <div class="top-1 left-1 pixel-rivet"></div>
+                <div class="top-1 right-1 pixel-rivet"></div>
+                <div class="bottom-1 left-1 pixel-rivet"></div>
+                <div class="bottom-1 right-1 pixel-rivet"></div>
+                <div class="flex justify-between items-center border-b border-amber-900/60 pb-1 mb-0.5">
+                    <span class="pixel-font text-[10px] text-amber-300 font-bold flex items-center gap-1.5 tracking-wider">
+                        <span>⚔️</span> <span>ACTIVE QUEST LOG</span>
                     </span>
-                    <span id="activeQuestCountBadge" class="text-[9px] mono-font text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800 font-bold">1 Active</span>
+                    <span id="activeQuestCountBadge" class="text-[9px] mono-font text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800 font-bold">1 Active</span>
                 </div>
                 <div id="stackedQuestList" class="flex flex-col gap-1.5 max-h-52 overflow-y-auto pr-0.5"></div>
             </div>
@@ -1684,9 +1711,14 @@
         // 1. Boots
         const bootCol = (role === 'player' && equipment && equipment.feet && equipment.feet.visualColor)
             ? equipment.feet.visualColor
-            : '#1e293b';
+            : (role === 'velvet' ? skinColor : '#1e293b');
         px(4, leftFootY, 3, 3, bootCol);
         px(9, rightFootY, 3, 3, bootCol);
+        if (role === 'velvet') {
+            // Delicate cobalt ankle straps
+            px(4, leftFootY + 2, 3, 1, '#1d4ed8');
+            px(9, rightFootY + 2, 3, 1, '#1d4ed8');
+        }
 
         // 2. Tunic & Cloak Body
         let bodyCol = (role === 'player' && equipment && equipment.chest && equipment.chest.visualColor)
@@ -1695,23 +1727,44 @@
         let trimCol = '#fbbf24';
 
         if (role === 'iron') { bodyCol = '#dc2626'; trimCol = '#fbbf24'; }
-        else if (role === 'velvet') { bodyCol = '#86198f'; trimCol = '#f0abfc'; }
+        else if (role === 'velvet') { bodyCol = '#2563eb'; trimCol = '#93c5fd'; }
         else if (role === 'inquisitor') { bodyCol = '#581c87'; trimCol = '#fde047'; }
         else if (role === 'border') { bodyCol = '#92400e'; trimCol = '#fcd34d'; }
         else if (role === 'blackshirt') { bodyCol = '#111827'; trimCol = '#ef4444'; }
         else if (role === 'avi') { bodyCol = '#1e1b4b'; trimCol = '#fbbf24'; }
         else if (role === 'ally') { bodyCol = tunicColor || '#059669'; trimCol = '#34d399'; }
 
-        // Torso
-        px(3, 10, 10, 7, bodyCol);
-        // Belt & Buckle
-        const waistCol = (role === 'player' && equipment && equipment.waist && equipment.waist.visualColor)
-            ? equipment.waist.visualColor
-            : trimCol;
-        px(3, 14, 10, 1, '#0f172a');
-        px(7, 14, 2, 1, waistCol);
-        // Shoulder trim / collar
-        px(4, 10, 8, 1, trimCol);
+        if (role === 'velvet') {
+            // Slender bikini femsphere model (reference art style: bikini, slender waist, bare skin)
+            const bikiniCol = '#2563eb';
+            const bikiniShade = '#1d4ed8';
+            // Slender bare shoulders and décolletage
+            px(4, 9, 8, 2, skinColor);
+            // Cobalt blue bikini top
+            px(4, 11, 3, 2, bikiniCol);
+            px(9, 11, 3, 2, bikiniCol);
+            px(5, 10, 1, 1, bikiniShade); // straps
+            px(10, 10, 1, 1, bikiniShade);
+            px(7, 11, 2, 1, '#93c5fd'); // center clasp
+            // Slender bare waist & midriff
+            px(5, 13, 6, 2, skinColor);
+            px(8, 13, 1, 1, '#d97706'); // navel
+            // Cobalt blue bikini bottom / shorts
+            px(4, 15, 8, 2, bikiniCol);
+            px(3, 15, 1, 1, '#93c5fd'); // side ties
+            px(12, 15, 1, 1, '#93c5fd');
+        } else {
+            // Torso
+            px(3, 10, 10, 7, bodyCol);
+            // Belt & Buckle
+            const waistCol = (role === 'player' && equipment && equipment.waist && equipment.waist.visualColor)
+                ? equipment.waist.visualColor
+                : trimCol;
+            px(3, 14, 10, 1, '#0f172a');
+            px(7, 14, 2, 1, waistCol);
+            // Shoulder trim / collar
+            px(4, 10, 8, 1, trimCol);
+        }
 
         // Professor Avi's golden scholarly stole with azure rune inlay
         if (role === 'avi') {
@@ -1742,6 +1795,11 @@
             px(1, 10 + armSwing, 2, 6, skinColor);
             px(13, 10 - armSwing, 2, 6, skinColor);
             px(6, 11, 4, 1, '#fbbf24');
+        } else if (role === 'velvet') {
+            // Slender bare feminine arms + gold bangle
+            px(2, 10 + armSwing, 2, 6, skinColor);
+            px(12, 10 - armSwing, 2, 6, skinColor);
+            px(12, 14 - armSwing, 2, 1, '#fbbf24');
         } else {
             const armCol = (role === 'avi') ? '#1e1b4b' : bodyCol;
             px(1, 10 + armSwing, 2, 5, armCol);
@@ -1808,7 +1866,23 @@
 
             // Hair / Hood styles
             const hCol = role === 'avi' ? '#1e1b4b' : hairColor;
-            if (role === 'avi') {
+            if (role === 'velvet') {
+                // Voluminous long flowing brunette hair cascading down to waist with top bun
+                const vHair = '#92400e';
+                const vHi = '#d97706';
+                px(3, 0, 10, 3, vHair);
+                px(4, 0, 8, 1, vHi);
+                px(6, -2, 4, 2, vHair); // Top hair bun
+                // Flowing locks framing face & cascading down past shoulders
+                px(2, 2, 2, 12, vHair);
+                px(12, 2, 2, 12, vHair);
+                px(1, 4, 1, 8, vHair);
+                px(14, 4, 1, 8, vHair);
+                if (dir === 1) {
+                    px(3, 2, 10, 12, vHair);
+                    px(4, 4, 8, 8, vHi);
+                }
+            } else if (role === 'avi') {
                 // Distinguished Sage Wizard Cowl & Golden Brocade Rim
                 px(2, 0, 12, 3, '#1e1b4b');
                 px(2, 3, 2, 6, '#1e1b4b');
@@ -2135,6 +2209,85 @@
         ctx.restore();
     }
 
+    function isCitadelUnlocked() {
+        if (typeof devMode !== 'undefined' && devMode) return true;
+        let completed = 0;
+        if (typeof player !== 'undefined' && player.zoneQuests) {
+            for (let i = 0; i < 8; i++) {
+                const q = player.zoneQuests[i];
+                if (q && (q.completed || q.cured >= q.curedGoal)) completed++;
+            }
+        }
+        return completed >= 4 || (typeof player !== 'undefined' && player.freedTotal >= 16);
+    }
+
+    function drawCitadelLockedPortcullis(ctx, x1, y1, x2, y2, orientation) {
+        ctx.save();
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        if (orientation === 'horizontal') {
+            const minX = Math.min(x1, x2);
+            const maxX = Math.max(x1, x2);
+            const y = y1;
+            // Horizontal heavy iron crossbars
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(minX, y - 6, maxX - minX, 5);
+            ctx.fillRect(minX, y + 4, maxX - minX, 5);
+            // Spiked vertical iron bars
+            for (let bx = minX + 8; bx <= maxX - 8; bx += 14) {
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(bx - 3, y - 24, 6, 44);
+                ctx.beginPath();
+                ctx.moveTo(bx - 4, y - 24);
+                ctx.lineTo(bx, y - 32);
+                ctx.lineTo(bx + 4, y - 24);
+                ctx.closePath();
+                ctx.fillStyle = '#475569';
+                ctx.fill();
+            }
+            const midX = (minX + maxX) / 2;
+            ctx.fillStyle = '#7f1d1d';
+            ctx.beginPath();
+            ctx.arc(midX, y, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'bold 15px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🔒', midX, y + 5);
+        } else {
+            const minY = Math.min(y1, y2);
+            const maxY = Math.max(y1, y2);
+            const x = x1;
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(x - 6, minY, 5, maxY - minY);
+            ctx.fillRect(x + 4, minY, 5, maxY - minY);
+            for (let by = minY + 8; by <= maxY - 8; by += 14) {
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(x - 24, by - 3, 44, 6);
+                ctx.beginPath();
+                ctx.moveTo(x - 24, by - 4);
+                ctx.lineTo(x - 32, by);
+                ctx.lineTo(x - 24, by + 4);
+                ctx.closePath();
+                ctx.fillStyle = '#475569';
+                ctx.fill();
+            }
+            const midY = (minY + maxY) / 2;
+            ctx.fillStyle = '#7f1d1d';
+            ctx.beginPath();
+            ctx.arc(x, midY, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'bold 15px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🔒', x, midY + 5);
+        }
+        ctx.restore();
+    }
+
     function renderHighwayBorderIndicators(ctx, mapMeta, cols, rows) {
         const overPos = MAP_OVERWORLD_POS[currentMapIndex];
         if (!overPos) return;
@@ -2149,29 +2302,32 @@
 
         // --- NORTH HIGHWAY GATEWAY (cols 14..22) ---
         if (northMap !== null) {
-            // Flanking stone gateway pillars
             drawStoneGatewayPillar(ctx, 13 * TILE_SIZE, 0);
             drawStoneGatewayPillar(ctx, 23 * TILE_SIZE, 0);
             if (assets.hasImage('alttp_village_sign')) {
                 assets.drawImage(ctx, 'alttp_village_sign', 13.5 * TILE_SIZE, 1.2 * TILE_SIZE, 28, 36);
             }
 
-            // Glowing animated pavement arrows pointing North
-            ctx.save();
-            ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
-            ctx.font = 'bold 16px monospace';
-            ctx.textAlign = 'center';
-            for (let c = 15; c <= 21; c += 2) {
-                ctx.fillText('▲', (c + 0.5) * TILE_SIZE, 0.9 * TILE_SIZE);
-                ctx.fillText('▲', (c + 0.5) * TILE_SIZE, 1.8 * TILE_SIZE);
+            if (northMap === 8 && !isCitadelUnlocked()) {
+                drawCitadelLockedPortcullis(ctx, 14 * TILE_SIZE, 1.0 * TILE_SIZE, 23 * TILE_SIZE, 1.0 * TILE_SIZE, 'horizontal');
+                if (player.y < 5.0 * TILE_SIZE && player.x >= 12 * TILE_SIZE && player.x <= 24 * TILE_SIZE) {
+                    drawHighwayTravelBanner(ctx, 18.5 * TILE_SIZE, 0.8 * TILE_SIZE, '🔒 CITADEL GATES SEALED');
+                }
+            } else {
+                ctx.save();
+                ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
+                ctx.font = 'bold 16px monospace';
+                ctx.textAlign = 'center';
+                for (let c = 15; c <= 21; c += 2) {
+                    ctx.fillText('▲', (c + 0.5) * TILE_SIZE, 0.9 * TILE_SIZE);
+                    ctx.fillText('▲', (c + 0.5) * TILE_SIZE, 1.8 * TILE_SIZE);
+                }
+                if (player.y < 5.0 * TILE_SIZE && player.x >= 12 * TILE_SIZE && player.x <= 24 * TILE_SIZE) {
+                    const targetName = MAPS[northMap].name.toUpperCase();
+                    drawHighwayTravelBanner(ctx, 18.5 * TILE_SIZE, 0.8 * TILE_SIZE, `▲ TO ${targetName}`);
+                }
+                ctx.restore();
             }
-
-            // Overhead floating destination banner if player is approaching North highway
-            if (player.y < 5.0 * TILE_SIZE && player.x >= 12 * TILE_SIZE && player.x <= 24 * TILE_SIZE) {
-                const targetName = MAPS[northMap].name.toUpperCase();
-                drawHighwayTravelBanner(ctx, 18.5 * TILE_SIZE, 0.8 * TILE_SIZE, `▲ TO ${targetName}`);
-            }
-            ctx.restore();
         }
 
         // --- SOUTH HIGHWAY GATEWAY (cols 14..22) ---
@@ -2183,20 +2339,26 @@
                 assets.drawImage(ctx, 'alttp_village_sign', 13.5 * TILE_SIZE, (rows - 2.5) * TILE_SIZE, 28, 36);
             }
 
-            ctx.save();
-            ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
-            ctx.font = 'bold 16px monospace';
-            ctx.textAlign = 'center';
-            for (let c = 15; c <= 21; c += 2) {
-                ctx.fillText('▼', (c + 0.5) * TILE_SIZE, (rows - 0.5) * TILE_SIZE);
-                ctx.fillText('▼', (c + 0.5) * TILE_SIZE, (rows - 1.5) * TILE_SIZE);
+            if (southMap === 8 && !isCitadelUnlocked()) {
+                drawCitadelLockedPortcullis(ctx, 14 * TILE_SIZE, (rows - 1.2) * TILE_SIZE, 23 * TILE_SIZE, (rows - 1.2) * TILE_SIZE, 'horizontal');
+                if (player.y > (rows - 5.5) * TILE_SIZE && player.x >= 12 * TILE_SIZE && player.x <= 24 * TILE_SIZE) {
+                    drawHighwayTravelBanner(ctx, 18.5 * TILE_SIZE, (rows - 1.2) * TILE_SIZE, '🔒 CITADEL GATES SEALED');
+                }
+            } else {
+                ctx.save();
+                ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
+                ctx.font = 'bold 16px monospace';
+                ctx.textAlign = 'center';
+                for (let c = 15; c <= 21; c += 2) {
+                    ctx.fillText('▼', (c + 0.5) * TILE_SIZE, (rows - 0.5) * TILE_SIZE);
+                    ctx.fillText('▼', (c + 0.5) * TILE_SIZE, (rows - 1.5) * TILE_SIZE);
+                }
+                if (player.y > (rows - 5.5) * TILE_SIZE && player.x >= 12 * TILE_SIZE && player.x <= 24 * TILE_SIZE) {
+                    const targetName = MAPS[southMap].name.toUpperCase();
+                    drawHighwayTravelBanner(ctx, 18.5 * TILE_SIZE, (rows - 1.2) * TILE_SIZE, `▼ TO ${targetName}`);
+                }
+                ctx.restore();
             }
-
-            if (player.y > (rows - 5.5) * TILE_SIZE && player.x >= 12 * TILE_SIZE && player.x <= 24 * TILE_SIZE) {
-                const targetName = MAPS[southMap].name.toUpperCase();
-                drawHighwayTravelBanner(ctx, 18.5 * TILE_SIZE, (rows - 1.2) * TILE_SIZE, `▼ TO ${targetName}`);
-            }
-            ctx.restore();
         }
 
         // --- WEST HIGHWAY GATEWAY (rows 10..18) ---
@@ -2207,20 +2369,26 @@
                 assets.drawImage(ctx, 'alttp_village_sign', 1.2 * TILE_SIZE, 9.5 * TILE_SIZE, 28, 36);
             }
 
-            ctx.save();
-            ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
-            ctx.font = 'bold 16px monospace';
-            ctx.textAlign = 'center';
-            for (let r = 11; r <= 17; r += 2) {
-                ctx.fillText('◀', 0.9 * TILE_SIZE, (r + 0.6) * TILE_SIZE);
-                ctx.fillText('◀', 1.8 * TILE_SIZE, (r + 0.6) * TILE_SIZE);
+            if (westMap === 8 && !isCitadelUnlocked()) {
+                drawCitadelLockedPortcullis(ctx, 1.0 * TILE_SIZE, 10 * TILE_SIZE, 1.0 * TILE_SIZE, 19 * TILE_SIZE, 'vertical');
+                if (player.x < 5.0 * TILE_SIZE && player.y >= 8.5 * TILE_SIZE && player.y <= 20.5 * TILE_SIZE) {
+                    drawHighwayTravelBanner(ctx, 1.5 * TILE_SIZE, 14.5 * TILE_SIZE, '🔒 CITADEL GATES SEALED');
+                }
+            } else {
+                ctx.save();
+                ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
+                ctx.font = 'bold 16px monospace';
+                ctx.textAlign = 'center';
+                for (let r = 11; r <= 17; r += 2) {
+                    ctx.fillText('◀', 0.9 * TILE_SIZE, (r + 0.6) * TILE_SIZE);
+                    ctx.fillText('◀', 1.8 * TILE_SIZE, (r + 0.6) * TILE_SIZE);
+                }
+                if (player.x < 5.0 * TILE_SIZE && player.y >= 8.5 * TILE_SIZE && player.y <= 20.5 * TILE_SIZE) {
+                    const targetName = MAPS[westMap].name.toUpperCase();
+                    drawHighwayTravelBanner(ctx, 1.5 * TILE_SIZE, 14.5 * TILE_SIZE, `◀ TO ${targetName}`);
+                }
+                ctx.restore();
             }
-
-            if (player.x < 5.0 * TILE_SIZE && player.y >= 8.5 * TILE_SIZE && player.y <= 20.5 * TILE_SIZE) {
-                const targetName = MAPS[westMap].name.toUpperCase();
-                drawHighwayTravelBanner(ctx, 1.5 * TILE_SIZE, 14.5 * TILE_SIZE, `◀ TO ${targetName}`);
-            }
-            ctx.restore();
         }
 
         // --- EAST HIGHWAY GATEWAY (rows 10..18) ---
@@ -2232,20 +2400,26 @@
                 assets.drawImage(ctx, 'alttp_village_sign', (cols - 2.5) * TILE_SIZE, 9.5 * TILE_SIZE, 28, 36);
             }
 
-            ctx.save();
-            ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
-            ctx.font = 'bold 16px monospace';
-            ctx.textAlign = 'center';
-            for (let r = 11; r <= 17; r += 2) {
-                ctx.fillText('▶', (cols - 0.7) * TILE_SIZE, (r + 0.6) * TILE_SIZE);
-                ctx.fillText('▶', (cols - 1.6) * TILE_SIZE, (r + 0.6) * TILE_SIZE);
+            if (eastMap === 8 && !isCitadelUnlocked()) {
+                drawCitadelLockedPortcullis(ctx, (cols - 1.2) * TILE_SIZE, 10 * TILE_SIZE, (cols - 1.2) * TILE_SIZE, 19 * TILE_SIZE, 'vertical');
+                if (player.x > (cols - 5.5) * TILE_SIZE && player.y >= 8.5 * TILE_SIZE && player.y <= 20.5 * TILE_SIZE) {
+                    drawHighwayTravelBanner(ctx, (cols - 1.5) * TILE_SIZE, 14.5 * TILE_SIZE, '🔒 CITADEL GATES SEALED');
+                }
+            } else {
+                ctx.save();
+                ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
+                ctx.font = 'bold 16px monospace';
+                ctx.textAlign = 'center';
+                for (let r = 11; r <= 17; r += 2) {
+                    ctx.fillText('▶', (cols - 0.7) * TILE_SIZE, (r + 0.6) * TILE_SIZE);
+                    ctx.fillText('▶', (cols - 1.6) * TILE_SIZE, (r + 0.6) * TILE_SIZE);
+                }
+                if (player.x > (cols - 5.5) * TILE_SIZE && player.y >= 8.5 * TILE_SIZE && player.y <= 20.5 * TILE_SIZE) {
+                    const targetName = MAPS[eastMap].name.toUpperCase();
+                    drawHighwayTravelBanner(ctx, (cols - 1.5) * TILE_SIZE, 14.5 * TILE_SIZE, `▶ TO ${targetName}`);
+                }
+                ctx.restore();
             }
-
-            if (player.x > (cols - 5.5) * TILE_SIZE && player.y >= 8.5 * TILE_SIZE && player.y <= 20.5 * TILE_SIZE) {
-                const targetName = MAPS[eastMap].name.toUpperCase();
-                drawHighwayTravelBanner(ctx, (cols - 1.5) * TILE_SIZE, 14.5 * TILE_SIZE, `▶ TO ${targetName}`);
-            }
-            ctx.restore();
         }
     }
 
@@ -2293,8 +2467,12 @@
         const w = b.wCols * TILE_SIZE;
         const h = b.hRows * TILE_SIZE;
 
-        // Render clean, cohesive high-definition 16-bit pixel-art building
-        drawAuthenticAlttpBuilding(ctx, b, x, y, w, h);
+        // Render distinct regional architectural styles (Citadel gothic basalt vs Alttp timber cottage)
+        if (typeof currentMapIndex !== 'undefined' && (currentMapIndex === 8 || b.style === 'citadel')) {
+            drawCitadelFortressBuilding(ctx, b, x, y, w, h);
+        } else {
+            drawAuthenticAlttpBuilding(ctx, b, x, y, w, h);
+        }
 
         // Overhead Building Name Plaque on proximity
         if (b.name && typeof player !== 'undefined' && Number.isFinite(player.x)) {
@@ -2453,6 +2631,116 @@
         ctx.beginPath();
         ctx.arc(chimX + 7 + Math.sin(performance.now() / 200) * 4, chimY - 8 - smokeShift, 5 + smokeShift * 0.25, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.restore();
+    }
+
+    function drawCitadelFortressBuilding(ctx, b, x, y, w, h) {
+        ctx.save();
+        // 1. Heavy menacing drop shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+        ctx.beginPath();
+        ctx.ellipse(x + w / 2, y + h - 2, w / 2 + 10, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const wallH = Math.floor(h * 0.48);
+        const wallY = y + h - wallH;
+
+        // 2. Obsidian & Basalt Masonry Walls
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(x + 4, wallY, w - 8, wallH);
+        // Stone courses
+        ctx.fillStyle = '#1e293b';
+        for (let by = wallY; by < wallY + wallH; by += 8) {
+            ctx.fillRect(x + 6, by, w - 12, 1);
+        }
+        for (let by = wallY + 4; by < wallY + wallH; by += 8) {
+            const shift = ((by - wallY) / 8) % 2 === 0 ? 0 : 12;
+            for (let bx = x + 6 + shift; bx < x + w - 6; bx += 24) {
+                ctx.fillRect(bx, by, 1, 8);
+            }
+        }
+        // Heavy iron structural buttresses
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(x + 4, wallY, 10, wallH);
+        ctx.fillRect(x + w - 14, wallY, 10, wallH);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x + 6, wallY + 2, 6, wallH - 4);
+        ctx.fillRect(x + w - 12, wallY + 2, 6, wallH - 4);
+
+        // 3. Steep Gothic Bloodstone Roof
+        const roofH = h - wallH + 10;
+        const eX = x - 8;
+        const eW = w + 16;
+        ctx.fillStyle = '#450a0a';
+        ctx.beginPath();
+        ctx.moveTo(eX, wallY + 4);
+        ctx.lineTo(x + 24, y);
+        ctx.lineTo(x + w - 24, y);
+        ctx.lineTo(eX + eW, wallY + 4);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shingle highlight courses
+        ctx.fillStyle = '#7f1d1d';
+        for (let sy = y + 6; sy < wallY; sy += 7) {
+            const frac = (sy - y) / (wallY - y);
+            const leftX = (x + 24) - frac * 32;
+            const rightX = (x + w - 24) + frac * 32;
+            ctx.fillRect(leftX + 2, sy, rightX - leftX - 4, 2.5);
+        }
+        // Iron ridge spires
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(x + 20, y - 2, w - 40, 4);
+        ctx.fillStyle = '#94a3b8';
+        [x + 22, x + w / 2, x + w - 22].forEach(sx => {
+            ctx.fillRect(sx - 1, y - 10, 3, 10);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(sx, y - 12, 1, 2);
+        });
+
+        // 4. Reinforced Iron Vault Door
+        const doorW = 32;
+        const doorH = 38;
+        const doorX = x + Math.floor((w - doorW) / 2);
+        const doorY = y + h - doorH - 2;
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(doorX - 3, doorY - 3, doorW + 6, doorH + 3);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(doorX, doorY, doorW, doorH);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(doorX + 2, doorY + 6, doorW - 4, 3);
+        ctx.fillRect(doorX + 2, doorY + doorH - 10, doorW - 4, 3);
+        ctx.fillStyle = '#94a3b8';
+        for (let rx = doorX + 4; rx < doorX + doorW - 4; rx += 6) {
+            ctx.fillRect(rx, doorY + 7, 2, 2);
+            ctx.fillRect(rx, doorY + doorH - 9, 2, 2);
+        }
+        // Totalitarian crest lock on door
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(doorX + doorW / 2 - 3, doorY + 18, 6, 7);
+
+        // 5. Totalitarian Hanging Crimson Propaganda Banners flanking door
+        [doorX - 16, doorX + doorW + 6].forEach(bx => {
+            ctx.fillStyle = '#7f1d1d';
+            ctx.fillRect(bx, wallY + 4, 10, wallH - 8);
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(bx + 1, wallY + 5, 8, wallH - 12);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(bx + 3, wallY + 12, 4, 4);
+        });
+
+        // 6. Red Surveillance Slit Windows
+        const winY = wallY + 8;
+        [x + 18, x + w - 34].forEach(wx => {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(wx - 2, winY - 2, 16, 12);
+            ctx.fillStyle = '#991b1b';
+            ctx.fillRect(wx, winY, 12, 8);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(wx + 2, winY + 2, 8, 4);
+        });
 
         ctx.restore();
     }
@@ -4546,62 +4834,64 @@
         // North & South highway: cols 14..22 across ALL sectors
         // West & East highway: rows 10..18 across ALL sectors
         if (hasNorth) {
-            for (let c = 0; c < 14; c++) {
-                if (g[0]) g[0][c] = 3;
-                if (g[1]) g[1][c] = 3;
-            }
-            for (let c = 23; c < cols; c++) {
-                if (g[0]) g[0][c] = 3;
-                if (g[1]) g[1][c] = 3;
-            }
-            for (let c = 14; c <= 22; c++) {
-                if (g[0]) g[0][c] = 1;
-                if (g[1]) g[1][c] = 1;
+            for (let r = 0; r <= 3; r++) {
+                if (!g[r]) continue;
+                for (let c = 0; c < 14; c++) {
+                    if (r < 2) g[r][c] = 3;
+                }
+                for (let c = 23; c < cols; c++) {
+                    if (r < 2) g[r][c] = 3;
+                }
+                for (let c = 14; c <= 22; c++) {
+                    g[r][c] = 1; // Paved walkable road
+                }
             }
         }
         if (hasSouth) {
-            for (let c = 0; c < 14; c++) {
-                if (g[rows - 1]) g[rows - 1][c] = 3;
-                if (g[rows - 2]) g[rows - 2][c] = 3;
+            for (let r = rows - 4; r < rows; r++) {
+                if (!g[r]) continue;
+                for (let c = 0; c < 14; c++) {
+                    if (r >= rows - 2) g[r][c] = 3;
+                }
+                for (let c = 23; c < cols; c++) {
+                    if (r >= rows - 2) g[r][c] = 3;
+                }
+                for (let c = 14; c <= 22; c++) {
+                    g[r][c] = 1; // Paved walkable road
+                }
             }
-            for (let c = 23; c < cols; c++) {
-                if (g[rows - 1]) g[rows - 1][c] = 3;
-                if (g[rows - 2]) g[rows - 2][c] = 3;
-            }
-            for (let c = 14; c <= 22; c++) {
-                if (g[rows - 1]) g[rows - 1][c] = 1;
-                if (g[rows - 2]) g[rows - 2][c] = 1;
-                if (g[MAP_ROWS - 1] && MAP_ROWS <= rows) g[MAP_ROWS - 1][c] = 1;
+            if (g[MAP_ROWS - 1] && MAP_ROWS <= rows) {
+                for (let c = 14; c <= 22; c++) g[MAP_ROWS - 1][c] = 1;
             }
         }
         if (hasWest) {
-            for (let r = 0; r < 10; r++) {
-                if (g[r]) g[r][0] = 3;
-                if (g[r]) g[r][1] = 3;
-            }
-            for (let r = 19; r < rows; r++) {
-                if (g[r]) g[r][0] = 3;
-                if (g[r]) g[r][1] = 3;
-            }
-            for (let r = 10; r <= 18; r++) {
-                if (g[r]) g[r][0] = 1;
-                if (g[r]) g[r][1] = 1;
+            for (let c = 0; c <= 3; c++) {
+                for (let r = 0; r < 10; r++) {
+                    if (g[r] && c < 2) g[r][c] = 3;
+                }
+                for (let r = 19; r < rows; r++) {
+                    if (g[r] && c < 2) g[r][c] = 3;
+                }
+                for (let r = 10; r <= 18; r++) {
+                    if (g[r]) g[r][c] = 1; // Paved walkable road
+                }
             }
         }
         if (hasEast) {
-            for (let r = 0; r < 10; r++) {
-                if (g[r]) g[r][cols - 1] = 3;
-                if (g[r]) g[r][cols - 2] = 3;
+            for (let c = cols - 4; c < cols; c++) {
+                for (let r = 0; r < 10; r++) {
+                    if (g[r] && c >= cols - 2) g[r][c] = 3;
+                }
+                for (let r = 19; r < rows; r++) {
+                    if (g[r] && c >= cols - 2) g[r][c] = 3;
+                }
+                for (let r = 10; r <= 18; r++) {
+                    if (g[r]) g[r][c] = 1; // Paved walkable road
+                }
             }
-            for (let r = 19; r < rows; r++) {
-                if (g[r]) g[r][cols - 1] = 3;
-                if (g[r]) g[r][cols - 2] = 3;
-            }
-            for (let r = 10; r <= 18; r++) {
-                if (g[r]) g[r][cols - 1] = 1;
-                if (g[r]) g[r][cols - 2] = 1;
-                if (g[r] && g[r][MAP_COLS - 1] !== undefined && MAP_COLS <= cols) {
-                    g[r][MAP_COLS - 1] = 1;
+            if (MAP_COLS <= cols) {
+                for (let r = 10; r <= 18; r++) {
+                    if (g[r] && g[r][MAP_COLS - 1] !== undefined) g[r][MAP_COLS - 1] = 1;
                 }
             }
         }
@@ -4944,7 +5234,7 @@
         grassBushes = [];
         const bushCount = [0, 1].includes(mapIndex) ? 10 : 16;
         for (let i = 0; i < bushCount; i++) {
-            const spot = findOpenTileSpot(10 + (i * 7) % (cols - 16), 8 + (i * 5) % (rows - 12));
+            const spot = findOpenBushSpot(10 + (i * 7) % (cols - 16), 8 + (i * 5) % (rows - 12));
             grassBushes.push({
                 id: `bush_${mapIndex}_${i}`,
                 x: spot.x,
@@ -5040,6 +5330,49 @@
             }
         }
         return { x: (Math.floor(curCols / 2) + 0.5) * TILE_SIZE, y: (Math.floor(curRows / 2) + 0.5) * TILE_SIZE };
+    }
+
+    function findOpenBushSpot(prefCol, prefRow) {
+        const curCols = getMapCols(currentMapIndex);
+        const curRows = getMapRows(currentMapIndex);
+        const bList = (MAPS[currentMapIndex] && MAPS[currentMapIndex].buildings) ? MAPS[currentMapIndex].buildings : [];
+        for (let rad = 0; rad < 22; rad++) {
+            for (let dr = -rad; dr <= rad; dr++) {
+                for (let dc = -rad; dc <= rad; dc++) {
+                    const c = Math.max(3, Math.min(curCols - 4, prefCol + dc));
+                    const r = Math.max(4, Math.min(curRows - 5, prefRow + dr));
+                    // Never spawn on border highway portals
+                    if (c >= 12 && c <= 24 && (r <= 5 || r >= curRows - 6)) continue;
+                    if (r >= 8 && r <= 20 && (c <= 5 || c >= curCols - 6)) continue;
+                    // Never spawn on or near building doorways / facades
+                    let nearBuilding = false;
+                    for (const b of bList) {
+                        if (c >= b.col - 2 && c <= b.col + b.wCols + 1 && r >= b.row - 2 && r <= b.row + b.hRows + 2) {
+                            nearBuilding = true;
+                            break;
+                        }
+                    }
+                    if (nearBuilding) continue;
+                    // Never spawn directly on NPCs
+                    let nearNpc = false;
+                    for (const n of npcs) {
+                        const nc = Math.floor(n.x / TILE_SIZE);
+                        const nr = Math.floor(n.y / TILE_SIZE);
+                        if (Math.abs(c - nc) <= 2 && Math.abs(r - nr) <= 2) {
+                            nearNpc = true;
+                            break;
+                        }
+                    }
+                    if (nearNpc) continue;
+
+                    // MUST be meadow grass (0 or 9). NEVER on road (1), bridge (8), water (4), or hazard (10, 11)
+                    if (mapGrid[r] && (mapGrid[r][c] === 0 || mapGrid[r][c] === 9)) {
+                        return { x: (c + 0.5) * TILE_SIZE, y: (r + 0.5) * TILE_SIZE };
+                    }
+                }
+            }
+        }
+        return { x: (prefCol + 0.5) * TILE_SIZE, y: (prefRow + 0.5) * TILE_SIZE };
     }
 
     function isRelicOwned(itemId) {
@@ -5142,6 +5475,24 @@
                 if (isTileBlocked(col, row)) {
                     if (dy > 0) ent.y = row * TILE_SIZE - r - 0.01;
                     else if (dy < 0) ent.y = (row + 1) * TILE_SIZE + r + 0.01;
+                }
+            }
+        }
+
+        // Physical Bush Collision (Uncut bushes block movement, zero clipping)
+        if (!currentInterior && typeof grassBushes !== 'undefined' && grassBushes && grassBushes.length > 0) {
+            for (let i = 0; i < grassBushes.length; i++) {
+                const b = grassBushes[i];
+                if (b.cut) continue;
+                const minD = r + 12;
+                const bxDist = ent.x - b.x;
+                const byDist = ent.y - b.y;
+                const d2 = bxDist * bxDist + byDist * byDist;
+                if (d2 < minD * minD && d2 > 0.0001) {
+                    const dist = Math.sqrt(d2);
+                    const push = minD - dist;
+                    ent.x += (bxDist / dist) * push;
+                    ent.y += (byDist / dist) * push;
                 }
             }
         }
@@ -5564,20 +5915,48 @@
 
                 // Symmetrical matching highway transitions with generous edge threshold
                 if (northMap !== null && onNS && player.y <= 1.5 * TILE_SIZE) {
+                    if (northMap === 8 && !isCitadelUnlocked()) {
+                        player.y = 2.2 * TILE_SIZE;
+                        audio.sfxHit();
+                        triggerShake(0.18);
+                        addFloatText(player.x, player.y - 30, '🔒 CITADEL GATES SEALED: Liberate other realms first!', '#f43f5e');
+                        return;
+                    }
                     const targetRows = getMapRows(northMap);
                     const spawnX = Math.max(14.5 * TILE_SIZE, Math.min(21.5 * TILE_SIZE, player.x));
                     transitionToNeighborMap(northMap, spawnX, (targetRows - 2.8) * TILE_SIZE, 'North');
                     return;
                 } else if (southMap !== null && onNS && player.y >= (curRows - 1.6) * TILE_SIZE) {
+                    if (southMap === 8 && !isCitadelUnlocked()) {
+                        player.y = (curRows - 2.2) * TILE_SIZE;
+                        audio.sfxHit();
+                        triggerShake(0.18);
+                        addFloatText(player.x, player.y - 30, '🔒 CITADEL GATES SEALED: Liberate other realms first!', '#f43f5e');
+                        return;
+                    }
                     const spawnX = Math.max(14.5 * TILE_SIZE, Math.min(21.5 * TILE_SIZE, player.x));
                     transitionToNeighborMap(southMap, spawnX, 2.8 * TILE_SIZE, 'South');
                     return;
                 } else if (westMap !== null && onWE && player.x <= 1.5 * TILE_SIZE) {
+                    if (westMap === 8 && !isCitadelUnlocked()) {
+                        player.x = 2.2 * TILE_SIZE;
+                        audio.sfxHit();
+                        triggerShake(0.18);
+                        addFloatText(player.x, player.y - 30, '🔒 CITADEL GATES SEALED: Liberate other realms first!', '#f43f5e');
+                        return;
+                    }
                     const targetCols = getMapCols(westMap);
                     const spawnY = Math.max(10.5 * TILE_SIZE, Math.min(17.5 * TILE_SIZE, player.y));
                     transitionToNeighborMap(westMap, (targetCols - 2.8) * TILE_SIZE, spawnY, 'West');
                     return;
                 } else if (eastMap !== null && onWE && player.x >= (curCols - 1.6) * TILE_SIZE) {
+                    if (eastMap === 8 && !isCitadelUnlocked()) {
+                        player.x = (curCols - 2.2) * TILE_SIZE;
+                        audio.sfxHit();
+                        triggerShake(0.18);
+                        addFloatText(player.x, player.y - 30, '🔒 CITADEL GATES SEALED: Liberate other realms first!', '#f43f5e');
+                        return;
+                    }
                     const spawnY = Math.max(10.5 * TILE_SIZE, Math.min(17.5 * TILE_SIZE, player.y));
                     transitionToNeighborMap(eastMap, 2.8 * TILE_SIZE, spawnY, 'East');
                     return;
@@ -5585,8 +5964,8 @@
             }
         }
 
-        const curTile = (mapGrid[curRow] && mapGrid[curRow][curCol] !== undefined) ? mapGrid[curRow][curCol] : 0;
-        if (curTile === 10) {
+        const curTile = (!currentInterior && mapGrid[curRow] && mapGrid[curRow][curCol] !== undefined) ? mapGrid[curRow][curCol] : 0;
+        if (!currentInterior && curTile === 10) {
             // Algorithmic Outrage Vent: Movement slow + Clarity drain
             player.hazardSlowTimer = 0.25;
             player.hazardDamageTimer = (player.hazardDamageTimer || 0) + dt;
@@ -5600,7 +5979,7 @@
                     updateAllHud();
                 }
             }
-        } else if (curTile === 11) {
+        } else if (!currentInterior && curTile === 11) {
             // Dogmatic Stasis Rune: Heavy slow + Stasis hit
             player.hazardSlowTimer = 0.45;
             player.hazardDamageTimer = (player.hazardDamageTimer || 0) + dt;
@@ -5786,6 +6165,19 @@
 
             if (en.isDummy) return;
 
+            // While player is inside building, overworld enemies wander and do not aggro interior coordinates
+            if (currentInterior) {
+                if (!Number.isFinite(en.wanderTimer)) en.wanderTimer = 1.5;
+                if (!Number.isFinite(en.wanderAngle)) en.wanderAngle = 0;
+                en.wanderTimer -= dt;
+                if (en.wanderTimer <= 0) {
+                    en.wanderTimer = 1.5 + Math.random() * 2;
+                    en.wanderAngle = Math.random() * Math.PI * 2;
+                }
+                moveEntityWithCollision(en, Math.cos(en.wanderAngle) * 38 * dt, Math.sin(en.wanderAngle) * 38 * dt);
+                return;
+            }
+
             const dPlayer = Math.hypot(player.x - en.x, player.y - en.y);
             const aggroRange = (en.isBoss ? 380 : 220) * diff.aggroMult;
 
@@ -5830,9 +6222,9 @@
             }
         });
 
-        // Boss HUD update
+        // Boss HUD update (strictly overworld encounters only, never inside building interiors)
         const bossHud = document.getElementById('hudBossContainer');
-        if (activeBoss) {
+        if (activeBoss && !currentInterior) {
             bossHud.classList.remove('hidden');
             document.getElementById('hudBossName').textContent = activeBoss.name;
             document.getElementById('hudBossHpBar').style.width = `${(activeBoss.hp / activeBoss.maxHp) * 100}%`;
@@ -5845,7 +6237,7 @@
                 phaseEl.textContent = 'HOLD [Q] PRISM TO FILL CLARITY BAR';
                 phaseEl.className = 'text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold';
             }
-        } else {
+        } else if (bossHud) {
             bossHud.classList.add('hidden');
         }
 
@@ -5859,7 +6251,7 @@
                 projectiles.splice(i, 1);
                 continue;
             }
-            if (Math.hypot(p.x - player.x, p.y - player.y) < player.radius + 6) {
+            if (!currentInterior && Math.hypot(p.x - player.x, p.y - player.y) < player.radius + 6) {
                 if (player.aegisTimer > 0) {
                     addFloatText(player.x, player.y - 20, 'AEGIS BLOCKED!', '#34d399');
                 } else {
@@ -5943,32 +6335,28 @@
                 c.dir = c.vx < 0 ? 'left' : 'right';
             }
 
-            if (c.state === 'flee') {
-                const nextX = c.x + c.vx * dt;
-                const nextY = c.y + c.vy * dt;
-                if (!isTileBlocked(Math.floor(nextX / TILE_SIZE), Math.floor(nextY / TILE_SIZE))) {
-                    c.x = nextX;
-                    c.y = nextY;
+            if (c.state === 'flee' || c.state === 'walk') {
+                c.radius = 8;
+                const prevX = c.x;
+                const prevY = c.y;
+                moveEntityWithCollision(c, c.vx * dt, c.vy * dt);
+
+                // Physical collision with player (cannot phase through Auron)
+                const dPlayer = Math.hypot(c.x - player.x, c.y - player.y);
+                const minD = c.radius + (player.radius || 14);
+                if (dPlayer < minD && dPlayer > 0.001) {
+                    const ang = Math.atan2(c.y - player.y, c.x - player.x);
+                    c.x = player.x + Math.cos(ang) * minD;
+                    c.y = player.y + Math.sin(ang) * minD;
                 }
-                if (c.timer <= 0) {
-                    c.state = 'idle';
-                    c.timer = 1.5 + Math.random() * 2.0;
-                    c.vx = 0;
-                    c.vy = 0;
-                }
-            } else if (c.state === 'walk') {
-                const nextX = c.x + c.vx * dt;
-                const nextY = c.y + c.vy * dt;
-                if (!isTileBlocked(Math.floor(nextX / TILE_SIZE), Math.floor(nextY / TILE_SIZE))) {
-                    c.x = nextX;
-                    c.y = nextY;
-                } else {
+
+                if (c.state === 'walk' && Math.hypot(c.x - prevX, c.y - prevY) < 0.2 && dt > 0) {
                     c.state = 'idle';
                     c.timer = 1.0 + Math.random() * 1.5;
                 }
                 if (c.timer <= 0) {
                     c.state = 'idle';
-                    c.timer = 1.2 + Math.random() * 2.0;
+                    c.timer = (c.state === 'flee' ? 1.5 : 1.2) + Math.random() * 2.0;
                     c.vx = 0;
                     c.vy = 0;
                 }
@@ -6048,6 +6436,8 @@
         player.holdingPot = null;
 
         audio.playFootstep('stone');
+        const bh = document.getElementById('hudBossContainer');
+        if (bh) bh.classList.add('hidden');
         addFloatText(player.x, player.y - 30, `Entered: ${building.name}`, '#38bdf8');
         updateAllHud();
     }
@@ -6839,6 +7229,21 @@
     // =========================================================================
     // 13. 32-BIT WORLD & SPRITE RENDERING ENGINE
     // =========================================================================
+    function drawRoundRect(context, x, y, width, height, radius = 4) {
+        if (typeof context.roundRect === 'function') {
+            context.roundRect(x, y, width, height, radius);
+        } else if (typeof context.arcTo === 'function') {
+            const r = Math.min(radius, width / 2, height / 2);
+            context.moveTo(x + r, y);
+            context.arcTo(x + width, y, x + width, y + height, r);
+            context.arcTo(x + width, y + height, x, y + height, r);
+            context.arcTo(x, y + height, x, y, r);
+            context.arcTo(x, y, x + width, y, r);
+        } else {
+            context.rect(x, y, width, height);
+        }
+    }
+
     function renderGameplay() {
         const w = canvas.width;
         const h = canvas.height;
@@ -6879,6 +7284,8 @@
             camX += (Math.random() - 0.5) * 10;
             camY += (Math.random() - 0.5) * 10;
         }
+
+        const renderList = [];
 
         ctx.save();
         ctx.scale(ZOOM, ZOOM);
@@ -6936,13 +7343,13 @@
                         // Stone shadow / mortar
                         ctx.fillStyle = stoneDark;
                         ctx.beginPath();
-                        ctx.roundRect(st.sx, st.sy, st.sw, st.sh, 4);
+                        drawRoundRect(ctx, st.sx, st.sy, st.sw, st.sh, 4);
                         ctx.fill();
 
                         // Stone surface
                         ctx.fillStyle = stoneMid;
                         ctx.beginPath();
-                        ctx.roundRect(st.sx + 1, st.sy + 1, st.sw - 2, st.sh - 2, 3);
+                        drawRoundRect(ctx, st.sx + 1, st.sy + 1, st.sw - 2, st.sh - 2, 3);
                         ctx.fill();
 
                         // Top-left highlight
@@ -7083,8 +7490,6 @@
         });
 
         // PASS 2: Y-SORTED FOREGROUND ENTITIES & PHYSICAL OBJECTS (Depth sorting)
-        const renderList = [];
-
         // 1. Trees as physical objects
         for (let r = 0; r < curRows; r++) {
             for (let c = 0; c < curCols; c++) {
@@ -7214,7 +7619,7 @@
                 if (!b.cut) {
                     renderList.push({
                         type: 'bush',
-                        baseY: b.y + 10,
+                        baseY: b.y + 12,
                         draw: () => {
                             ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
                             ctx.beginPath();
@@ -7249,7 +7654,8 @@
                         ctx.ellipse(0, 6, 7, 3, 0, 0, Math.PI * 2);
                         ctx.fill();
 
-                        if (c.dir === 'left') {
+                        // Base sprite faces left by default; flip horizontally when moving right!
+                        if (c.dir === 'right') {
                             ctx.scale(-1, 1);
                         }
 
@@ -8420,35 +8826,32 @@
         if (player.statPoints > 0) statAlert.classList.remove('hidden');
         else statAlert.classList.add('hidden');
 
-        // Minimal Non-Overlapping Top-Center Quest Pill (! -> grey ? -> yellow ? -> ✓)
-        const mapMeta = MAPS[currentMapIndex];
-        document.getElementById('hudMapTitle').textContent = mapMeta.name;
+        // Optional Top-Center Quest Marker (Safely guarded if element exists)
+        const hudMapTitle = document.getElementById('hudMapTitle');
+        if (hudMapTitle) hudMapTitle.textContent = MAPS[currentMapIndex].name;
         const qIcon = document.getElementById('hudQuestMarkerIcon');
         const qText = document.getElementById('hudQuestPillText');
-
-        const qg = npcs.find(n => n.isQuestGiver) || { name: 'Quest Mentor' };
-
-        if (!player.questAccepted) {
-            qIcon.textContent = '!';
-            qIcon.className = 'pixel-font text-sm text-amber-400 font-bold shrink-0 animate-bounce';
-            qIcon.style.textShadow = '0 2px 0 #000, 0 0 8px rgba(251,191,36,0.75)';
-            qText.textContent = `Speak with ${qg.name} [SPACE]`;
-        } else if (!player.questReadyToTurnIn) {
-            qIcon.textContent = '?';
-            qIcon.className = 'pixel-font text-sm text-slate-400 font-bold shrink-0';
-            qIcon.style.textShadow = '0 2px 0 #000';
-            const puzzleProgress = mapMeta.puzzleGoal ? ` | Bridges: ${player.mapPuzzlesSolved}/${mapMeta.puzzleGoal}` : '';
-            qText.textContent = `${mapMeta.questTitle} (${player.mapCitizensFreed}/${mapMeta.curedGoal}${puzzleProgress})`;
-        } else if (!player.questTurnedIn) {
-            qIcon.textContent = '?';
-            qIcon.className = 'pixel-font text-sm text-amber-300 font-bold shrink-0 animate-pulse';
-            qIcon.style.textShadow = '0 2px 0 #000, 0 0 10px rgba(253,224,71,0.9)';
-            qText.textContent = `Quest Complete! Speak with ${qg.name} at the Portal [SPACE]`;
-        } else {
-            qIcon.textContent = '✓';
-            qIcon.className = 'pixel-font text-sm text-emerald-400 font-bold shrink-0';
-            qIcon.style.textShadow = '0 2px 0 #000, 0 0 8px rgba(52,211,153,0.8)';
-            qText.textContent = 'Enter the Glowing North Portal [SPACE]';
+        if (qIcon && qText) {
+            const mapMeta = MAPS[currentMapIndex];
+            const qg = npcs.find(n => n.isQuestGiver) || { name: 'Quest Mentor' };
+            if (!player.questAccepted) {
+                qIcon.textContent = '!';
+                qIcon.className = 'pixel-font text-sm text-amber-400 font-bold shrink-0 animate-bounce';
+                qText.textContent = `Speak with ${qg.name} [SPACE]`;
+            } else if (!player.questReadyToTurnIn) {
+                qIcon.textContent = '?';
+                qIcon.className = 'pixel-font text-sm text-slate-400 font-bold shrink-0';
+                const puzzleProgress = mapMeta.puzzleGoal ? ` | Bridges: ${player.mapPuzzlesSolved}/${mapMeta.puzzleGoal}` : '';
+                qText.textContent = `${mapMeta.questTitle} (${player.mapCitizensFreed}/${mapMeta.curedGoal}${puzzleProgress})`;
+            } else if (!player.questTurnedIn) {
+                qIcon.textContent = '?';
+                qIcon.className = 'pixel-font text-sm text-amber-300 font-bold shrink-0 animate-pulse';
+                qText.textContent = `Quest Complete! Speak with ${qg.name} at the Portal [SPACE]`;
+            } else {
+                qIcon.textContent = '✓';
+                qIcon.className = 'pixel-font text-sm text-emerald-400 font-bold shrink-0';
+                qText.textContent = 'Enter the Glowing North Portal [SPACE]';
+            }
         }
 
         const tonicRed = player.inventory.find(i => i.id === 'tonic');
@@ -8524,17 +8927,18 @@
             const meta = MAPS[q.mapIndex];
             const isCurrent = q.mapIndex === currentMapIndex;
             const qCard = document.createElement('div');
-            qCard.className = `p-2 rounded-lg border transition-all text-left flex flex-col gap-1 ${
-                isCurrent ? 'bg-cyan-950/50 border-cyan-500/70 shadow-[0_0_8px_rgba(6,182,212,0.25)]' : 'bg-slate-900/70 border-slate-800'
+            qCard.className = `p-2 text-left flex flex-col gap-1 transition-all ${
+                isCurrent ? 'pixel-border-gold bg-[#131b2e]/95 shadow-[0_0_8px_rgba(251,191,36,0.2)]' : 'pixel-border-steel bg-[#0b101c]/85'
             }`;
 
             let statusBadge = '';
             if (q.completed) {
-                statusBadge = '<span class="text-[8px] mono-font font-bold text-emerald-300 bg-emerald-950/90 border border-emerald-700/60 px-1.5 py-0.5 rounded">✓ COMPLETED</span>';
+                statusBadge = '<span class="text-[8px] mono-font font-bold text-emerald-400 bg-emerald-950/90 border border-emerald-600/70 px-1.5 py-0.5 rounded">✓ COMPLETED</span>';
             } else if (q.readyToTurnIn) {
                 statusBadge = '<span class="text-[8px] mono-font font-bold text-amber-300 bg-amber-950/90 border border-amber-600/70 px-1.5 py-0.5 rounded animate-pulse">[?] RETURN TO MENTOR</span>';
             } else {
-                statusBadge = '<span class="text-[8px] mono-font font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-800/60 px-1.5 py-0.5 rounded">IN PROGRESS</span>';
+                // In Progress: no distracting badge, clean & minimal!
+                statusBadge = '';
             }
 
             const currentMarker = isCurrent ? '<span class="text-amber-400 text-[10px]">▶</span> ' : '';
@@ -8545,7 +8949,7 @@
                     ${statusBadge}
                 </div>
                 <div class="text-[9px] text-slate-300 leading-tight">${q.title}</div>
-                <div class="flex items-center gap-2 text-[8px] mono-font text-slate-400 pt-0.5 border-t border-slate-800/80">
+                <div class="flex items-center gap-2 text-[8px] mono-font text-slate-400 pt-0.5 border-t border-slate-700/60">
                     <span class="text-amber-300">Mentor: ${q.mentor}</span>
                     <span>•</span>
                     <span class="${q.cured >= q.curedGoal ? 'text-emerald-300 font-bold' : 'text-slate-300'}">Freed: ${q.cured}/${q.curedGoal}</span>
@@ -9011,37 +9415,41 @@
 
     let lastTime = performance.now();
     function mainLoop(now) {
-        const dt = Math.min(0.05, (now - lastTime) / 1000);
-        lastTime = now;
+        try {
+            const dt = Math.min(0.05, (now - lastTime) / 1000);
+            lastTime = now;
 
-        if (appState === 'INTRO') {
-            updateAndRenderIntro(dt);
-        } else if (appState === 'TITLE') {
-            renderTitleBackground(now, dt);
-        } else if (appState === 'CHAR_CREATE') {
-            renderTitleBackground(now, dt);
-            pCtx.clearRect(0, 0, 128, 128);
-            drawCharacterSprite(pCtx, 64, 70, 4.2, {
-                role: 'player',
-                dir: previewDir,
-                frame: Math.floor(now / 220) % 4,
-                skinColor: DIFFICULTY_PROFILES[player.skinIndex].skinHex,
-                hairStyle: player.hairStyle,
-                hairColor: player.hairColor,
-                tunicColor: player.tunicColor,
-                hideWeapons: true,
-                equipment: null
-            });
-        } else if (appState === 'PLAYING' || appState === 'PAUSED' || appState === 'DIALOGUE' || appState === 'ITEM_FANFARE') {
-            updateGameplay(dt);
-            renderGameplay();
-            const wmModal = document.getElementById('worldMapModal');
-            if (wmModal && !wmModal.classList.contains('hidden')) {
-                renderWorldMap();
+            if (appState === 'INTRO') {
+                updateAndRenderIntro(dt);
+            } else if (appState === 'TITLE') {
+                renderTitleBackground(now, dt);
+            } else if (appState === 'CHAR_CREATE') {
+                renderTitleBackground(now, dt);
+                pCtx.clearRect(0, 0, 128, 128);
+                drawCharacterSprite(pCtx, 64, 70, 4.2, {
+                    role: 'player',
+                    dir: previewDir,
+                    frame: Math.floor(now / 220) % 4,
+                    skinColor: DIFFICULTY_PROFILES[player.skinIndex].skinHex,
+                    hairStyle: player.hairStyle,
+                    hairColor: player.hairColor,
+                    tunicColor: player.tunicColor,
+                    hideWeapons: true,
+                    equipment: null
+                });
+            } else if (appState === 'PLAYING' || appState === 'PAUSED' || appState === 'DIALOGUE' || appState === 'ITEM_FANFARE') {
+                updateGameplay(dt);
+                renderGameplay();
+                const wmModal = document.getElementById('worldMapModal');
+                if (wmModal && !wmModal.classList.contains('hidden')) {
+                    renderWorldMap();
+                }
             }
+        } catch (err) {
+            console.error('Recovered from unhandled frame error in mainLoop:', err);
+        } finally {
+            requestAnimationFrame(mainLoop);
         }
-
-        requestAnimationFrame(mainLoop);
     }
 
     window.onload = () => {

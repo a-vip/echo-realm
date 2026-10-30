@@ -62,16 +62,23 @@ function loadGameEnvironment() {
         updateStackedQuestHud,
         triggerInteraction,
         findNearestInteractable,
-        get activeDialogueList() { return activeDialogueList; }
+        get activeDialogueList() { return activeDialogueList; },
+        updateGameplay,
+        renderGameplay,
+        moveEntityWithCollision,
+        isCitadelUnlocked,
+        get grassBushes() { return grassBushes; }
     };`;
 
     const mockElem = {
         getContext: () => ({
             clearRect: () => {}, fillRect: () => {}, strokeRect: () => {}, beginPath: () => {}, arc: () => {},
             fill: () => {}, stroke: () => {}, drawImage: () => {}, save: () => {},
-            restore: () => {}, translate: () => {}, rotate: () => {}, fillText: () => {},
+            restore: () => {}, translate: () => {}, scale: () => {}, rotate: () => {}, fillText: () => {},
             moveTo: () => {}, lineTo: () => {}, closePath: () => {}, ellipse: () => {},
+            arcTo: () => {},
             rect: () => {}, clip: () => {}, setLineDash: () => {}, bezierCurveTo: () => {},
+            quadraticCurveTo: () => {},
             measureText: () => ({ width: 50 }),
             createLinearGradient: () => ({ addColorStop: () => {} }),
             createRadialGradient: () => ({ addColorStop: () => {} })
