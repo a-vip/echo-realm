@@ -1544,6 +1544,19 @@
     assets.registerImage('potion_blue', 'assets/sprites/potion_blue.png');
     assets.registerImage('alttp_stump', 'assets/sprites/alttp_stump.png');
     assets.registerImage('alttp_tallgrass', 'assets/sprites/alttp_tallgrass.png');
+    assets.registerImage('alttp_world_map_full', 'assets/sprites/alttp_world_map_full.jpg');
+    assets.registerImage('alttp_world_map_clouds', 'assets/sprites/alttp_world_map_clouds.jpg');
+    assets.registerImage('alttp_weathervane', 'assets/sprites/alttp_weathervane.png');
+    assets.registerImage('alttp_village_well', 'assets/sprites/alttp_village_well.png');
+    assets.registerImage('alttp_village_sign', 'assets/sprites/alttp_village_sign.png');
+    assets.registerImage('alttp_house_red', 'assets/sprites/alttp_house_red.png');
+    assets.registerImage('alttp_house_blue', 'assets/sprites/alttp_house_blue.png');
+    assets.registerImage('alttp_house_green', 'assets/sprites/alttp_house_green.png');
+    assets.registerImage('alttp_tree_green', 'assets/sprites/alttp_tree_green.png');
+    assets.registerImage('alttp_tree_crimson', 'assets/sprites/alttp_tree_crimson.png');
+    assets.registerImage('alttp_tree_olive', 'assets/sprites/alttp_tree_olive.png');
+    assets.registerImage('alttp_tent', 'assets/sprites/alttp_tent.png');
+    assets.registerImage('alttp_desert_ruin', 'assets/sprites/alttp_desert_ruin.png');
 
     // Legacy spritesheet registration for fallback
     assets.registerSpriteSheet('alttp_overworld', 'assets/sprites/alttp_overworld_spritesheet.jpg', 16, 16);
@@ -2065,6 +2078,158 @@
             ctx.fillRect(wx + 10, winY + winH - 2, 3, 3);
         });
 
+        ctx.restore();
+    }
+
+    function renderHighwayBorderIndicators(ctx, mapMeta, cols, rows) {
+        const overPos = MAP_OVERWORLD_POS[currentMapIndex];
+        if (!overPos) return;
+
+        const northMap = overPos.row > 0 ? OVERWORLD_GRID[overPos.row - 1][overPos.col] : null;
+        const southMap = overPos.row < 2 ? OVERWORLD_GRID[overPos.row + 1][overPos.col] : null;
+        const westMap = overPos.col > 0 ? OVERWORLD_GRID[overPos.row][overPos.col - 1] : null;
+        const eastMap = overPos.col < 2 ? OVERWORLD_GRID[overPos.row][overPos.col + 1] : null;
+
+        const time = performance.now();
+        const pulse = 0.5 + 0.5 * Math.sin(time / 200);
+
+        // --- NORTH HIGHWAY GATEWAY (cols 14..22) ---
+        if (northMap !== null) {
+            // Flanking stone gateway pillars
+            drawStoneGatewayPillar(ctx, 13 * TILE_SIZE, 0);
+            drawStoneGatewayPillar(ctx, 23 * TILE_SIZE, 0);
+            if (assets.hasImage('alttp_village_sign')) {
+                assets.drawImage(ctx, 'alttp_village_sign', 13.5 * TILE_SIZE, 1.2 * TILE_SIZE, 28, 36);
+            }
+
+            // Glowing animated pavement arrows pointing North
+            ctx.save();
+            ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
+            ctx.font = 'bold 16px monospace';
+            ctx.textAlign = 'center';
+            for (let c = 15; c <= 21; c += 2) {
+                ctx.fillText('▲', (c + 0.5) * TILE_SIZE, 0.9 * TILE_SIZE);
+                ctx.fillText('▲', (c + 0.5) * TILE_SIZE, 1.8 * TILE_SIZE);
+            }
+
+            // Overhead floating destination banner if player is approaching North highway
+            if (player.y < 5.0 * TILE_SIZE && player.x >= 12 * TILE_SIZE && player.x <= 24 * TILE_SIZE) {
+                const targetName = MAPS[northMap].name.toUpperCase();
+                drawHighwayTravelBanner(ctx, 18.5 * TILE_SIZE, 0.8 * TILE_SIZE, `▲ TO ${targetName}`);
+            }
+            ctx.restore();
+        }
+
+        // --- SOUTH HIGHWAY GATEWAY (cols 14..22) ---
+        if (southMap !== null) {
+            const botY = (rows - 2) * TILE_SIZE;
+            drawStoneGatewayPillar(ctx, 13 * TILE_SIZE, botY);
+            drawStoneGatewayPillar(ctx, 23 * TILE_SIZE, botY);
+            if (assets.hasImage('alttp_village_sign')) {
+                assets.drawImage(ctx, 'alttp_village_sign', 13.5 * TILE_SIZE, (rows - 2.5) * TILE_SIZE, 28, 36);
+            }
+
+            ctx.save();
+            ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
+            ctx.font = 'bold 16px monospace';
+            ctx.textAlign = 'center';
+            for (let c = 15; c <= 21; c += 2) {
+                ctx.fillText('▼', (c + 0.5) * TILE_SIZE, (rows - 0.5) * TILE_SIZE);
+                ctx.fillText('▼', (c + 0.5) * TILE_SIZE, (rows - 1.5) * TILE_SIZE);
+            }
+
+            if (player.y > (rows - 5.5) * TILE_SIZE && player.x >= 12 * TILE_SIZE && player.x <= 24 * TILE_SIZE) {
+                const targetName = MAPS[southMap].name.toUpperCase();
+                drawHighwayTravelBanner(ctx, 18.5 * TILE_SIZE, (rows - 1.2) * TILE_SIZE, `▼ TO ${targetName}`);
+            }
+            ctx.restore();
+        }
+
+        // --- WEST HIGHWAY GATEWAY (rows 10..18) ---
+        if (westMap !== null) {
+            drawStoneGatewayPillar(ctx, 0, 9 * TILE_SIZE);
+            drawStoneGatewayPillar(ctx, 0, 19 * TILE_SIZE);
+            if (assets.hasImage('alttp_village_sign')) {
+                assets.drawImage(ctx, 'alttp_village_sign', 1.2 * TILE_SIZE, 9.5 * TILE_SIZE, 28, 36);
+            }
+
+            ctx.save();
+            ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
+            ctx.font = 'bold 16px monospace';
+            ctx.textAlign = 'center';
+            for (let r = 11; r <= 17; r += 2) {
+                ctx.fillText('◀', 0.9 * TILE_SIZE, (r + 0.6) * TILE_SIZE);
+                ctx.fillText('◀', 1.8 * TILE_SIZE, (r + 0.6) * TILE_SIZE);
+            }
+
+            if (player.x < 5.0 * TILE_SIZE && player.y >= 8.5 * TILE_SIZE && player.y <= 20.5 * TILE_SIZE) {
+                const targetName = MAPS[westMap].name.toUpperCase();
+                drawHighwayTravelBanner(ctx, 1.5 * TILE_SIZE, 14.5 * TILE_SIZE, `◀ TO ${targetName}`);
+            }
+            ctx.restore();
+        }
+
+        // --- EAST HIGHWAY GATEWAY (rows 10..18) ---
+        if (eastMap !== null) {
+            const rightX = (cols - 2) * TILE_SIZE;
+            drawStoneGatewayPillar(ctx, rightX, 9 * TILE_SIZE);
+            drawStoneGatewayPillar(ctx, rightX, 19 * TILE_SIZE);
+            if (assets.hasImage('alttp_village_sign')) {
+                assets.drawImage(ctx, 'alttp_village_sign', (cols - 2.5) * TILE_SIZE, 9.5 * TILE_SIZE, 28, 36);
+            }
+
+            ctx.save();
+            ctx.fillStyle = `rgba(251, 191, 36, ${0.45 + 0.35 * pulse})`;
+            ctx.font = 'bold 16px monospace';
+            ctx.textAlign = 'center';
+            for (let r = 11; r <= 17; r += 2) {
+                ctx.fillText('▶', (cols - 0.7) * TILE_SIZE, (r + 0.6) * TILE_SIZE);
+                ctx.fillText('▶', (cols - 1.6) * TILE_SIZE, (r + 0.6) * TILE_SIZE);
+            }
+
+            if (player.x > (cols - 5.5) * TILE_SIZE && player.y >= 8.5 * TILE_SIZE && player.y <= 20.5 * TILE_SIZE) {
+                const targetName = MAPS[eastMap].name.toUpperCase();
+                drawHighwayTravelBanner(ctx, (cols - 1.5) * TILE_SIZE, 14.5 * TILE_SIZE, `▶ TO ${targetName}`);
+            }
+            ctx.restore();
+        }
+    }
+
+    function drawStoneGatewayPillar(ctx, x, y) {
+        ctx.save();
+        // Stone monolith pedestal
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE * 1.5);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(x + 5, y + 5, TILE_SIZE - 10, TILE_SIZE * 1.5 - 6);
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(x + 8, y + 8, TILE_SIZE - 16, TILE_SIZE * 1.5 - 12);
+
+        // Glowing crystal rune cap
+        const glow = 0.5 + 0.5 * Math.sin(performance.now() / 250);
+        ctx.fillStyle = `rgba(56, 189, 248, ${0.6 + 0.4 * glow})`;
+        ctx.beginPath();
+        ctx.arc(x + TILE_SIZE / 2, y + 10, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawHighwayTravelBanner(ctx, x, y, text) {
+        ctx.save();
+        ctx.font = 'bold 12px "Space Grotesk", sans-serif';
+        const tw = (ctx.measureText && ctx.measureText(text)) ? ctx.measureText(text).width : 160;
+        const bw = tw + 24;
+        const bh = 26;
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+        ctx.fillRect(x - bw / 2, y - bh / 2, bw, bh);
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - bw / 2, y - bh / 2, bw, bh);
+
+        ctx.fillStyle = '#fde047';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, x, y + 4);
         ctx.restore();
     }
 
@@ -4627,12 +4792,13 @@
         if (row < 0 || row >= curRows || col < 0 || col >= curCols) {
             const overPos = MAP_OVERWORLD_POS[currentMapIndex];
             if (overPos) {
-                const midC = Math.floor(curCols / 2);
-                const midR = Math.floor(curRows / 2);
-                if (row < 0 && overPos.row > 0 && col >= midC - 6 && col <= midC + 6) return false;
-                if (row >= curRows && overPos.row < 2 && col >= midC - 6 && col <= midC + 6) return false;
-                if (col < 0 && overPos.col > 0 && row >= midR - 6 && row <= midR + 6) return false;
-                if (col >= curCols && overPos.col < 2 && row >= midR - 6 && row <= midR + 6) return false;
+                // Symmetrical highway corridors across ALL sectors:
+                // North/South highway: cols 13..23
+                // West/East highway: rows 9..19
+                if (row < 0 && overPos.row > 0 && col >= 13 && col <= 23) return false;
+                if (row >= curRows && overPos.row < 2 && col >= 13 && col <= 23) return false;
+                if (col < 0 && overPos.col > 0 && row >= 9 && row <= 19) return false;
+                if (col >= curCols && overPos.col < 2 && row >= 9 && row <= 19) return false;
             }
             return true;
         }
@@ -4746,8 +4912,22 @@
             }
             return;
         } else {
-            ent.x = Math.max(minBoundX, Math.min(maxBoundX, ent.x));
-            ent.y = Math.max(minBoundY, Math.min(maxBoundY, ent.y));
+            const overPos = MAP_OVERWORLD_POS[currentMapIndex];
+            const hasNorth = overPos && overPos.row > 0;
+            const hasSouth = overPos && overPos.row < 2;
+            const hasWest = overPos && overPos.col > 0;
+            const hasEast = overPos && overPos.col < 2;
+
+            const onNSHighway = ent.x >= 13.0 * TILE_SIZE && ent.x <= 23.0 * TILE_SIZE;
+            const onWEHighway = ent.y >= 9.0 * TILE_SIZE && ent.y <= 19.0 * TILE_SIZE;
+
+            const minX = (hasWest && onWEHighway) ? -TILE_SIZE : minBoundX;
+            const maxX = (hasEast && onWEHighway) ? curCols * TILE_SIZE + TILE_SIZE : maxBoundX;
+            const minY = (hasNorth && onNSHighway) ? -TILE_SIZE : minBoundY;
+            const maxY = (hasSouth && onNSHighway) ? curRows * TILE_SIZE + TILE_SIZE : maxBoundY;
+
+            ent.x = Math.max(minX, Math.min(maxX, ent.x));
+            ent.y = Math.max(minY, Math.min(maxY, ent.y));
         }
     }
 
@@ -5051,24 +5231,27 @@
                 const westMap = overPos.col > 0 ? OVERWORLD_GRID[overPos.row][overPos.col - 1] : null;
                 const eastMap = overPos.col < 2 ? OVERWORLD_GRID[overPos.row][overPos.col + 1] : null;
 
-                // Symmetrical matching highway transitions
-                if (northMap !== null && player.y <= 0.8 * TILE_SIZE) {
+                const onNS = player.x >= 13.0 * TILE_SIZE && player.x <= 23.0 * TILE_SIZE;
+                const onWE = player.y >= 9.0 * TILE_SIZE && player.y <= 19.0 * TILE_SIZE;
+
+                // Symmetrical matching highway transitions with generous edge threshold
+                if (northMap !== null && onNS && player.y <= 1.5 * TILE_SIZE) {
                     const targetRows = getMapRows(northMap);
                     const spawnX = Math.max(14.5 * TILE_SIZE, Math.min(21.5 * TILE_SIZE, player.x));
-                    transitionToNeighborMap(northMap, spawnX, (targetRows - 2.5) * TILE_SIZE, 'North');
+                    transitionToNeighborMap(northMap, spawnX, (targetRows - 2.8) * TILE_SIZE, 'North');
                     return;
-                } else if (southMap !== null && player.y >= (curRows - 1.2) * TILE_SIZE) {
+                } else if (southMap !== null && onNS && player.y >= (curRows - 1.6) * TILE_SIZE) {
                     const spawnX = Math.max(14.5 * TILE_SIZE, Math.min(21.5 * TILE_SIZE, player.x));
-                    transitionToNeighborMap(southMap, spawnX, 2.5 * TILE_SIZE, 'South');
+                    transitionToNeighborMap(southMap, spawnX, 2.8 * TILE_SIZE, 'South');
                     return;
-                } else if (westMap !== null && player.x <= 0.8 * TILE_SIZE) {
+                } else if (westMap !== null && onWE && player.x <= 1.5 * TILE_SIZE) {
                     const targetCols = getMapCols(westMap);
                     const spawnY = Math.max(10.5 * TILE_SIZE, Math.min(17.5 * TILE_SIZE, player.y));
-                    transitionToNeighborMap(westMap, (targetCols - 2.5) * TILE_SIZE, spawnY, 'West');
+                    transitionToNeighborMap(westMap, (targetCols - 2.8) * TILE_SIZE, spawnY, 'West');
                     return;
-                } else if (eastMap !== null && player.x >= (curCols - 1.2) * TILE_SIZE) {
+                } else if (eastMap !== null && onWE && player.x >= (curCols - 1.6) * TILE_SIZE) {
                     const spawnY = Math.max(10.5 * TILE_SIZE, Math.min(17.5 * TILE_SIZE, player.y));
-                    transitionToNeighborMap(eastMap, 2.5 * TILE_SIZE, spawnY, 'East');
+                    transitionToNeighborMap(eastMap, 2.8 * TILE_SIZE, spawnY, 'East');
                     return;
                 }
             }
@@ -6015,6 +6198,9 @@
             }
         }
 
+        // Render Clear Highway Gateways & Navigational Indicators connecting adjacent zones
+        renderHighwayBorderIndicators(ctx, mapMeta, curCols, curRows);
+
         // Render Buildings & Landmarks
         if (mapMeta.buildings && Array.isArray(mapMeta.buildings)) {
             mapMeta.buildings.forEach(b => drawBuilding(ctx, b));
@@ -6772,7 +6958,7 @@
         ctx.fillStyle = '#060913';
         ctx.fillRect(0, 0, w, h);
 
-        const border = 44;
+        const border = 36;
         const innerX = border;
         const innerY = border;
         const innerW = w - border * 2;
@@ -6781,26 +6967,22 @@
         const secH = innerH / 3;
 
         ctx.save();
-        ctx.beginPath();
-        ctx.rect(innerX, innerY, innerW, innerH);
-        ctx.clip();
 
-        ctx.fillStyle = '#1e3a1f';
-        ctx.fillRect(innerX, innerY, innerW, innerH);
-
-        for (let r = 0; r < 3; r++) {
-            for (let c = 0; c < 3; c++) {
-                const mapIdx = OVERWORLD_GRID[r][c];
-                const sx = innerX + c * secW;
-                const sy = innerY + r * secH;
-                drawAlttpSector(ctx, r, c, mapIdx, sx, sy, secW, secH);
-            }
+        // 1. Render Authentic Full Stitched Connected Overworld Map
+        if (assets.hasImage('alttp_world_map_full')) {
+            ctx.imageSmoothingEnabled = true;
+            assets.drawImage(ctx, 'alttp_world_map_full', innerX, innerY, innerW, innerH);
+        } else if (assets.hasImage('alttp_world_map_clouds')) {
+            ctx.imageSmoothingEnabled = true;
+            assets.drawImage(ctx, 'alttp_world_map_clouds', 0, 0, w, h);
+        } else {
+            ctx.fillStyle = '#1e3a1f';
+            ctx.fillRect(innerX, innerY, innerW, innerH);
         }
 
-        drawOverworldConnectingPaths(ctx, innerX, innerY, secW, secH);
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-        ctx.lineWidth = 1;
+        // 2. Translucent 3x3 Sector Grid Demarcation Lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+        ctx.lineWidth = 1.5;
         ctx.setLineDash([4, 4]);
         for (let i = 1; i < 3; i++) {
             ctx.beginPath();
@@ -6815,30 +6997,55 @@
         }
         ctx.setLineDash([]);
 
+        // 3. Sector Badges on Map
+        for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+                const mapIdx = OVERWORLD_GRID[r][c];
+                const meta = MAP_OVERWORLD_POS[mapIdx];
+                if (meta) {
+                    const sx = innerX + c * secW;
+                    const sy = innerY + r * secH;
+                    ctx.fillStyle = 'rgba(2, 6, 23, 0.75)';
+                    ctx.fillRect(sx + 4, sy + 4, secW - 8, 14);
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(sx + 4, sy + 4, secW - 8, 14);
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.font = '7px "Press Start 2P", monospace';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(`${meta.icon} ${meta.alttpName}`, sx + 8, sy + 14);
+                }
+            }
+        }
+
+        // 4. Sector Hover Highlight
         if (mapHoverGridPos) {
             const hx = innerX + mapHoverGridPos.col * secW;
             const hy = innerY + mapHoverGridPos.row * secH;
-            ctx.fillStyle = devMode ? 'rgba(251, 191, 36, 0.12)' : 'rgba(56, 189, 248, 0.12)';
+            ctx.fillStyle = devMode ? 'rgba(251, 191, 36, 0.16)' : 'rgba(56, 189, 248, 0.16)';
             ctx.fillRect(hx, hy, secW, secH);
             ctx.strokeStyle = devMode ? '#fbbf24' : '#38bdf8';
             ctx.lineWidth = 2.5;
             ctx.strokeRect(hx + 1, hy + 1, secW - 2, secH - 2);
         }
 
+        // 5. Accurate Real-Time Player Location Beacon
         const curMeta = MAP_OVERWORLD_POS[currentMapIndex];
         if (curMeta) {
             const mCols = getMapCols(currentMapIndex);
             const mRows = getMapRows(currentMapIndex);
             const px = innerX + curMeta.col * secW + (player.x / (mCols * TILE_SIZE)) * secW;
             const py = innerY + curMeta.row * secH + (player.y / (mRows * TILE_SIZE)) * secH;
-            const pulse = 1 + 0.25 * Math.sin(performance.now() / 150);
+            const pulse = 1 + 0.3 * Math.sin(performance.now() / 140);
 
-            ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
-            ctx.lineWidth = 2;
+            // Animated radar ripple ring
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.9)';
+            ctx.lineWidth = 2.5;
             ctx.beginPath();
-            ctx.arc(px, py, 11 * pulse, 0, Math.PI * 2);
+            ctx.arc(px, py, 12 * pulse, 0, Math.PI * 2);
             ctx.stroke();
 
+            // Flashing Compass Arrow
             const flash = Math.sin(performance.now() / 180) > 0;
             ctx.fillStyle = flash ? '#ef4444' : '#fbbf24';
             ctx.strokeStyle = '#020617';
@@ -6851,19 +7058,21 @@
             ctx.fill();
             ctx.stroke();
 
-            ctx.fillStyle = 'rgba(2, 6, 23, 0.92)';
+            // Overhead "YOU ARE HERE" Banner
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.94)';
             ctx.strokeStyle = '#38bdf8';
             ctx.lineWidth = 1.5;
-            const pillW = 82;
-            const pillH = 16;
-            ctx.fillRect(px - pillW / 2, py - 36, pillW, pillH);
-            ctx.strokeRect(px - pillW / 2, py - 36, pillW, pillH);
+            const pillW = 86;
+            const pillH = 17;
+            ctx.fillRect(px - pillW / 2, py - 38, pillW, pillH);
+            ctx.strokeRect(px - pillW / 2, py - 38, pillW, pillH);
             ctx.fillStyle = '#38bdf8';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'center';
-            ctx.fillText('YOU ARE HERE', px, py - 24);
+            ctx.fillText('YOU ARE HERE', px, py - 26);
         }
 
+        // 6. Developer Teleport Target Cursor
         if (devMode && mapHoverGridPos) {
             ctx.strokeStyle = '#fbbf24';
             ctx.lineWidth = 1.5;
@@ -6887,6 +7096,7 @@
 
         ctx.restore();
 
+        // 7. Authentic Pixel Cloud Border Frame
         drawAlttpPixelCloudFrame(ctx, w, h, border);
     }
 
