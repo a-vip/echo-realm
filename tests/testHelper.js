@@ -70,34 +70,70 @@ function loadGameEnvironment() {
         isCitadelUnlocked,
         get grassBushes() { return grassBushes; },
         get treeStumps() { return treeStumps; },
+        get signposts() { return signposts; },
+        get enemies() { return enemies; },
+        get document() { return document; },
         getSectorGrid
     };`;
 
-    const mockElem = {
-        getContext: () => ({
-            clearRect: () => {}, fillRect: () => {}, strokeRect: () => {}, beginPath: () => {}, arc: () => {},
-            fill: () => {}, stroke: () => {}, drawImage: () => {}, save: () => {},
-            restore: () => {}, translate: () => {}, scale: () => {}, rotate: () => {}, fillText: () => {},
-            moveTo: () => {}, lineTo: () => {}, closePath: () => {}, ellipse: () => {},
-            arcTo: () => {},
-            rect: () => {}, clip: () => {}, setLineDash: () => {}, bezierCurveTo: () => {},
-            quadraticCurveTo: () => {},
-            measureText: () => ({ width: 50 }),
-            createLinearGradient: () => ({ addColorStop: () => {} }),
-            createRadialGradient: () => ({ addColorStop: () => {} })
-        }),
-        classList: { add: () => {}, remove: () => {}, contains: () => false },
-        style: {},
-        appendChild: () => {},
-        innerHTML: '',
-        textContent: '',
-        addEventListener: () => {},
-        removeEventListener: () => {},
-        onclick: null,
-        oninput: null,
-        onchange: null
-    };
+    function createMockElement(id = '') {
+        const classSet = new Set();
+        return {
+            id,
+            getContext: () => ({
+                clearRect: () => {}, fillRect: () => {}, strokeRect: () => {}, beginPath: () => {}, arc: () => {},
+                fill: () => {}, stroke: () => {}, drawImage: () => {}, save: () => {},
+                restore: () => {}, translate: () => {}, scale: () => {}, rotate: () => {}, fillText: () => {},
+                moveTo: () => {}, lineTo: () => {}, closePath: () => {}, ellipse: () => {},
+                arcTo: () => {},
+                rect: () => {}, clip: () => {}, setLineDash: () => {}, bezierCurveTo: () => {},
+                quadraticCurveTo: () => {},
+                measureText: () => ({ width: 50 }),
+                createLinearGradient: () => ({ addColorStop: () => {} }),
+                createRadialGradient: () => ({ addColorStop: () => {} })
+            }),
+            classList: {
+                add: (c) => classSet.add(c),
+                remove: (c) => classSet.delete(c),
+                toggle: (c, force) => {
+                    if (force !== undefined) {
+                        if (force) classSet.add(c);
+                        else classSet.delete(c);
+                    } else {
+                        if (classSet.has(c)) classSet.delete(c);
+                        else classSet.add(c);
+                    }
+                },
+                contains: (c) => classSet.has(c)
+            },
+            style: {},
+            appendChild: function(ch) {
+                this._children = this._children || [];
+                this._children.push(ch);
+                if (ch.innerHTML) this.innerHTML = (this.innerHTML || '') + ch.innerHTML;
+            },
+            querySelector: function() { return createMockElement(); },
+            _innerHTML: '',
+            _textContent: '',
+            get innerHTML() { return this._innerHTML; },
+            set innerHTML(val) {
+                this._innerHTML = String(val);
+                this._textContent = String(val).replace(/<[^>]*>/g, '');
+            },
+            get textContent() { return this._textContent; },
+            set textContent(val) {
+                this._textContent = String(val);
+                this._innerHTML = String(val);
+            },
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            onclick: null,
+            oninput: null,
+            onchange: null
+        };
+    }
 
+    const elemRegistry = {};
     const sandbox = {
         window: {
             addEventListener: () => {},
@@ -105,8 +141,11 @@ function loadGameEnvironment() {
             innerHeight: 1080
         },
         document: {
-            getElementById: () => mockElem,
-            createElement: () => mockElem,
+            getElementById: (id) => {
+                if (!elemRegistry[id]) elemRegistry[id] = createMockElement(id);
+                return elemRegistry[id];
+            },
+            createElement: (tag) => createMockElement(tag),
             querySelectorAll: () => [],
             addEventListener: () => {}
         },

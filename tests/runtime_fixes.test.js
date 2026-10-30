@@ -267,5 +267,118 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
             });
         });
     });
+
+    test('Active Quest Log is hidden when no quests are active, and quest cards contain zero Map numbers, mentor names, or boss status', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(1); // Performative Valley
+
+        // Initially no accepted quest
+        env.updateStackedQuestHud();
+        const box = env.document.getElementById('stackedQuestBox');
+        assert.ok(box.classList.contains('hidden'), 'Active quest box must be hidden when 0 quests are accepted');
+
+        // Accept quest
+        const maya = env.npcs.find(n => n.name === 'Commander Maya');
+        env.appState = 'PLAYING';
+        env.player.x = maya.x;
+        env.player.y = maya.y + 20;
+        env.triggerInteraction();
+        for (let i = 0; i < 5; i++) env.advanceDialogue ? env.advanceDialogue() : env.triggerInteraction();
+
+        // Update HUD
+        env.updateStackedQuestHud();
+        assert.ok(!box.classList.contains('hidden'), 'Active quest box must be visible after quest is accepted');
+
+        const listEl = env.document.getElementById('stackedQuestList');
+        const cardHtml = listEl.innerHTML;
+        assert.ok(!/Map\s+\d+:/i.test(cardHtml), 'Quest card must NOT include Map number prefix');
+        assert.ok(!/Mentor:/i.test(cardHtml), 'Quest card must NOT state who you got it from (Mentor)');
+        assert.ok(!/Boss Alive/i.test(cardHtml) && !/Boss Defeated/i.test(cardHtml), 'Quest card must NOT state whether boss is alive');
+        assert.ok(/Performative Valley/i.test(cardHtml), 'Quest card should display concise area name');
+    });
+
+    test('Location HUD banner and MAPS definitions display concise area names without Map number prefixes', () => {
+        const env = loadGameEnvironment();
+        env.MAPS.forEach((m, idx) => {
+            assert.ok(!/^Map\s+\d+:/i.test(m.name), `Map ${idx} name must not contain 'Map X:' prefix: ${m.name}`);
+        });
+        Object.entries(env.MAP_OVERWORLD_POS).forEach(([k, p]) => {
+            assert.ok(!/^Map\s+\d+:/i.test(p.name), `Overworld pos ${k} must not contain 'Map X:' prefix: ${p.name}`);
+        });
+
+        env.loadMap(0);
+        const locBanner = env.document.getElementById('locationBannerText');
+        assert.ok(!/^Map\s+\d+:/i.test(locBanner.textContent), 'Location HUD banner must not state Map number');
+    });
+
+    test('Boss health container is hidden until the boss is actively aggroed in combat', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(3); // Map 4 (Iron & Velvet Divide with Alpha-Cynic Algorithm)
+        env.appState = 'PLAYING';
+
+        const bossHud = env.document.getElementById('hudBossContainer');
+        assert.ok(env.enemies.some(e => e.isBoss), 'Sector must spawn boss');
+
+        // Place player far from boss at bottom of sector
+        env.player.x = 25 * env.TILE_SIZE;
+        env.player.y = 44 * env.TILE_SIZE;
+        env.updateGameplay(0.016);
+        assert.ok(bossHud.classList.contains('hidden'), 'Boss HUD must be hidden when boss is not aggroed');
+
+        // Place player right in front of boss within aggro range
+        const boss = env.enemies.find(e => e.isBoss);
+        env.player.x = boss.x;
+        env.player.y = boss.y + 60;
+        env.updateGameplay(0.016);
+        assert.ok(boss.isAggroed, 'Boss should become aggroed when player enters combat range');
+        assert.ok(!bossHud.classList.contains('hidden'), 'Boss HUD must be shown when boss is actively aggroed in combat');
+    });
+
+    test('Interactive signposts have physical collision and trigger dialogue upon interaction', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(1);
+
+        assert.ok(env.signposts && env.signposts.length > 0, 'Signposts must be spawned across sector');
+        const sign = env.signposts[0];
+
+        // Verify collision
+        env.player.x = sign.x - 25;
+        env.player.y = sign.y;
+        const initialX = env.player.x;
+        env.moveEntityWithCollision(env.player, 15, 0);
+        assert.ok(env.player.x < sign.x, 'Player must be physically blocked by signpost');
+
+        // Verify interaction
+        env.player.x = sign.x;
+        env.player.y = sign.y + 20;
+        env.appState = 'PLAYING';
+        const target = env.findNearestInteractable();
+        assert.ok(target && target.type === 'sign', 'Signpost must be detected as interactable');
+
+        env.triggerInteraction();
+        assert.equal(env.appState, 'DIALOGUE');
+        assert.ok(env.document.getElementById('dialogueText').textContent.length > 0, 'Dialogue modal must display sign message');
+    });
+
+    test('House interior exit prompt strictly says Exit without overworld or space key words', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(1);
+        const building = env.MAPS[1].buildings[0];
+        env.enterBuildingInterior(building);
+        env.appState = 'PLAYING';
+
+        const roomH = env.currentInterior.roomH;
+        const roomW = env.currentInterior.roomW;
+        env.player.x = Math.floor(roomW / 2);
+        env.player.y = roomH - 40; // Standing at the south exit doorway
+
+        const target = env.findNearestInteractable();
+        assert.equal(target.type, 'exit_door');
+        assert.equal(target.label, 'Exit');
+
+        env.updateGameplay(0.016);
+        const prompt = env.document.getElementById('interactPrompt');
+        assert.equal(prompt.textContent.trim(), 'Exit', 'Prompt must strictly say Exit');
+    });
 });
 

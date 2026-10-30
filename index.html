@@ -446,13 +446,12 @@
             <div id="locationHudBanner" class="w-full max-w-[290px] pixel-border-steel rounded px-3 py-1.5 flex items-center justify-between shadow-lg relative">
                 <div class="flex items-center gap-1.5 min-w-0">
                     <span class="text-amber-400 text-xs">📍</span>
-                    <span id="locationBannerText" class="text-[11px] font-extrabold text-white truncate pixel-font tracking-wide">Map 1: The Quiet Archive</span>
+                    <span id="locationBannerText" class="text-[11px] font-extrabold text-white truncate pixel-font tracking-wide">Quiet Archive</span>
                 </div>
-                <span id="locationSectorBadge" class="text-[9px] font-bold text-amber-300 mono-font uppercase px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-600/50 shrink-0">SEC [2,1]</span>
             </div>
 
-            <!-- Stacked Active Quests Tracker Box (32-Bit RPG Aesthetic) -->
-            <div id="stackedQuestBox" class="w-full max-w-[290px] pixel-border-gold rounded p-2.5 shadow-2xl flex flex-col gap-1.5 transition-all relative overflow-hidden">
+            <!-- Stacked Active Quests Tracker Box (32-Bit RPG Aesthetic) - Hidden unless a quest is accepted -->
+            <div id="stackedQuestBox" class="w-full max-w-[290px] pixel-border-gold rounded p-2.5 shadow-2xl flex flex-col gap-1.5 transition-all relative overflow-hidden hidden">
                 <div class="top-1 left-1 pixel-rivet"></div>
                 <div class="top-1 right-1 pixel-rivet"></div>
                 <div class="bottom-1 left-1 pixel-rivet"></div>
@@ -461,7 +460,7 @@
                     <span class="pixel-font text-[10px] text-amber-300 font-bold flex items-center gap-1.5 tracking-wider">
                         <span>⚔️</span> <span>ACTIVE QUEST LOG</span>
                     </span>
-                    <span id="activeQuestCountBadge" class="text-[9px] mono-font text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800 font-bold">1 Active</span>
+                    <span id="activeQuestCountBadge" class="text-[9px] mono-font text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800 font-bold">0 Active</span>
                 </div>
                 <div id="stackedQuestList" class="flex flex-col gap-1.5 max-h-52 overflow-y-auto pr-0.5"></div>
             </div>
@@ -2304,9 +2303,6 @@
         if (northMap !== null) {
             drawStoneGatewayPillar(ctx, 13 * TILE_SIZE, 0);
             drawStoneGatewayPillar(ctx, 23 * TILE_SIZE, 0);
-            if (assets.hasImage('alttp_village_sign')) {
-                assets.drawImage(ctx, 'alttp_village_sign', 13.5 * TILE_SIZE, 1.2 * TILE_SIZE, 28, 36);
-            }
 
             if (northMap === 8 && !isCitadelUnlocked()) {
                 drawCitadelLockedPortcullis(ctx, 14 * TILE_SIZE, 1.0 * TILE_SIZE, 23 * TILE_SIZE, 1.0 * TILE_SIZE, 'horizontal');
@@ -2335,9 +2331,6 @@
             const botY = (rows - 2) * TILE_SIZE;
             drawStoneGatewayPillar(ctx, 13 * TILE_SIZE, botY);
             drawStoneGatewayPillar(ctx, 23 * TILE_SIZE, botY);
-            if (assets.hasImage('alttp_village_sign')) {
-                assets.drawImage(ctx, 'alttp_village_sign', 13.5 * TILE_SIZE, (rows - 2.5) * TILE_SIZE, 28, 36);
-            }
 
             if (southMap === 8 && !isCitadelUnlocked()) {
                 drawCitadelLockedPortcullis(ctx, 14 * TILE_SIZE, (rows - 1.2) * TILE_SIZE, 23 * TILE_SIZE, (rows - 1.2) * TILE_SIZE, 'horizontal');
@@ -2365,9 +2358,6 @@
         if (westMap !== null) {
             drawStoneGatewayPillar(ctx, 0, 9 * TILE_SIZE);
             drawStoneGatewayPillar(ctx, 0, 19 * TILE_SIZE);
-            if (assets.hasImage('alttp_village_sign')) {
-                assets.drawImage(ctx, 'alttp_village_sign', 1.2 * TILE_SIZE, 9.5 * TILE_SIZE, 28, 36);
-            }
 
             if (westMap === 8 && !isCitadelUnlocked()) {
                 drawCitadelLockedPortcullis(ctx, 1.0 * TILE_SIZE, 10 * TILE_SIZE, 1.0 * TILE_SIZE, 19 * TILE_SIZE, 'vertical');
@@ -2396,9 +2386,6 @@
             const rightX = (cols - 2) * TILE_SIZE;
             drawStoneGatewayPillar(ctx, rightX, 9 * TILE_SIZE);
             drawStoneGatewayPillar(ctx, rightX, 19 * TILE_SIZE);
-            if (assets.hasImage('alttp_village_sign')) {
-                assets.drawImage(ctx, 'alttp_village_sign', (cols - 2.5) * TILE_SIZE, 9.5 * TILE_SIZE, 28, 36);
-            }
 
             if (eastMap === 8 && !isCitadelUnlocked()) {
                 drawCitadelLockedPortcullis(ctx, (cols - 1.2) * TILE_SIZE, 10 * TILE_SIZE, (cols - 1.2) * TILE_SIZE, 19 * TILE_SIZE, 'vertical');
@@ -2852,7 +2839,7 @@
     const MAPS = [
         {
             id: 0,
-            name: 'Map 1: The Quiet Archive',
+            name: 'Quiet Archive',
             chapter: 'Prologue: The Awakening',
             themeColor: '#0f172a',
             groundColor: '#132238',
@@ -2883,7 +2870,7 @@
         },
         {
             id: 1,
-            name: 'Map 2: Performative Valley',
+            name: 'Performative Valley',
             chapter: 'Chapter 1: The Golden Masks',
             themeColor: '#1e1b4b',
             groundColor: '#17253b',
@@ -2928,7 +2915,7 @@
         },
         {
             id: 2,
-            name: 'Map 3: Sunlit Riverfront of Nuance',
+            name: 'Sunlit Riverfront',
             chapter: 'Interlude I: The Crystal River Bridge',
             themeColor: '#064e3b',
             groundColor: '#15803d',
@@ -2969,7 +2956,7 @@
         },
         {
             id: 3,
-            name: 'Map 4: The Iron & Velvet Divide',
+            name: 'Iron & Velvet Divide',
             chapter: 'Chapter 2: Gendered Grievance Loops',
             themeColor: '#2e1025',
             groundColor: '#241426',
@@ -3019,7 +3006,7 @@
         },
         {
             id: 4,
-            name: 'Map 5: The Dogma Catacombs',
+            name: 'Dogma Catacombs',
             chapter: 'Chapter 3: The Purity Spiral',
             themeColor: '#24123a',
             groundColor: '#1b112c',
@@ -3069,7 +3056,7 @@
         },
         {
             id: 5,
-            name: 'Map 6: Whispering Woods of Inquiry',
+            name: 'Whispering Woods',
             chapter: 'Interlude II: The Sacred Glade Puzzle',
             themeColor: '#065f46',
             groundColor: '#166534',
@@ -3110,7 +3097,7 @@
         },
         {
             id: 6,
-            name: 'Map 7: Borderland of Scapegoats',
+            name: 'The Borderlands',
             chapter: 'Chapter 4: Fear of the Other',
             themeColor: '#291d12',
             groundColor: '#241c14',
@@ -3160,7 +3147,7 @@
         },
         {
             id: 7,
-            name: 'Map 8: Highland Oasis of Solidarity',
+            name: 'Highland Oasis',
             chapter: 'Interlude III: The Three Pillars of Truth',
             themeColor: '#0c4a6e',
             groundColor: '#15803d',
@@ -3201,7 +3188,7 @@
         },
         {
             id: 8,
-            name: 'Map 9: The Obsidian Reich-Citadel',
+            name: 'Obsidian Citadel',
             chapter: 'Finale: The Fascist Convergence',
             themeColor: '#280909',
             groundColor: '#1a0c0e',
@@ -3264,15 +3251,15 @@
     ];
 
     const MAP_OVERWORLD_POS = {
-        0: { row: 2, col: 1, name: 'The Quiet Archive', regionTitle: 'Archival Sanctuary', alttpName: 'Archival Sanctuary', icon: '📚' },
+        0: { row: 2, col: 1, name: 'Quiet Archive', regionTitle: 'Archival Sanctuary', alttpName: 'Archival Sanctuary', icon: '📚' },
         1: { row: 1, col: 0, name: 'Performative Valley', regionTitle: 'The Agora of Validation', alttpName: 'The Agora of Validation', icon: '🎭' },
-        2: { row: 0, col: 2, name: 'Sunlit Riverfront of Nuance', regionTitle: 'River of Nuance & Socratic Bridge', alttpName: 'River of Nuance', icon: '🌊' },
-        3: { row: 2, col: 0, name: 'The Iron & Velvet Divide', regionTitle: 'Polarized Dunes & Canyon', alttpName: 'Polarized Dunes', icon: '🏜️' },
-        4: { row: 0, col: 1, name: 'The Dogma Catacombs', regionTitle: 'Gothic Purity Catacombs', alttpName: 'Gothic Purity Catacombs', icon: '⛰️' },
-        5: { row: 0, col: 0, name: 'Whispering Woods of Inquiry', regionTitle: 'Labyrinth of Reflection', alttpName: 'Labyrinth of Reflection', icon: '🌲' },
-        6: { row: 1, col: 2, name: 'Borderland of Scapegoats', regionTitle: 'Scapegoat Citadel Ruins', alttpName: 'Scapegoat Citadel Ruins', icon: '🏛️' },
-        7: { row: 2, col: 2, name: 'Highland Oasis of Solidarity', regionTitle: 'Sanctuary Oasis & Springs', alttpName: 'Sanctuary Oasis', icon: '🏝️' },
-        8: { row: 1, col: 1, name: 'The Obsidian Reich-Citadel', regionTitle: 'Totalitarian Sovereign Citadel', alttpName: 'Sovereign Citadel', icon: '🏰' }
+        2: { row: 0, col: 2, name: 'Sunlit Riverfront', regionTitle: 'River of Nuance & Socratic Bridge', alttpName: 'River of Nuance', icon: '🌊' },
+        3: { row: 2, col: 0, name: 'Iron & Velvet Divide', regionTitle: 'Polarized Dunes & Canyon', alttpName: 'Polarized Dunes', icon: '🏜️' },
+        4: { row: 0, col: 1, name: 'Dogma Catacombs', regionTitle: 'Gothic Purity Catacombs', alttpName: 'Gothic Purity Catacombs', icon: '⛰️' },
+        5: { row: 0, col: 0, name: 'Whispering Woods', regionTitle: 'Labyrinth of Reflection', alttpName: 'Labyrinth of Reflection', icon: '🌲' },
+        6: { row: 1, col: 2, name: 'The Borderlands', regionTitle: 'Scapegoat Citadel Ruins', alttpName: 'Scapegoat Citadel Ruins', icon: '🏛️' },
+        7: { row: 2, col: 2, name: 'Highland Oasis', regionTitle: 'Sanctuary Oasis & Springs', alttpName: 'Sanctuary Oasis', icon: '🏝️' },
+        8: { row: 1, col: 1, name: 'Obsidian Citadel', regionTitle: 'Totalitarian Sovereign Citadel', alttpName: 'Sovereign Citadel', icon: '🏰' }
     };
 
     let devMode = false;
@@ -3333,6 +3320,7 @@
     let portals = [];
     let npcs = [];
     let critters = [];
+    let signposts = [];
     let grassBushes = [];
     let treeStumps = [];
     let chests = [];
@@ -5031,66 +5019,66 @@
         const hasEast = overPos.col < 2;
 
         // Unified symmetrical highway coordinates:
-        // North & South highway: cols 14..22 across ALL sectors
-        // West & East highway: rows 10..18 across ALL sectors
+        // North & South highway: cols 13..23 across ALL sectors (margin 12..24 clear of trees)
+        // West & East highway: rows 9..19 across ALL sectors (clear of trees)
         if (hasNorth) {
             for (let r = 0; r <= 3; r++) {
                 if (!g[r]) continue;
-                for (let c = 0; c < 14; c++) {
+                for (let c = 0; c < 12; c++) {
                     if (r < 2) g[r][c] = 3;
                 }
-                for (let c = 23; c < cols; c++) {
+                for (let c = 25; c < cols; c++) {
                     if (r < 2) g[r][c] = 3;
                 }
-                for (let c = 14; c <= 22; c++) {
-                    g[r][c] = 1; // Paved walkable road
+                for (let c = 12; c <= 24; c++) {
+                    g[r][c] = 1; // Paved walkable road, guaranteed clear of trees and covering
                 }
             }
         }
         if (hasSouth) {
             for (let r = rows - 4; r < rows; r++) {
                 if (!g[r]) continue;
-                for (let c = 0; c < 14; c++) {
+                for (let c = 0; c < 12; c++) {
                     if (r >= rows - 2) g[r][c] = 3;
                 }
-                for (let c = 23; c < cols; c++) {
+                for (let c = 25; c < cols; c++) {
                     if (r >= rows - 2) g[r][c] = 3;
                 }
-                for (let c = 14; c <= 22; c++) {
-                    g[r][c] = 1; // Paved walkable road
+                for (let c = 12; c <= 24; c++) {
+                    g[r][c] = 1; // Paved walkable road, guaranteed clear of trees and covering
                 }
             }
             if (g[MAP_ROWS - 1] && MAP_ROWS <= rows) {
-                for (let c = 14; c <= 22; c++) g[MAP_ROWS - 1][c] = 1;
+                for (let c = 12; c <= 24; c++) g[MAP_ROWS - 1][c] = 1;
             }
         }
         if (hasWest) {
             for (let c = 0; c <= 3; c++) {
-                for (let r = 0; r < 10; r++) {
+                for (let r = 0; r < 9; r++) {
                     if (g[r] && c < 2) g[r][c] = 3;
                 }
-                for (let r = 19; r < rows; r++) {
+                for (let r = 20; r < rows; r++) {
                     if (g[r] && c < 2) g[r][c] = 3;
                 }
-                for (let r = 10; r <= 18; r++) {
-                    if (g[r]) g[r][c] = 1; // Paved walkable road
+                for (let r = 9; r <= 19; r++) {
+                    if (g[r]) g[r][c] = 1; // Paved walkable road, guaranteed clear of trees
                 }
             }
         }
         if (hasEast) {
             for (let c = cols - 4; c < cols; c++) {
-                for (let r = 0; r < 10; r++) {
+                for (let r = 0; r < 9; r++) {
                     if (g[r] && c >= cols - 2) g[r][c] = 3;
                 }
-                for (let r = 19; r < rows; r++) {
+                for (let r = 20; r < rows; r++) {
                     if (g[r] && c >= cols - 2) g[r][c] = 3;
                 }
-                for (let r = 10; r <= 18; r++) {
-                    if (g[r]) g[r][c] = 1; // Paved walkable road
+                for (let r = 9; r <= 19; r++) {
+                    if (g[r]) g[r][c] = 1; // Paved walkable road, guaranteed clear of trees
                 }
             }
             if (MAP_COLS <= cols) {
-                for (let r = 10; r <= 18; r++) {
+                for (let r = 9; r <= 19; r++) {
                     if (g[r] && g[r][MAP_COLS - 1] !== undefined) g[r][MAP_COLS - 1] = 1;
                 }
             }
@@ -5104,6 +5092,7 @@
         mapGrid = [];
         portals = []; // Completely removed for open-world freedom; players travel seamlessly across borders
         npcs = [];
+        signposts = [];
         chests = [];
         puzzleNodes = [];
         enemies = [];
@@ -5539,6 +5528,88 @@
             }
         }
 
+        // Spawn Interactive Physical Signposts (Gateways & Sector Notices)
+        signposts = [];
+        const overPos = MAP_OVERWORLD_POS[mapIndex];
+        if (overPos) {
+            const northMap = overPos.row > 0 ? OVERWORLD_GRID[overPos.row - 1][overPos.col] : null;
+            const southMap = overPos.row < 2 ? OVERWORLD_GRID[overPos.row + 1][overPos.col] : null;
+            const westMap = overPos.col > 0 ? OVERWORLD_GRID[overPos.row][overPos.col - 1] : null;
+            const eastMap = overPos.col < 2 ? OVERWORLD_GRID[overPos.row][overPos.col + 1] : null;
+
+            if (northMap !== null) {
+                const targetName = MAPS[northMap].name;
+                const isCitadelLocked = (northMap === 8 && !isCitadelUnlocked());
+                signposts.push({
+                    id: `sign_north_${mapIndex}`,
+                    x: 13.5 * TILE_SIZE,
+                    y: 1.5 * TILE_SIZE,
+                    title: isCitadelLocked ? 'CITADEL PORTCULLIS' : 'NORTH HIGHWAY',
+                    text: isCitadelLocked ? 'SEALED PORTCULLIS: Southern passage to the Citadel is locked. Liberate regional sectors first.' : `NORTH GATEWAY: Paved road to ${targetName}.`
+                });
+            }
+            if (southMap !== null) {
+                const targetName = MAPS[southMap].name;
+                const isCitadelLocked = (southMap === 8 && !isCitadelUnlocked());
+                signposts.push({
+                    id: `sign_south_${mapIndex}`,
+                    x: 13.5 * TILE_SIZE,
+                    y: (rows - 2.5) * TILE_SIZE,
+                    title: isCitadelLocked ? 'CITADEL PORTCULLIS' : 'SOUTH HIGHWAY',
+                    text: isCitadelLocked ? 'SEALED PORTCULLIS: Northern passage to the Citadel is locked. Liberate regional sectors first.' : `SOUTH GATEWAY: Paved road to ${targetName}.`
+                });
+            }
+            if (westMap !== null) {
+                const targetName = MAPS[westMap].name;
+                const isCitadelLocked = (westMap === 8 && !isCitadelUnlocked());
+                signposts.push({
+                    id: `sign_west_${mapIndex}`,
+                    x: 1.5 * TILE_SIZE,
+                    y: 9.5 * TILE_SIZE,
+                    title: isCitadelLocked ? 'CITADEL PORTCULLIS' : 'WEST HIGHWAY',
+                    text: isCitadelLocked ? 'SEALED PORTCULLIS: Eastern passage to the Citadel is locked. Liberate regional sectors first.' : `WEST GATEWAY: Paved road to ${targetName}.`
+                });
+            }
+            if (eastMap !== null) {
+                const targetName = MAPS[eastMap].name;
+                const isCitadelLocked = (eastMap === 8 && !isCitadelUnlocked());
+                signposts.push({
+                    id: `sign_east_${mapIndex}`,
+                    x: (cols - 2.5) * TILE_SIZE,
+                    y: 9.5 * TILE_SIZE,
+                    title: isCitadelLocked ? 'CITADEL PORTCULLIS' : 'EAST HIGHWAY',
+                    text: isCitadelLocked ? 'SEALED PORTCULLIS: Western passage to the Citadel is locked. Liberate regional sectors first.' : `EAST GATEWAY: Paved road to ${targetName}.`
+                });
+            }
+        }
+
+        // Sector Landmark Notices
+        if (mapIndex === 0) {
+            signposts.push({
+                id: 'sign_archive',
+                x: 18.5 * TILE_SIZE,
+                y: 12.5 * TILE_SIZE,
+                title: 'ARCHIVE NOTICE',
+                text: 'QUIET ARCHIVE: Epistemic Sanctuary. Restore nuance and context to free captive minds.'
+            });
+        } else if (mapIndex === 1) {
+            signposts.push({
+                id: 'sign_village',
+                x: 23.5 * TILE_SIZE,
+                y: 20.5 * TILE_SIZE,
+                title: 'VILLAGE NOTICE',
+                text: 'PERFORMATIVE VALLEY: North to Agora of Validation, South to Fellowship Hall, East to Apothecary.'
+            });
+        } else if (mapIndex === 2) {
+            signposts.push({
+                id: 'sign_river',
+                x: 15.5 * TILE_SIZE,
+                y: 13.5 * TILE_SIZE,
+                title: 'RIVERFRONT NOTICE',
+                text: 'SUNLIT RIVERFRONT: Reconstruct the wooden crossing by attuning the three resonance crystal switches.'
+            });
+        }
+
         revealFogAround(player.x, player.y, 6);
         hazardCleanseProgress = {};
 
@@ -5699,6 +5770,9 @@
         if (!currentInterior && typeof treeStumps !== 'undefined' && treeStumps && treeStumps.length > 0) {
             if (treeStumps.some(s => s.c === col && s.r === row)) return true;
         }
+        if (!currentInterior && typeof signposts !== 'undefined' && signposts && signposts.length > 0) {
+            if (signposts.some(s => Math.floor(s.x / TILE_SIZE) === col && Math.floor(s.y / TILE_SIZE) === row)) return true;
+        }
         return t === 2 || t === 3 || t === 4 || t === 6 || t === 12;
     }
 
@@ -5762,6 +5836,23 @@
             for (let i = 0; i < treeStumps.length; i++) {
                 const s = treeStumps[i];
                 const minD = r + (s.radius || 16);
+                const sxDist = ent.x - s.x;
+                const syDist = ent.y - s.y;
+                const d2 = sxDist * sxDist + syDist * syDist;
+                if (d2 < minD * minD && d2 > 0.0001) {
+                    const dist = Math.sqrt(d2);
+                    const push = minD - dist;
+                    ent.x += (sxDist / dist) * push;
+                    ent.y += (syDist / dist) * push;
+                }
+            }
+        }
+
+        // Physical Signpost Collision (Solid wooden signs prevent player walking through)
+        if (!currentInterior && typeof signposts !== 'undefined' && signposts && signposts.length > 0) {
+            for (let i = 0; i < signposts.length; i++) {
+                const s = signposts[i];
+                const minD = r + 13;
                 const sxDist = ent.x - s.x;
                 const syDist = ent.y - s.y;
                 const d2 = sxDist * sxDist + syDist * syDist;
@@ -6460,6 +6551,7 @@
             const aggroRange = (en.isBoss ? 380 : 220) * diff.aggroMult;
 
             if (dPlayer < aggroRange) {
+                en.isAggroed = true;
                 const ang = Math.atan2(player.y - en.y, player.x - en.x);
                 const spd = en.isBoss ? 78 : 92;
                 moveEntityWithCollision(en, Math.cos(ang) * spd * dt, Math.sin(ang) * spd * dt);
@@ -6489,6 +6581,7 @@
                     }
                 }
             } else {
+                en.isAggroed = false;
                 if (!Number.isFinite(en.wanderTimer)) en.wanderTimer = 1.5;
                 if (!Number.isFinite(en.wanderAngle)) en.wanderAngle = 0;
                 en.wanderTimer -= dt;
@@ -6500,9 +6593,10 @@
             }
         });
 
-        // Boss HUD update (strictly overworld encounters only, never inside building interiors)
+        // Boss HUD update (strictly overworld encounters only when boss is aggroed in active combat)
         const bossHud = document.getElementById('hudBossContainer');
-        if (activeBoss && !currentInterior) {
+        const isBossInCombat = activeBoss && !currentInterior && (activeBoss.isAggroed || activeBoss.state === 'stunned' || activeBoss.clarity > 0);
+        if (isBossInCombat) {
             bossHud.classList.remove('hidden');
             document.getElementById('hudBossName').textContent = activeBoss.name;
             document.getElementById('hudBossHpBar').style.width = `${(activeBoss.hp / activeBoss.maxHp) * 100}%`;
@@ -6556,7 +6650,9 @@
         if (nearTarget) {
             promptEl.classList.remove('hidden');
             if (nearTarget.type === 'exit_door') {
-                promptEl.textContent = 'Press [SPACE] to Exit to Overworld';
+                promptEl.textContent = 'Exit';
+            } else if (nearTarget.type === 'sign') {
+                promptEl.textContent = 'Press [SPACE] to Read Notice';
             } else if (nearTarget.type === 'door') {
                 const bName = (nearTarget.obj && nearTarget.obj.name) ? nearTarget.obj.name : 'Building';
                 promptEl.textContent = `Press [SPACE] to Enter ${bName}`;
@@ -6607,7 +6703,7 @@
                 c.state = 'flee';
                 c.timer = 1.2;
                 const angle = Math.atan2(c.y - player.y, c.x - player.x) + (Math.random() - 0.5) * 0.4;
-                const speed = c.type === 'chicken' ? 55 : 80;
+                const speed = c.type === 'chicken' ? 42 : 48; // Natural scurrying speed
                 c.vx = Math.cos(angle) * speed;
                 c.vy = Math.sin(angle) * speed;
                 c.dir = c.vx < 0 ? 'left' : 'right';
@@ -6649,7 +6745,7 @@
                         c.state = 'walk';
                         c.timer = 0.8 + Math.random() * 1.6;
                         const angle = Math.random() * Math.PI * 2;
-                        const speed = c.type === 'chicken' ? 24 : 38;
+                        const speed = c.type === 'chicken' ? 22 : 28;
                         c.vx = Math.cos(angle) * speed;
                         c.vy = Math.sin(angle) * speed;
                         c.dir = c.vx < 0 ? 'left' : 'right';
@@ -7258,7 +7354,7 @@
         ctx.font = 'bold 9px monospace';
         ctx.fillStyle = '#fde047';
         ctx.textAlign = 'center';
-        ctx.fillText('▼ OVERWORLD EXIT [SPACE]', doorX + doorW / 2, doorY + 18);
+        ctx.fillText('▼ EXIT', doorX + doorW / 2, doorY + 18);
 
         // 12. Player Character Inside Room
         drawCharacterSprite(ctx, offX + player.x, offY + player.y, 2.3, {
@@ -7314,7 +7410,7 @@
         ctx.fillStyle = '#fde047';
         ctx.font = 'bold 11px "Space Grotesk", sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`${currentInterior.name} [INTERIOR] (ESC or Walk South to Exit)`, w / 2, 27);
+        ctx.fillText(currentInterior.name, w / 2, 27);
 
         ctx.restore();
     }
@@ -7325,7 +7421,7 @@
             const roomH = currentInterior.roomH || 580;
             // South doorway exit threshold
             if (player.y >= roomH - 65 && Math.abs(player.x - Math.floor(roomW / 2)) < 60) {
-                return { type: 'exit_door', obj: { name: 'Overworld' }, label: 'Exit to Overworld' };
+                return { type: 'exit_door', obj: { name: 'Exit' }, label: 'Exit' };
             }
             // Chest in alcove
             if (currentInterior.chest && !currentInterior.chest.opened && Math.hypot(player.x - (roomW - 120), player.y - 220) < 65) {
@@ -7338,7 +7434,7 @@
             return null;
         }
 
-        // Overworld: check chests, pedestals, NPCs, and building doors
+        // Overworld: check chests, pedestals, signposts, NPCs, and building doors
         for (const ch of chests) {
             if (!ch.opened && Math.hypot(player.x - ch.x, player.y - ch.y) < 58) {
                 return { type: 'chest', obj: ch };
@@ -7347,6 +7443,13 @@
         for (const node of puzzleNodes) {
             if (node.type === 'socratic_pedestal' && !node.solved && Math.hypot(player.x - node.x, player.y - node.y) < 58) {
                 return { type: 'pedestal', obj: node };
+            }
+        }
+        if (!currentInterior && typeof signposts !== 'undefined' && signposts && signposts.length > 0) {
+            for (const s of signposts) {
+                if (Math.hypot(player.x - s.x, player.y - s.y) < 48) {
+                    return { type: 'sign', obj: s, label: `Read ${s.title || 'Notice'}` };
+                }
             }
         }
         for (const npc of npcs) {
@@ -7420,6 +7523,11 @@
             openSocraticPedestalPuzzle(target.obj);
         } else if (target.type === 'npc') {
             startNpcDialogue(target.obj);
+        } else if (target.type === 'sign') {
+            startNpcDialogue({
+                name: target.obj.title || 'WOODEN SIGNPOST',
+                dialogues: [target.obj.text]
+            });
         }
     }
 
@@ -7569,98 +7677,103 @@
         ctx.scale(ZOOM, ZOOM);
         ctx.translate(-camX, -camY);
 
-        // PASS 1: GROUND TILES ONLY (Background terrain - cannot clip trees or buildings)
-        const waterWaveShift = Math.floor(performance.now() / 260) % 2;
+        // PASS 1: GROUND TILES ONLY (Background terrain - autotiled, blended & organic)
+        const nowMs = performance.now();
         for (let r = 0; r < curRows; r++) {
             for (let c = 0; c < curCols; c++) {
                 const tx = c * TILE_SIZE;
                 const ty = r * TILE_SIZE;
                 const t = mapGrid[r] ? mapGrid[r][c] : 0;
+                const isBright = mapMeta.isBrightAlttpZone;
+                const tileHash = (r * 47 + c * 79) % 100;
 
-                // Base ground terrain
-                ctx.fillStyle = t === 5 ? '#162436' : (mapMeta.isBrightAlttpZone ? '#16a34a' : mapMeta.groundColor);
+                // Base ground terrain (Lush vibrant grass or dark archive slate)
+                const baseGrass = isBright ? '#16a34a' : mapMeta.groundColor;
+                ctx.fillStyle = t === 5 ? '#162436' : baseGrass;
                 ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
 
-                // Alternating subtle green lawn stripes
-                if ((t === 0 || t === 9) && r % 2 === 0) {
-                    ctx.fillStyle = mapMeta.isBrightAlttpZone ? 'rgba(34, 197, 94, 0.16)' : 'rgba(255,255,255,0.03)';
-                    ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
+                // Organic pixel texture & blade clusters (no harsh scanlines)
+                if (t === 0 || t === 9) {
+                    if (tileHash % 3 === 0) {
+                        ctx.fillStyle = isBright ? 'rgba(21, 128, 61, 0.4)' : 'rgba(0, 0, 0, 0.08)';
+                        ctx.fillRect(tx + (tileHash % 17), ty + ((tileHash * 3) % 21), 6, 3);
+                    }
+                    if (tileHash % 5 === 0) {
+                        ctx.fillStyle = isBright ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.04)';
+                        ctx.fillRect(tx + ((tileHash * 7) % 23), ty + ((tileHash * 5) % 23), 5, 3);
+                    }
+                    // Wildflower / clover specks on bright meadow grass
+                    if (isBright && tileHash % 9 === 0) {
+                        ctx.fillStyle = (tileHash % 18 === 0) ? '#fef08a' : '#bfdbfe';
+                        ctx.fillRect(tx + 8 + (tileHash % 14), ty + 8 + ((tileHash * 2) % 14), 2, 2);
+                    }
                 }
 
                 if (t === 1) {
-                    // Contiguous 32-Bit Cobblestone Highway (Organic, connected road without square boxes)
-                    const isBright = mapMeta.isBrightAlttpZone;
-                    const roadBed = isBright ? '#d4b276' : '#334155';
-                    const stoneLight = isBright ? '#f3e2b8' : '#64748b';
-                    const stoneMid = isBright ? '#dfc48c' : '#475569';
-                    const stoneDark = isBright ? '#9c7841' : '#1e293b';
+                    // Contiguous 32-Bit Cobblestone Highway (Organic flagstones, soft mortar & gravel edges)
+                    const roadBed = isBright ? '#c29a5d' : '#334155';
+                    const stoneLight = isBright ? '#e8d29b' : '#64748b';
+                    const stoneMid = isBright ? '#d4b77f' : '#475569';
+                    const stoneDark = isBright ? '#8a652a' : '#1e293b';
 
-                    // 1. Full-bleed road foundation connecting smoothly with neighbors
+                    // Road foundation
                     ctx.fillStyle = roadBed;
                     ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
 
-                    // 2. Neighbor Adjacency
+                    // Neighbor Adjacency
                     const hasN = r > 0 && mapGrid[r - 1] && mapGrid[r - 1][c] === 1;
                     const hasS = r < curRows - 1 && mapGrid[r + 1] && mapGrid[r + 1][c] === 1;
                     const hasW = c > 0 && mapGrid[r][c - 1] === 1;
                     const hasE = c < curCols - 1 && mapGrid[r][c + 1] === 1;
 
-                    // 3. Nestled Organic Cobblestones (4-5 stones per tile, offset by coordinate hash)
-                    const seed = (r * 37 + c * 59) % 100;
-                    const ox1 = (seed % 3) - 1;
-                    const oy1 = ((seed * 7) % 3) - 1;
+                    // Organic flagstone clusters
+                    const ox1 = (tileHash % 3) - 1;
+                    const oy1 = ((tileHash * 7) % 3) - 1;
                     const stones = [
-                        { sx: tx + 3 + ox1, sy: ty + 3 + oy1, sw: 16, sh: 14 },
-                        { sx: tx + 22, sy: ty + 4 - oy1, sw: 18, sh: 13 },
-                        { sx: tx + 4 - ox1, sy: ty + 21, sw: 15, sh: 18 },
-                        { sx: tx + 23 + ox1, sy: ty + 21 + oy1, sw: 17, sh: 17 },
-                        { sx: tx + 14, sy: ty + 14, sw: 14, sh: 12 }
+                        { sx: tx + 3 + ox1, sy: ty + 3 + oy1, sw: 15, sh: 13 },
+                        { sx: tx + 21, sy: ty + 4 - oy1, sw: 17, sh: 12 },
+                        { sx: tx + 4 - ox1, sy: ty + 20, sw: 14, sh: 17 },
+                        { sx: tx + 22 + ox1, sy: ty + 20 + oy1, sw: 16, sh: 16 },
+                        { sx: tx + 13, sy: ty + 13, sw: 13, sh: 11 }
                     ];
 
                     stones.forEach(st => {
-                        // Stone shadow / mortar
                         ctx.fillStyle = stoneDark;
                         ctx.beginPath();
                         drawRoundRect(ctx, st.sx, st.sy, st.sw, st.sh, 4);
                         ctx.fill();
 
-                        // Stone surface
                         ctx.fillStyle = stoneMid;
                         ctx.beginPath();
                         drawRoundRect(ctx, st.sx + 1, st.sy + 1, st.sw - 2, st.sh - 2, 3);
                         ctx.fill();
 
-                        // Top-left highlight
+                        // Gentle specular highlight without harsh line
                         ctx.fillStyle = stoneLight;
-                        ctx.fillRect(st.sx + 2, st.sy + 1, Math.max(2, st.sw - 6), 2);
-                        ctx.fillRect(st.sx + 1, st.sy + 2, 2, Math.max(2, st.sh - 6));
+                        ctx.fillRect(st.sx + 2, st.sy + 1, Math.max(2, st.sw - 6), 1.5);
                     });
 
-                    // 4. Natural blended curb / edge into grass on non-road borders
+                    // Organic feathered dither along grass borders (replaces blocky 2px borders)
                     const turfColor = isBright ? '#16a34a' : mapMeta.groundColor;
                     if (!hasN) {
-                        ctx.fillStyle = stoneDark;
-                        ctx.fillRect(tx, ty, TILE_SIZE, 2);
                         ctx.fillStyle = turfColor;
-                        ctx.fillRect(tx + 4 + (seed % 7), ty, 6, 2);
+                        ctx.fillRect(tx + (tileHash % 11), ty, 5, 2);
+                        ctx.fillRect(tx + 16 + (tileHash % 9), ty, 6, 2.5);
                     }
                     if (!hasS) {
-                        ctx.fillStyle = stoneDark;
-                        ctx.fillRect(tx, ty + TILE_SIZE - 2, TILE_SIZE, 2);
                         ctx.fillStyle = turfColor;
-                        ctx.fillRect(tx + 8 + (seed % 9), ty + TILE_SIZE - 2, 6, 2);
+                        ctx.fillRect(tx + 4 + (tileHash % 9), ty + TILE_SIZE - 2.5, 6, 2.5);
+                        ctx.fillRect(tx + 18 + (tileHash % 7), ty + TILE_SIZE - 2, 5, 2);
                     }
                     if (!hasW) {
-                        ctx.fillStyle = stoneDark;
-                        ctx.fillRect(tx, ty, 2, TILE_SIZE);
                         ctx.fillStyle = turfColor;
-                        ctx.fillRect(tx, ty + 6 + (seed % 7), 2, 6);
+                        ctx.fillRect(tx, ty + (tileHash % 9), 2.5, 6);
+                        ctx.fillRect(tx, ty + 16 + (tileHash % 7), 2, 5);
                     }
                     if (!hasE) {
-                        ctx.fillStyle = stoneDark;
-                        ctx.fillRect(tx + TILE_SIZE - 2, ty, 2, TILE_SIZE);
                         ctx.fillStyle = turfColor;
-                        ctx.fillRect(tx + TILE_SIZE - 2, ty + 8 + (seed % 9), 2, 6);
+                        ctx.fillRect(tx + TILE_SIZE - 2.5, ty + 4 + (tileHash % 9), 2.5, 6);
+                        ctx.fillRect(tx + TILE_SIZE - 2, ty + 18 + (tileHash % 7), 2, 5);
                     }
                 } else if (t === 2) {
                     // Perimeter Stone Wall / Cliff Ledge
@@ -7669,17 +7782,75 @@
                     ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#14532d' : '#1e293b';
                     ctx.fillRect(tx + 4, ty + 4, TILE_SIZE - 8, TILE_SIZE - 12);
                 } else if (t === 4) {
-                    // River water with animated ripples
+                    // River water with animated multi-layer caustics & shoreline foam blending
                     ctx.fillStyle = '#0284c7';
                     ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
-                    ctx.fillStyle = '#38bdf8';
-                    ctx.fillRect(tx + 4 + waterWaveShift * 6, ty + 6, TILE_SIZE - 12, 6);
+
+                    const waveSin = Math.sin(nowMs / 380 + c * 0.7 + r * 0.5);
+                    const waveCos = Math.cos(nowMs / 520 + c * 0.5 - r * 0.6);
+
+                    // Translucent caustics
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+                    ctx.beginPath();
+                    ctx.ellipse(tx + 16 + waveSin * 4, ty + 11 + waveCos * 2.5, 10, 4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.ellipse(tx + 18 - waveCos * 4, ty + 23 + waveSin * 2, 8, 3, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Wave crest highlights
+                    ctx.fillStyle = 'rgba(224, 242, 254, 0.65)';
+                    ctx.fillRect(tx + 10 + Math.floor(waveSin * 3), ty + 10, 6, 1.5);
+                    ctx.fillRect(tx + 15 + Math.floor(waveCos * 3), ty + 22, 5, 1.5);
+
+                    // Shoreline autotiling (Check neighbors touching non-water)
+                    const landN = r > 0 && mapGrid[r - 1] && mapGrid[r - 1][c] !== 4 && mapGrid[r - 1][c] !== 8;
+                    const landS = r < curRows - 1 && mapGrid[r + 1] && mapGrid[r + 1][c] !== 4 && mapGrid[r + 1][c] !== 8;
+                    const landW = c > 0 && mapGrid[r][c - 1] !== 4 && mapGrid[r][c - 1] !== 8;
+                    const landE = c < curCols - 1 && mapGrid[r][c + 1] !== 4 && mapGrid[r][c + 1] !== 8;
+
+                    const foamBob = Math.sin(nowMs / 280 + c * 1.2 + r) * 1.5;
+                    if (landN) {
+                        ctx.fillStyle = '#ca8a04';
+                        ctx.fillRect(tx, ty, TILE_SIZE, 3);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                        ctx.fillRect(tx, ty + 3 + foamBob, TILE_SIZE, 2);
+                        ctx.fillStyle = 'rgba(125, 211, 252, 0.7)';
+                        ctx.fillRect(tx, ty + 5 + foamBob, TILE_SIZE, 1.5);
+                    }
+                    if (landS) {
+                        ctx.fillStyle = '#ca8a04';
+                        ctx.fillRect(tx, ty + TILE_SIZE - 3, TILE_SIZE, 3);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                        ctx.fillRect(tx, ty + TILE_SIZE - 5 - foamBob, TILE_SIZE, 2);
+                        ctx.fillStyle = 'rgba(125, 211, 252, 0.7)';
+                        ctx.fillRect(tx, ty + TILE_SIZE - 6 - foamBob, TILE_SIZE, 1.5);
+                    }
+                    if (landW) {
+                        ctx.fillStyle = '#ca8a04';
+                        ctx.fillRect(tx, ty, 3, TILE_SIZE);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                        ctx.fillRect(tx + 3 + foamBob, ty, 2, TILE_SIZE);
+                        ctx.fillStyle = 'rgba(125, 211, 252, 0.7)';
+                        ctx.fillRect(tx + 5 + foamBob, ty, 1.5, TILE_SIZE);
+                    }
+                    if (landE) {
+                        ctx.fillStyle = '#ca8a04';
+                        ctx.fillRect(tx + TILE_SIZE - 3, ty, 3, TILE_SIZE);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                        ctx.fillRect(tx + TILE_SIZE - 5 - foamBob, ty, 2, TILE_SIZE);
+                        ctx.fillStyle = 'rgba(125, 211, 252, 0.7)';
+                        ctx.fillRect(tx + TILE_SIZE - 6 - foamBob, ty, 1.5, TILE_SIZE);
+                    }
                 } else if (t === 8) {
-                    // Extended Wooden Bridge
+                    // Extended Wooden Bridge with woodgrain planks
                     ctx.fillStyle = '#78350f';
                     ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
                     ctx.fillStyle = '#92400e';
                     ctx.fillRect(tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+                    ctx.fillStyle = '#5c2b09';
+                    ctx.fillRect(tx, ty + 10, TILE_SIZE, 1.5);
+                    ctx.fillRect(tx, ty + 21, TILE_SIZE, 1.5);
                 }
 
                 // Clover Tufts / tallgrass on open meadows
@@ -7809,6 +7980,45 @@
             });
         }
 
+        // 1.8. Physical Interactive Signposts (Depth-sorted, in front of trees behind them)
+        if (!currentInterior && typeof signposts !== 'undefined' && signposts && signposts.length > 0) {
+            signposts.forEach(s => {
+                renderList.push({
+                    type: 'sign',
+                    baseY: s.y + 16,
+                    draw: () => {
+                        ctx.save();
+                        ctx.translate(s.x, s.y);
+                        // Dark ground drop shadow
+                        ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+                        ctx.beginPath();
+                        ctx.ellipse(0, 14, 12, 4.5, 0, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        const sprite = assets.hasImage('alttp_village_sign') ? 'alttp_village_sign' : (assets.hasImage('signpost') ? 'signpost' : null);
+                        if (sprite) {
+                            assets.drawImage(ctx, sprite, -14, -18, 28, 36);
+                        } else {
+                            ctx.fillStyle = '#451a03';
+                            ctx.fillRect(-3, 0, 6, 16);
+                            ctx.fillStyle = '#78350f';
+                            ctx.fillRect(-13, -15, 26, 17);
+                            ctx.fillStyle = '#92400e';
+                            ctx.fillRect(-11, -13, 22, 13);
+                        }
+
+                        if (Math.hypot(player.x - s.x, player.y - s.y) < 48) {
+                            ctx.font = 'bold 9px "JetBrains Mono", monospace';
+                            ctx.fillStyle = '#fde047';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('📜 READ [SPACE]', 0, -22);
+                        }
+                        ctx.restore();
+                    }
+                });
+            });
+        }
+
         // 2. Buildings as physical objects
         if (mapMeta.buildings && Array.isArray(mapMeta.buildings)) {
             mapMeta.buildings.forEach(b => {
@@ -7932,18 +8142,24 @@
             });
         }
 
-        // 5c. Active Critters (Chickens & Squirrels)
+        // 5c. Active Critters (Chickens & Squirrels - Grounded with natural scamper cycles)
         if (critters && critters.length > 0) {
             critters.forEach(c => {
+                const isMoving = (c.state === 'walk' || c.state === 'flee');
+                const scamperSpeed = c.state === 'flee' ? 18 : 12;
+                const scamperBob = (c.type === 'squirrel' && isMoving) ? Math.abs(Math.sin(c.animTimer * scamperSpeed)) * 3.5 : 0;
+                const chickenBob = (c.type === 'chicken' && isMoving) ? Math.abs(Math.sin(c.animTimer * 10)) * 2 : 0;
                 renderList.push({
                     type: 'critter',
                     baseY: c.y + 8,
                     draw: () => {
                         ctx.save();
                         ctx.translate(c.x, c.y);
-                        ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+                        // Dark ground drop shadow firmly anchoring critter to terrain
+                        ctx.fillStyle = 'rgba(15, 23, 42, 0.42)';
                         ctx.beginPath();
-                        ctx.ellipse(0, 6, 7, 3, 0, 0, Math.PI * 2);
+                        const sw = c.type === 'squirrel' ? (isMoving ? 9 : 8) : 7;
+                        ctx.ellipse(0, 7, sw, 3.5, 0, 0, Math.PI * 2);
                         ctx.fill();
 
                         // Base sprite faces left by default; flip horizontally when moving right!
@@ -7951,10 +8167,18 @@
                             ctx.scale(-1, 1);
                         }
 
+                        // Subtle squash & stretch during scamper
+                        if (c.type === 'squirrel' && isMoving) {
+                            const sqScale = 1 + Math.sin(c.animTimer * scamperSpeed) * 0.08;
+                            ctx.scale(sqScale, 2 - sqScale);
+                        }
+
                         const spriteKey = c.type === 'chicken' ? 'critter_chicken' : 'critter_squirrel';
                         if (assets.hasImage(spriteKey)) {
                             const sz = c.type === 'chicken' ? 22 : 24;
-                            assets.drawImage(ctx, spriteKey, -sz / 2, -sz + 6, sz, sz);
+                            // Lower sprite so feet firmly meet ground shadow (no hovering or flying)
+                            const yOff = c.type === 'chicken' ? (-sz + 7 - chickenBob) : (-sz + 9 - scamperBob);
+                            assets.drawImage(ctx, spriteKey, -sz / 2, yOff, sz, sz);
                         } else {
                             ctx.fillStyle = c.type === 'chicken' ? '#f8fafc' : '#b45309';
                             ctx.fillRect(-6, -8, 12, 10);
@@ -9219,17 +9443,10 @@
         const locTextEl = document.getElementById('locationBannerText');
         const locBadgeEl = document.getElementById('locationSectorBadge');
         if (locTextEl) {
-            if (currentInterior) {
-                locTextEl.textContent = `${currentInterior.name} [INTERIOR]`;
-            } else {
-                locTextEl.textContent = MAPS[currentMapIndex].name;
-            }
+            locTextEl.textContent = currentInterior ? currentInterior.name : MAPS[currentMapIndex].name;
         }
         if (locBadgeEl) {
-            const overPos = MAP_OVERWORLD_POS[currentMapIndex];
-            if (overPos) {
-                locBadgeEl.textContent = `SEC [${overPos.row},${overPos.col}]`;
-            }
+            locBadgeEl.classList.add('hidden');
         }
     }
 
@@ -9263,13 +9480,20 @@
 
         const quests = Object.values(player.zoneQuests);
         const activeQuests = quests.filter(q => q.accepted && !q.completed);
+        const boxEl = document.getElementById('stackedQuestBox');
+        if (boxEl) {
+            if (activeQuests.length === 0) {
+                boxEl.classList.add('hidden');
+            } else {
+                boxEl.classList.remove('hidden');
+            }
+        }
         if (badgeEl) {
             badgeEl.textContent = `${activeQuests.length} Active`;
         }
 
         listEl.innerHTML = '';
         if (activeQuests.length === 0) {
-            listEl.innerHTML = `<div class="text-[10px] text-slate-400 italic p-3 text-center bg-slate-900/60 rounded border border-amber-900/40">No active quests.<br><span class="text-amber-300 font-semibold">Speak with an NPC marked with [!] to accept an assignment.</span></div>`;
             return;
         }
 
@@ -9282,29 +9506,22 @@
             }`;
 
             let statusBadge = '';
-            if (q.completed) {
-                statusBadge = '<span class="text-[8px] mono-font font-bold text-emerald-400 bg-emerald-950/90 border border-emerald-600/70 px-1.5 py-0.5 rounded">✓ COMPLETED</span>';
-            } else if (q.readyToTurnIn) {
+            if (q.readyToTurnIn) {
                 statusBadge = '<span class="text-[8px] mono-font font-bold text-amber-300 bg-amber-950/90 border border-amber-600/70 px-1.5 py-0.5 rounded animate-pulse">[?] RETURN TO MENTOR</span>';
-            } else {
-                // In Progress: no distracting badge, clean & minimal!
-                statusBadge = '';
             }
 
             const currentMarker = isCurrent ? '<span class="text-amber-400 text-[10px]">▶</span> ' : '';
+            const areaName = meta.name.replace(/^Map\s+\d+:\s*/i, '');
 
             qCard.innerHTML = `
                 <div class="flex justify-between items-center gap-1">
-                    <span class="pixel-font text-[9px] text-white font-bold truncate">${currentMarker}${meta.name.split(':')[0]}: ${meta.name.split(':')[1] || meta.name}</span>
+                    <span class="pixel-font text-[9px] text-white font-bold truncate">${currentMarker}${areaName}</span>
                     ${statusBadge}
                 </div>
                 <div class="text-[9px] text-slate-300 leading-tight">${q.title}</div>
                 <div class="flex items-center gap-2 text-[8px] mono-font text-slate-400 pt-0.5 border-t border-slate-700/60">
-                    <span class="text-amber-300">Mentor: ${q.mentor}</span>
-                    <span>•</span>
                     <span class="${q.cured >= q.curedGoal ? 'text-emerald-300 font-bold' : 'text-slate-300'}">Freed: ${q.cured}/${q.curedGoal}</span>
                     ${q.puzzleGoal ? `<span>•</span><span class="${q.puzzlesSolved >= q.puzzleGoal ? 'text-emerald-300 font-bold' : 'text-slate-300'}">Puzzles: ${q.puzzlesSolved}/${q.puzzleGoal}</span>` : ''}
-                    ${q.hasBoss ? `<span>•</span><span class="${q.bossDefeated ? 'text-emerald-300 font-bold' : 'text-rose-300'}">${q.bossDefeated ? 'Boss Defeated' : 'Boss Alive'}</span>` : ''}
                 </div>
             `;
             listEl.appendChild(qCard);
