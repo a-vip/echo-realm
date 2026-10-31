@@ -79,8 +79,10 @@ function loadGameEnvironment() {
         selectSocraticDuelOption,
         get activeDuelBoss() { return activeDuelBoss; },
         get activeDuelOptions() { return activeDuelOptions; },
-        openTreasureChestZeldaStyle
-    };`;
+        openTreasureChestZeldaStyle,
+        drawCharacterSprite,
+        findNearestInteractable,
+        };`;
 
     function createMockElement(id = '') {
         const classSet = new Set();
@@ -210,7 +212,9 @@ function loadGameEnvironment() {
     sandbox.window.localStorage = sandbox.localStorage;
 
     vm.runInNewContext(scriptContent, sandbox);
-    return sandbox.window.__EXPORTED__;
+    const exp = sandbox.window.__EXPORTED__;
+    exp.rawHtml = html;
+    return exp;
 }
 
 module.exports = { loadGameEnvironment };

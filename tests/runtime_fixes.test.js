@@ -596,5 +596,126 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         assert.ok(!textEl.innerHTML.includes('Woven in the Whispering Woods'),
             'Must not contain italic description quote');
     });
-});
 
+    test('Citadel gates remain strictly locked and guarded even when Dev Mode is enabled until Quest 8 is received', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(0);
+        env.devMode = true; // Dev mode enabled
+        env.player.zoneQuests = {};
+
+        // With devMode true, isCitadelUnlocked() must still be false until Quest 8 is received
+        assert.equal(env.isCitadelUnlocked(), false, 'Citadel gates must remain locked in Dev Mode until story quest is accepted');
+
+        // Grant Quest 8
+        env.player.zoneQuests[8] = { accepted: true };
+        assert.equal(env.isCitadelUnlocked(), true, 'Citadel opens once Quest 8 is accepted');
+    });
+
+    test('Map 7 (Highland Oasis) contains zero impassable diagonal tree barriers and permits traversal across the sector', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(7);
+        const grid = env.mapGrid;
+
+        // Verify that there is a clear vertical path from north highway (r=1) down to south lake promenade (r=35)
+        let blockedRows = 0;
+        for (let r = 1; r <= 35; r++) {
+            let hasWalkable = false;
+            for (let c = 14; c <= 22; c++) {
+                if (grid[r][c] !== 2 && grid[r][c] !== 3) {
+                    hasWalkable = true;
+                    break;
+                }
+            }
+            if (!hasWalkable) blockedRows++;
+        }
+        assert.equal(blockedRows, 0, 'North-South avenue in Map 7 must have no blocked rows from trees or walls');
+
+        // Verify clearings around buildings: no trees touching building footprints
+        const buildings = env.MAPS[7].buildings;
+        buildings.forEach(b => {
+            for (let r = b.row; r < b.row + b.hRows; r++) {
+                for (let c = b.col; c < b.col + b.wCols; c++) {
+                    assert.notEqual(grid[r][c], 3, "Building " + b.id + " must not be obstructed by trees");
+                }
+            }
+        });
+    });
+
+    test('Building interior player movement towards chest is smooth and free of snapping or teleportation', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(1);
+        const building = env.MAPS[1].buildings[0];
+        env.enterBuildingInterior(building);
+        assert.ok(env.currentInterior);
+
+        // Player starts at x=380, y=510. Move player towards the treasure chest alcove (x ~ 620, y ~ 220)
+        env.player.x = 450;
+        env.player.y = 220;
+
+        // Step player right towards chest
+        for (let step = 0; step < 10; step++) {
+            const prevX = env.player.x;
+            env.moveEntityWithCollision(env.player, 5, 0);
+            assert.ok(env.player.x >= prevX, "Player moving right towards chest should smoothly advance without snapping backwards (was " + prevX + ", now " + env.player.x + ")");
+        }
+
+        // Verify player can get close to chest without jitter
+        env.player.x = 600;
+        env.player.y = 220;
+        const target = env.findNearestInteractable();
+        assert.ok(target && target.type === 'interior_chest', 'Player near chest must detect interior_chest interactable');
+    });
+
+    test('Character sprite does not render golden belt buckle on back when facing away (dir === 1)', () => {
+        const env = loadGameEnvironment();
+        const fillRectCalls = [];
+        const mockCtx = {
+            save() {},
+            restore() {},
+            translate() {},
+            fillRect(x, y, w, h) {
+                fillRectCalls.push({ x, y, w, h, fillStyle: this.fillStyle });
+            },
+            beginPath() {},
+            ellipse() {},
+            arc() {},
+            fill() {},
+            stroke() {},
+            rotate() {},
+            setLineDash() {},
+            measureText() { return { width: 10 }; },
+            fillText() {}
+        };
+
+        // Draw facing Up (dir === 1)
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'player', dir: 1, frame: 0 });
+        const goldBuckleOnBack = fillRectCalls.find(call =>
+            call.fillStyle === '#fbbf24' && call.w === 4 && call.h === 2
+        );
+        assert.equal(goldBuckleOnBack, undefined, 'Golden belt buckle must NOT be drawn on back when dir === 1');
+
+        // Draw facing Down (dir === 0)
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'player', dir: 0, frame: 0 });
+        const goldBuckleOnFront = fillRectCalls.find(call =>
+            call.fillStyle === '#fbbf24' && call.w === 4 && call.h === 2
+        );
+        assert.ok(goldBuckleOnFront, 'Golden belt buckle MUST be drawn on front when dir === 0');
+    });
+
+    test('World Map UI modal displays 32-bit Realm Atlas header without Overworld text or repeated M', () => {
+        const env = loadGameEnvironment();
+        const modal = env.document.getElementById('worldMapModal');
+        assert.ok(modal, 'worldMapModal must exist');
+
+        const startIdx = env.rawHtml.indexOf('id="worldMapModal"');
+        const endIdx = env.rawHtml.indexOf('id="inventoryModal"');
+        const modalHtml = env.rawHtml.substring(startIdx, endIdx);
+        assert.ok(!modalHtml.includes('OVERWORLD MAP'), 'Modal must not contain OVERWORLD MAP text');
+        assert.ok(modalHtml.includes('REALM ATLAS'), 'Modal must display REALM ATLAS');
+        assert.ok(!modalHtml.includes('Close [M / ESC]'), 'Close button must not repeat [M]');
+        assert.ok(modalHtml.includes('Close [ESC]'), 'Close button must say Close [ESC]');
+        assert.ok(!modalHtml.includes('[PRESS M TO CLOSE]'), 'Action prompt must not say [PRESS M TO CLOSE]');
+    });
+});

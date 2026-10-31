@@ -605,37 +605,43 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- [M] FULL ALttP OVERWORLD MAP MODAL (Framed in Clouds)                -->
+    <!-- [M] FULL 32-BIT CONTINENTAL REALM ATLAS MODAL                         -->
     <!-- =================================================================== -->
-    <div id="worldMapModal" class="fixed inset-0 z-40 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 hidden pointer-events-auto">
-        <div class="relative retro-box rounded-2xl p-4 sm:p-5 max-w-2xl w-full flex flex-col items-center">
+    <div id="worldMapModal" class="fixed inset-0 z-40 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 hidden pointer-events-auto">
+        <div class="relative bg-[#1c130c] border-4 border-[#78350f] shadow-[0_0_35px_rgba(0,0,0,0.95)] p-4 sm:p-5 max-w-2xl w-full flex flex-col items-center" style="box-shadow: inset 0 0 0 2px #d97706, 0 12px 28px rgba(0,0,0,0.85);">
+            <!-- 32-bit Ornate Corner Rivets -->
+            <div class="absolute top-1.5 left-1.5 w-2.5 h-2.5 bg-[#fbbf24] border border-[#78350f]"></div>
+            <div class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#fbbf24] border border-[#78350f]"></div>
+            <div class="absolute bottom-1.5 left-1.5 w-2.5 h-2.5 bg-[#fbbf24] border border-[#78350f]"></div>
+            <div class="absolute bottom-1.5 right-1.5 w-2.5 h-2.5 bg-[#fbbf24] border border-[#78350f]"></div>
+
             <!-- Modal Header -->
-            <div class="w-full flex justify-between items-center border-b border-slate-800 pb-2.5 mb-3">
+            <div class="w-full flex justify-between items-center border-b-2 border-[#78350f] pb-2.5 mb-3 bg-[#26180e] px-3.5 py-2" style="box-shadow: inset 0 0 0 1px #92400e;">
                 <div class="flex items-center gap-2.5">
-                    <span class="pixel-font text-xs text-amber-300">🗺️ OVERWORLD MAP [M]</span>
-                    <span id="worldMapDevIndicator" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/50 animate-pulse">
+                    <span class="pixel-font text-xs text-amber-200 tracking-wider font-bold">🗺️ REALM ATLAS</span>
+                    <span id="worldMapDevIndicator" class="hidden text-[10px] font-extrabold px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/60 animate-pulse">
                         ⚡ DEV TELEPORT ACTIVE (CLICK TO WARP)
                     </span>
                 </div>
-                <button onclick="closeAllMenus()" class="retro-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300">
-                    Close [M / ESC]
+                <button onclick="closeAllMenus()" class="retro-btn px-3 py-1 bg-[#451a03] hover:bg-[#78350f] text-xs font-bold text-amber-200 border border-[#b45309]">
+                    Close [ESC]
                 </button>
             </div>
 
-            <!-- Canvas Container with SNES ALttP Pixel Cloud Framing -->
-            <div class="relative flex items-center justify-center w-full max-w-[560px] aspect-square rounded-xl overflow-hidden border-2 border-slate-800 bg-slate-950 shadow-2xl">
+            <!-- Canvas Container with 32-bit Wooden Cartography Frame -->
+            <div class="relative flex items-center justify-center w-full max-w-[560px] aspect-square overflow-hidden border-4 border-[#451a03] bg-[#0d0906]" style="box-shadow: inset 0 0 0 2px #92400e, 0 4px 16px rgba(0,0,0,0.85);">
                 <canvas id="worldMapCanvas" width="600" height="600" class="w-full h-full cursor-pointer"></canvas>
             </div>
 
             <!-- Modal Footer / Sector Info Bar -->
-            <div id="worldMapHoverBar" class="w-full mt-3 bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2 flex flex-col sm:flex-row items-center justify-between text-xs gap-1">
+            <div id="worldMapHoverBar" class="w-full mt-3 bg-[#26180e] border-2 border-[#78350f] px-4 py-2 flex flex-col sm:flex-row items-center justify-between text-xs gap-1" style="box-shadow: inset 0 0 0 1px #92400e;">
                 <div class="flex items-center gap-2 min-w-0">
                     <span id="mapHoverIcon" class="text-base shrink-0">📍</span>
-                    <span id="mapHoverName" class="font-bold text-white truncate">The Quiet Archive</span>
-                    <span id="mapHoverParallel" class="text-slate-400 text-[11px] shrink-0">(Sanctuary & Link's House)</span>
+                    <span id="mapHoverName" class="font-bold text-amber-100 truncate">The Quiet Archive</span>
+                    <span id="mapHoverParallel" class="text-amber-400/70 text-[11px] shrink-0">(Archival Sanctuary)</span>
                 </div>
-                <div id="mapHoverAction" class="pixel-font text-[10px] text-cyan-300 shrink-0">
-                    [PRESS M TO CLOSE]
+                <div id="mapHoverAction" class="pixel-font text-[10px] text-amber-300 shrink-0">
+                    [ESC] TO RETURN
                 </div>
             </div>
         </div>
@@ -1439,7 +1445,7 @@
             desc: 'A precision brass instrument that always points towards primary sources and structural context.'
         },
         map_realm: {
-            id: 'map_realm', name: "Cartographer's Overworld Map", slot: 'offHand', icon: '🗺️', sprite: 'map_item', visualColor: '#fbbf24',
+            id: 'map_realm', name: "Cartographer's Realm Map", slot: 'offHand', icon: '🗺️', sprite: 'map_item', visualColor: '#fbbf24',
             stat: 'speed', val: 20, bonus: '+20 Exploration Speed',
             desc: 'An authentic stitched survey of all 9 Echo Realm sectors. Press [M] to inspect the continent.'
         },
@@ -1771,49 +1777,54 @@
         } else {
             // Torso
             px(3, 10, 10, 7, bodyCol);
-            // Belt & Buckle
+            // Belt & Buckle (Buckle only rendered on front/sides, NEVER when facing away dir === 1)
             const waistCol = (role === 'player' && equipment && equipment.waist && equipment.waist.visualColor)
                 ? equipment.waist.visualColor
                 : trimCol;
             px(3, 14, 10, 1, '#0f172a');
-            px(7, 14, 2, 1, waistCol);
+            if (dir !== 1) {
+                px(7, 14, 2, 1, waistCol);
+            }
             // Shoulder trim / collar
             px(4, 10, 8, 1, trimCol);
         }
 
-        // Professor Avi's golden scholarly stole with azure rune inlay
-        if (role === 'avi') {
-            px(6, 10, 4, 7, '#fbbf24');
-            px(7, 11, 2, 5, '#38bdf8');
-        } else if (role === 'maya') {
-            // Commander Maya: Gold sash & shoulder armor
-            px(4, 9, 8, 2, '#fbbf24');
-            px(1, 9, 3, 3, '#f59e0b');
-            px(12, 9, 3, 3, '#f59e0b');
-        } else if (role === 'lyra') {
-            // Bridgekeeper Lyra: Water lily river medallion
-            px(6, 11, 4, 3, '#38bdf8');
-            px(7, 12, 2, 1, '#fde047');
-        } else if (role === 'tariq') {
-            // Comrade Tariq: Cross-chest harness strap & steel buckle
-            px(4, 10, 2, 5, '#78350f');
-            px(7, 12, 2, 2, '#94a3b8');
-        } else if (role === 'elena') {
-            // Sister Elena: Glowing golden Prism rosary
-            px(6, 11, 4, 2, '#fbbf24');
-            px(7, 13, 2, 3, '#fde047');
-        } else if (role === 'rowan') {
-            // Ranger Rowan: Leather quiver shoulder strap
-            px(3, 10, 2, 5, '#78350f');
-        } else if (role === 'kael') {
-            // Organizer Kael: Humanitarian rescue cross
-            px(7, 11, 2, 4, '#ffffff');
-            px(6, 12, 4, 2, '#ffffff');
-            px(7, 12, 2, 2, '#ef4444');
-        } else if (role === 'zephyr') {
-            // Elder Zephyr: Solar gold medallion
-            px(6, 11, 4, 4, '#f59e0b');
-            px(7, 12, 2, 2, '#fbbf24');
+        // Front emblems & medallions rendered ONLY when facing camera/sides (dir !== 1)
+        if (dir !== 1) {
+            // Professor Avi's golden scholarly stole with azure rune inlay
+            if (role === 'avi') {
+                px(6, 10, 4, 7, '#fbbf24');
+                px(7, 11, 2, 5, '#38bdf8');
+            } else if (role === 'maya') {
+                // Commander Maya: Gold sash & shoulder armor
+                px(4, 9, 8, 2, '#fbbf24');
+                px(1, 9, 3, 3, '#f59e0b');
+                px(12, 9, 3, 3, '#f59e0b');
+            } else if (role === 'lyra') {
+                // Bridgekeeper Lyra: Water lily river medallion
+                px(6, 11, 4, 3, '#38bdf8');
+                px(7, 12, 2, 1, '#fde047');
+            } else if (role === 'tariq') {
+                // Comrade Tariq: Cross-chest harness strap & steel buckle
+                px(4, 10, 2, 5, '#78350f');
+                px(7, 12, 2, 2, '#94a3b8');
+            } else if (role === 'elena') {
+                // Sister Elena: Glowing golden Prism rosary
+                px(6, 11, 4, 2, '#fbbf24');
+                px(7, 13, 2, 3, '#fde047');
+            } else if (role === 'rowan') {
+                // Ranger Rowan: Leather quiver shoulder strap
+                px(3, 10, 2, 5, '#78350f');
+            } else if (role === 'kael') {
+                // Organizer Kael: Humanitarian rescue cross
+                px(7, 11, 2, 4, '#ffffff');
+                px(6, 12, 4, 2, '#ffffff');
+                px(7, 12, 2, 2, '#ef4444');
+            } else if (role === 'zephyr') {
+                // Elder Zephyr: Solar gold medallion
+                px(6, 11, 4, 4, '#f59e0b');
+                px(7, 12, 2, 2, '#fbbf24');
+            }
         }
 
         // Equipped Pauldrons / Shoulders on Player
@@ -2297,14 +2308,18 @@
     }
 
     function isCitadelUnlocked() {
-        if (typeof devMode !== 'undefined' && devMode) return true;
         if (typeof player === 'undefined' || !player || !player.zoneQuests) return false;
-        // Check 1: Explicit unlock flag or Finale quest active/completed
-        if (player.citadelUnlocked) return true;
-        if (player.zoneQuests[8] && (player.zoneQuests[8].accepted || player.zoneQuests[8].completed)) return true;
-        if (player.zoneQuests[7] && player.zoneQuests[7].completed) return true;
+        // Strict Story Lock: Citadel opens ONLY when the player receives & accepts the Finale Quest (Quest 8)
+        // or turns in Sector 7 to Elder Zephyr. Developer mode does not bypass physical border gates.
+        if (player.zoneQuests[8] && (player.zoneQuests[8].accepted || player.zoneQuests[8].completed)) {
+            player.citadelUnlocked = true;
+            return true;
+        }
+        if (player.citadelUnlocked && player.zoneQuests[7] && player.zoneQuests[7].completed) {
+            return true;
+        }
 
-        // Check 2: Check if all 8 outer sectors (0 through 7) have fulfilled their objectives
+        // Check if all 8 outer sectors (0 through 7) have fulfilled their objectives
         let allFulfilled = true;
         for (let i = 0; i <= 7; i++) {
             const q = player.zoneQuests[i];
@@ -5456,23 +5471,46 @@
                 for (let c = 18; c < cols - 1; c++) grid[r][c] = 1;
             }
         } else if (mapIndex === 6) {
-            // MAP 7: Borderland of Scapegoats (Diagonal Earthen Ramparts & Checkpoint Courtyard)
+            // MAP 7: Borderland of Scapegoats (Scenic River Corridor, Checkpoint Courtyard & Ruined Ramparts)
             // Exits: North (c 14..22), South (c 14..22), West (r 10..18)
             for (let r = 1; r < rows - 1; r++) {
+                // Diagonal earthen ramparts with wide breaches so movement is never blocked
                 const wallC = Math.round(20 + (r / rows) * (cols - 30));
                 for (let c = 1; c < cols - 1; c++) {
-                    if (Math.abs(c - wallC) <= 1 && !(r >= 11 && r <= 17)) {
+                    const isBreach = (r >= 10 && r <= 18) || (r >= 26 && r <= 32) || (r >= 40 && r <= 46);
+                    if (Math.abs(c - wallC) <= 1 && !isBreach) {
                         grid[r][c] = 2; // Diagonal Earthen Rampart Wall
                     } else if (Math.abs(c - (wallC - 4)) <= 1 || Math.abs(c - (wallC + 4)) <= 1) {
                         grid[r][c] = 1; // Patrol roadway
-                    } else if (Math.sin(r * 0.3 + c * 0.3) > 0.48) {
-                        grid[r][c] = 3;
+                    } else if (Math.sin(c * 0.45) * Math.cos(r * 0.45) > 0.65 && c > 4 && c < cols - 4 && r > 4 && r < rows - 4) {
+                        grid[r][c] = 3; // Natural organic tree copses (NEVER continuous diagonal walls)
+                    } else if (Math.sin(r * 0.35 + c * 0.25) < -0.45) {
+                        grid[r][c] = 9; // Grassy meadow patches
                     }
                 }
             }
+
+            // Continental River flowing from North (from Sunlit Riverfront Map 2) to South (into Highland Oasis Map 7)
+            for (let r = 1; r < rows - 1; r++) {
+                const rivC = Math.round(18 + 3 * Math.sin(r * 0.15));
+                for (let c = rivC - 2; c <= rivC + 2; c++) {
+                    if (c > 0 && c < cols - 1) grid[r][c] = 4; // Sparkling River
+                }
+            }
+
+            // Arched Wooden Causeway Bridges crossing river at highway intersection
+            for (let r = 12; r <= 16; r++) {
+                const rivC = Math.round(18 + 3 * Math.sin(r * 0.15));
+                for (let c = rivC - 2; c <= rivC + 2; c++) {
+                    if (c > 0 && c < cols - 1) grid[r][c] = 8;
+                }
+            }
+
             // Checkpoint Gatehouse Courtyard at highway junction
             for (let r = 11; r <= 17; r++) {
-                for (let c = 13; c <= 23; c++) grid[r][c] = 1;
+                for (let c = 13; c <= 23; c++) {
+                    if (grid[r][c] !== 8) grid[r][c] = 1;
+                }
             }
             // West entrance supply road from Citadel
             for (let r = 12; r <= 16; r++) {
@@ -5480,44 +5518,106 @@
             }
             // North patrol road to Riverfront exit
             for (let r = 1; r <= 12; r++) {
-                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
+                for (let c = 15; c <= 21; c++) {
+                    if (grid[r][c] !== 4 && grid[r][c] !== 8) grid[r][c] = 1;
+                }
             }
             // South patrol road to Highland Oasis exit
             for (let r = 16; r < rows - 1; r++) {
-                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
+                for (let c = 15; c <= 21; c++) {
+                    if (grid[r][c] !== 4 && grid[r][c] !== 8) grid[r][c] = 1;
+                }
             }
         } else if (mapIndex === 7) {
             // MAP 8: Highland Oasis of Solidarity (Mountain Oasis Lake & Shrine Island)
             // Exits: North (c 14..22) and West (r 10..18)
+            // Lake centered at (cols - 16, rows - 14)
             for (let r = 1; r < rows - 1; r++) {
                 for (let c = 1; c < cols - 1; c++) {
                     const lakeDist = Math.hypot((c - (cols - 16)) * 0.9, r - (rows - 14));
                     if (lakeDist <= 14) {
                         if (lakeDist <= 3.5) grid[r][c] = 9; // Socratic Shrine Island
                         else grid[r][c] = 4; // Sparkling Oasis Lake Water
-                    } else if (lakeDist <= 16.5) {
-                        grid[r][c] = 1; // Lakeside Promenade
-                    } else if (Math.sin(r * 0.3 + c * 0.3) > 0.46) {
-                        grid[r][c] = 3;
-                    } else if (Math.cos(r * 0.25 + c * 0.25) < -0.42) {
-                        grid[r][c] = 9;
+                    } else if (lakeDist <= 17) {
+                        grid[r][c] = 1; // Complete Circular Lakeside Promenade
+                    } else {
+                        // Organic isolated palm & tree groves (NO diagonal unbroken walls!)
+                        const groveNoise = Math.sin(c * 0.42) * Math.cos(r * 0.42);
+                        if (groveNoise > 0.68 && c > 5 && c < cols - 5 && r > 5 && r < rows - 5) {
+                            grid[r][c] = 3; // Lush tree copses
+                        } else if (Math.cos(r * 0.25 + c * 0.25) < -0.42) {
+                            grid[r][c] = 9; // Wildflower meadows
+                        }
                     }
                 }
             }
+
+            // River inlet from North (flowing down from Map 6 into the Oasis Lake)
+            for (let r = 1; r <= rows - 26; r++) {
+                const rivC = Math.round(18 + 2 * Math.sin(r * 0.18));
+                for (let c = rivC - 2; c <= rivC + 2; c++) {
+                    if (c > 0 && c < cols - 1) grid[r][c] = 4;
+                }
+            }
+            // Arched wooden causeway bridges across the inlet
+            for (let r = 12; r <= 16; r++) {
+                const rivC = Math.round(18 + 2 * Math.sin(r * 0.18));
+                for (let c = rivC - 2; c <= rivC + 2; c++) {
+                    if (c > 0 && c < cols - 1) grid[r][c] = 8;
+                }
+            }
+
             // Wooden Pier extending from West shore to Shrine Island
             const pierR = rows - 14;
             for (let c = cols - 24; c <= cols - 16; c++) {
                 if (grid[pierR] && c > 0 && c < cols - 1) grid[pierR][c] = 8;
                 if (grid[pierR + 1] && c > 0 && c < cols - 1) grid[pierR + 1][c] = 8;
             }
-            // West gate avenue
+            // Eastern scenic footbridge from Shrine Island to East bank
+            for (let c = cols - 15; c <= cols - 8; c++) {
+                if (grid[pierR] && c > 0 && c < cols - 1) grid[pierR][c] = 8;
+                if (grid[pierR + 1] && c > 0 && c < cols - 1) grid[pierR + 1][c] = 8;
+            }
+
+            // West gate avenue connecting all the way to Platonic Villa (c 1..42)
             for (let r = 12; r <= 16; r++) {
-                for (let c = 1; c <= 18; c++) grid[r][c] = 1;
+                for (let c = 1; c <= 42; c++) {
+                    if (grid[r][c] !== 4 && grid[r][c] !== 8) grid[r][c] = 1;
+                }
             }
-            // Lakeside promenade turning North to North exit
-            for (let r = 1; r <= 14; r++) {
-                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
+            // Grand North-South Avenue connecting North exit down to Promenade
+            for (let r = 1; r <= rows - 18; r++) {
+                for (let c = 15; c <= 21; c++) {
+                    if (grid[r][c] !== 4 && grid[r][c] !== 8) grid[r][c] = 1;
+                }
             }
+            // South avenue connecting to Solidarity Pavilion (col 16, row 32)
+            for (let r = 16; r <= 38; r++) {
+                for (let c = 14; c <= 18; c++) {
+                    if (grid[r][c] !== 4 && grid[r][c] !== 8) grid[r][c] = 1;
+                }
+            }
+
+            // Guaranteed clearing around ALL buildings, pedestals, chest, and mentor
+            const clears = [
+                { c: 12, r: 10, w: 7, h: 5 }, // oasis_lodge
+                { c: 36, r: 10, w: 6, h: 5 }, // platonic_villa
+                { c: 16, r: 32, w: 6, h: 5 }, // solidarity_pavillion
+                { c: 7, r: 5, w: 4, h: 4 },   // chest
+                { c: 21, r: 16, w: 5, h: 5 }, // Elder Zephyr
+                { c: 9, r: 12, w: 4, h: 4 },  // Pillar 1
+                { c: 17, r: 12, w: 4, h: 4 }, // Pillar 2
+                { c: 25, r: 12, w: 4, h: 4 }  // Pillar 3
+            ];
+            clears.forEach(cl => {
+                for (let cr = cl.r - 2; cr <= cl.r + cl.h + 2; cr++) {
+                    for (let cc = cl.c - 2; cc <= cl.c + cl.w + 2; cc++) {
+                        if (cr > 0 && cr < rows - 1 && cc > 0 && cc < cols - 1) {
+                            if (grid[cr][cc] === 3) grid[cr][cc] = 0;
+                        }
+                    }
+                }
+            });
         } else if (mapIndex === 8) {
             // MAP 9: The Obsidian Reich-Citadel (Imperial Fortress Castle & Grand Boulevard)
             // Exits: All 4 directions (center of continent)
@@ -6402,12 +6502,71 @@
     function moveEntityWithCollision(ent, dx, dy) {
         if (!Number.isFinite(dx)) dx = 0;
         if (!Number.isFinite(dy)) dy = 0;
-        const curCols = currentInterior ? currentInterior.cols : getMapCols(currentMapIndex);
-        const curRows = currentInterior ? currentInterior.rows : getMapRows(currentMapIndex);
+        const r = ent.radius || 14;
+
+        // Inside building interior: continuous 760x580 pixel room with solid furniture boxes
+        // Strictly isolated from overworld tile grid to eliminate chest approaching teleport bug!
+        if (currentInterior) {
+            const minX = 42;
+            const maxX = 718;
+            const minY = 138;
+            const maxY = 525;
+            const doorMinX = 336;
+            const doorMaxX = 424;
+            const doorMaxY = 565;
+
+            // Solid Physical Interior Obstacle Boxes { x1, y1, x2, y2 }
+            const obstacles = [
+                // Bookshelves (left wall)
+                { x1: 0, y1: 0, x2: 76, y2: 215 },
+                // Reading desk (left side)
+                { x1: 96, y1: 232, x2: 172, y2: 286 },
+                // Dining Table & Turned-Wood Chairs (center room)
+                { x1: 276, y1: 278, x2: 476, y2: 366 },
+                // Treasure Chest (right alcove: 640, 220, w:44, h:44)
+                { x1: 616, y1: 196, x2: 664, y2: 244 },
+                // Central Fireplace hearth (back wall)
+                { x1: 318, y1: 0, x2: 442, y2: 140 }
+            ];
+
+            // Resolve X movement with obstacle box collision
+            ent.x += dx;
+            for (const ob of obstacles) {
+                if (ent.x + r > ob.x1 && ent.x - r < ob.x2 && ent.y + r > ob.y1 && ent.y - r < ob.y2) {
+                    if (dx > 0) ent.x = ob.x1 - r - 0.01;
+                    else if (dx < 0) ent.x = ob.x2 + r + 0.01;
+                }
+            }
+            ent.x = Math.max(minX, Math.min(maxX, ent.x));
+
+            // Resolve Y movement with obstacle box collision
+            ent.y += dy;
+            for (const ob of obstacles) {
+                if (ent.x + r > ob.x1 && ent.x - r < ob.x2 && ent.y + r > ob.y1 && ent.y - r < ob.y2) {
+                    if (dy > 0) ent.y = ob.y1 - r - 0.01;
+                    else if (dy < 0) ent.y = ob.y2 + r + 0.01;
+                }
+            }
+
+            // Doorway and south threshold clamping
+            if (ent.x >= doorMinX && ent.x <= doorMaxX) {
+                ent.y = Math.max(minY, Math.min(doorMaxY, ent.y));
+                if (ent === player && ent.y >= 538) {
+                    exitBuildingInterior();
+                    return;
+                }
+            } else {
+                ent.y = Math.max(minY, Math.min(maxY, ent.y));
+            }
+            return;
+        }
+
+        // --- OVERWORLD MOVEMENT & COLLISION RESOLUTION ---
+        const curCols = getMapCols(currentMapIndex);
+        const curRows = getMapRows(currentMapIndex);
         if (!Number.isFinite(ent.x)) ent.x = (Math.floor(curCols / 2) + 0.5) * TILE_SIZE;
         if (!Number.isFinite(ent.y)) ent.y = (Math.floor(curRows / 2) + 0.5) * TILE_SIZE;
 
-        const r = ent.radius || 14;
         ent.x += dx;
         let cMin = Math.floor((ent.x - r) / TILE_SIZE);
         let cMax = Math.floor((ent.x + r) / TILE_SIZE);
@@ -6494,61 +6653,7 @@
         const minBoundY = TILE_SIZE + r + 2;
         const maxBoundY = (curRows - 1) * TILE_SIZE - r - 2;
 
-        if (currentInterior) {
-            const minX = 42;
-            const maxX = 718;
-            const minY = 138;
-            const maxY = 525;
-            const doorMinX = 336;
-            const doorMaxX = 424;
-            const doorMaxY = 565;
-
-            // Solid Physical Interior Obstacle Boxes { x1, y1, x2, y2 }
-            // Zero walking through furniture, tables, chairs, bookshelves, desks, or chests!
-            const obstacles = [
-                // Bookshelves (left wall)
-                { x1: 0, y1: 0, x2: 76, y2: 215 },
-                // Reading desk (left side)
-                { x1: 96, y1: 232, x2: 172, y2: 286 },
-                // Dining Table & Turned-Wood Chairs (center room)
-                { x1: 276, y1: 278, x2: 476, y2: 366 },
-                // Treasure Chest (right alcove)
-                { x1: 610, y1: 190, x2: 672, y2: 250 },
-                // Central Fireplace hearth (back wall)
-                { x1: 318, y1: 0, x2: 442, y2: 140 }
-            ];
-
-            // Resolve X movement with obstacle box collision
-            ent.x += dx;
-            for (const ob of obstacles) {
-                if (ent.x + r > ob.x1 && ent.x - r < ob.x2 && ent.y + r > ob.y1 && ent.y - r < ob.y2) {
-                    if (dx > 0) ent.x = ob.x1 - r - 0.01;
-                    else if (dx < 0) ent.x = ob.x2 + r + 0.01;
-                }
-            }
-            ent.x = Math.max(minX, Math.min(maxX, ent.x));
-
-            // Resolve Y movement with obstacle box collision
-            ent.y += dy;
-            for (const ob of obstacles) {
-                if (ent.x + r > ob.x1 && ent.x - r < ob.x2 && ent.y + r > ob.y1 && ent.y - r < ob.y2) {
-                    if (dy > 0) ent.y = ob.y1 - r - 0.01;
-                    else if (dy < 0) ent.y = ob.y2 + r + 0.01;
-                }
-            }
-
-            // Doorway and south threshold clamping
-            if (ent.x >= doorMinX && ent.x <= doorMaxX) {
-                ent.y = Math.max(minY, Math.min(doorMaxY, ent.y));
-                if (ent === player && ent.y >= 538) {
-                    exitBuildingInterior();
-                    return;
-                }
-            } else {
-                ent.y = Math.max(minY, Math.min(maxY, ent.y));
-            }
-            return;
-        } else {
+        {
             const overPos = MAP_OVERWORLD_POS[currentMapIndex];
             const hasNorth = overPos && overPos.row > 0;
             const hasSouth = overPos && overPos.row < 2;
@@ -9029,14 +9134,128 @@
                         ctx.fillRect(tx + TILE_SIZE - 4.5 - shoreLapping, ty + 2, 1, TILE_SIZE - 4);
                     }
                 } else if (t === 8) {
-                    // Extended Wooden Bridge with woodgrain planks
-                    ctx.fillStyle = '#78350f';
-                    ctx.fillRect(tx, ty, TILE_SIZE + 1, TILE_SIZE + 1);
-                    ctx.fillStyle = '#92400e';
-                    ctx.fillRect(tx + 2, ty + 2, TILE_SIZE - 4, TILE_SIZE - 4);
-                    ctx.fillStyle = '#5c2b09';
-                    ctx.fillRect(tx, ty + 10, TILE_SIZE, 1.5);
-                    ctx.fillRect(tx, ty + 21, TILE_SIZE, 1.5);
+                    // Authentic 32-Bit Hand-Carved Timber Bridge across waterways
+                    const isWaterAbove = (r > 0 && mapGrid[r - 1] && mapGrid[r - 1][c] === 4);
+                    const isWaterBelow = (r < curRows - 1 && mapGrid[r + 1] && mapGrid[r + 1][c] === 4);
+                    const isWaterLeft = (c > 0 && mapGrid[r][c - 1] === 4);
+                    const isWaterRight = (c < curCols - 1 && mapGrid[r][c + 1] === 4);
+
+                    const isEastWest = (c > 0 && (mapGrid[r][c - 1] === 8 || mapGrid[r][c - 1] === 1)) ||
+                                       (c < curCols - 1 && (mapGrid[r][c + 1] === 8 || mapGrid[r][c + 1] === 1));
+
+                    // 1. Soft River Under-Shadow
+                    if (isWaterBelow) {
+                        ctx.fillStyle = 'rgba(2, 6, 23, 0.55)';
+                        ctx.fillRect(tx, ty + TILE_SIZE, TILE_SIZE, 5);
+                    }
+                    if (isWaterRight) {
+                        ctx.fillStyle = 'rgba(2, 6, 23, 0.55)';
+                        ctx.fillRect(tx + TILE_SIZE, ty, 5, TILE_SIZE);
+                    }
+
+                    // 2. Heavy Submerged Foundation Pilings (next to water)
+                    if (isWaterAbove || isWaterBelow || isWaterLeft || isWaterRight) {
+                        ctx.fillStyle = '#271004';
+                        if (isWaterLeft) ctx.fillRect(tx - 3, ty + 4, 4, TILE_SIZE - 8);
+                        if (isWaterRight) ctx.fillRect(tx + TILE_SIZE - 1, ty + 4, 4, TILE_SIZE - 8);
+                    }
+
+                    // 3. Wooden Planking
+                    if (isEastWest) {
+                        // Vertical wooden cross-planks (4 planks per tile)
+                        for (let p = 0; p < 4; p++) {
+                            const px = tx + p * 8;
+                            ctx.fillStyle = '#3b1807';
+                            ctx.fillRect(px, ty, 8, TILE_SIZE);
+                            ctx.fillStyle = (p % 2 === 0) ? '#854d0e' : '#78350f';
+                            ctx.fillRect(px + 1, ty, 6, TILE_SIZE);
+                            ctx.fillStyle = '#a16207';
+                            ctx.fillRect(px + 2, ty + 3, 2, TILE_SIZE - 6);
+                            ctx.fillStyle = '#0f172a';
+                            ctx.fillRect(px + 2, ty + 5, 2, 2);
+                            ctx.fillRect(px + 2, ty + TILE_SIZE - 7, 2, 2);
+                            ctx.fillStyle = '#94a3b8';
+                            ctx.fillRect(px + 2, ty + 5, 1, 1);
+                            ctx.fillRect(px + 2, ty + TILE_SIZE - 7, 1, 1);
+                        }
+                    } else {
+                        // Horizontal wooden cross-planks (4 planks per tile)
+                        for (let p = 0; p < 4; p++) {
+                            const py = ty + p * 8;
+                            ctx.fillStyle = '#3b1807';
+                            ctx.fillRect(tx, py, TILE_SIZE, 8);
+                            ctx.fillStyle = (p % 2 === 0) ? '#854d0e' : '#78350f';
+                            ctx.fillRect(tx, py + 1, TILE_SIZE, 6);
+                            ctx.fillStyle = '#a16207';
+                            ctx.fillRect(tx + 3, py + 2, TILE_SIZE - 6, 2);
+                            ctx.fillStyle = '#0f172a';
+                            ctx.fillRect(tx + 5, py + 2, 2, 2);
+                            ctx.fillRect(tx + TILE_SIZE - 7, py + 2, 2, 2);
+                            ctx.fillStyle = '#94a3b8';
+                            ctx.fillRect(tx + 5, py + 2, 1, 1);
+                            ctx.fillRect(tx + TILE_SIZE - 7, py + 2, 1, 1);
+                        }
+                    }
+
+                    // 4. Carved Safety Handrails & Baluster Posts along bridge sides
+                    if (isWaterAbove) {
+                        ctx.fillStyle = '#271004';
+                        ctx.fillRect(tx, ty, TILE_SIZE, 5);
+                        ctx.fillStyle = '#92400e';
+                        ctx.fillRect(tx, ty, TILE_SIZE, 3);
+                        ctx.fillStyle = '#d97706';
+                        ctx.fillRect(tx, ty, TILE_SIZE, 1);
+                        for (let postX = tx + 3; postX < tx + TILE_SIZE; postX += 10) {
+                            ctx.fillStyle = '#451a03';
+                            ctx.fillRect(postX, ty, 3, 7);
+                            ctx.fillStyle = '#fbbf24';
+                            ctx.fillRect(postX + 1, ty + 2, 1, 1);
+                        }
+                    }
+                    if (isWaterBelow) {
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                        ctx.fillRect(tx, ty + TILE_SIZE - 6, TILE_SIZE, 2);
+                        ctx.fillStyle = '#271004';
+                        ctx.fillRect(tx, ty + TILE_SIZE - 5, TILE_SIZE, 5);
+                        ctx.fillStyle = '#92400e';
+                        ctx.fillRect(tx, ty + TILE_SIZE - 5, TILE_SIZE, 3);
+                        ctx.fillStyle = '#d97706';
+                        ctx.fillRect(tx, ty + TILE_SIZE - 5, TILE_SIZE, 1);
+                        for (let postX = tx + 3; postX < tx + TILE_SIZE; postX += 10) {
+                            ctx.fillStyle = '#451a03';
+                            ctx.fillRect(postX, ty + TILE_SIZE - 6, 3, 6);
+                            ctx.fillStyle = '#fbbf24';
+                            ctx.fillRect(postX + 1, ty + TILE_SIZE - 4, 1, 1);
+                        }
+                    }
+                    if (isWaterLeft && !isEastWest) {
+                        ctx.fillStyle = '#271004';
+                        ctx.fillRect(tx, ty, 5, TILE_SIZE);
+                        ctx.fillStyle = '#92400e';
+                        ctx.fillRect(tx, ty, 3, TILE_SIZE);
+                        ctx.fillStyle = '#d97706';
+                        ctx.fillRect(tx, ty, 1, TILE_SIZE);
+                        for (let postY = ty + 3; postY < ty + TILE_SIZE; postY += 10) {
+                            ctx.fillStyle = '#451a03';
+                            ctx.fillRect(tx, postY, 7, 3);
+                            ctx.fillStyle = '#fbbf24';
+                            ctx.fillRect(tx + 2, postY + 1, 1, 1);
+                        }
+                    }
+                    if (isWaterRight && !isEastWest) {
+                        ctx.fillStyle = '#271004';
+                        ctx.fillRect(tx + TILE_SIZE - 5, ty, 5, TILE_SIZE);
+                        ctx.fillStyle = '#92400e';
+                        ctx.fillRect(tx + TILE_SIZE - 3, ty, 3, TILE_SIZE);
+                        ctx.fillStyle = '#d97706';
+                        ctx.fillRect(tx + TILE_SIZE - 1, ty, 1, TILE_SIZE);
+                        for (let postY = ty + 3; postY < ty + TILE_SIZE; postY += 10) {
+                            ctx.fillStyle = '#451a03';
+                            ctx.fillRect(tx + TILE_SIZE - 6, postY, 6, 3);
+                            ctx.fillStyle = '#fbbf24';
+                            ctx.fillRect(tx + TILE_SIZE - 4, postY + 1, 1, 1);
+                        }
+                    }
                 }
 
 // Waving grass blades animated above
@@ -9692,10 +9911,10 @@
                 actEl.textContent = '⚡ CLICK ANYWHERE TO TELEPORT';
                 actEl.className = 'pixel-font text-[10px] text-amber-300 animate-pulse';
             } else if (mapIdx === currentMapIndex) {
-                actEl.textContent = 'YOU ARE HERE [M TO CLOSE]';
+                actEl.textContent = 'YOU ARE HERE • [ESC] RETURN';
                 actEl.className = 'pixel-font text-[10px] text-emerald-400';
             } else {
-                actEl.textContent = '[M / ESC TO CLOSE]';
+                actEl.textContent = '[ESC] TO RETURN';
                 actEl.className = 'pixel-font text-[10px] text-cyan-300';
             }
         }
@@ -9713,7 +9932,7 @@
         if (nameEl && curMap) nameEl.textContent = curMap.name;
         if (parEl && curMeta) parEl.textContent = `(${curMeta.alttpName})`;
         if (actEl) {
-            actEl.textContent = devMode ? '⚡ DEV MODE ACTIVE • CLICK MAP TO WARP' : '[PRESS M TO CLOSE]';
+            actEl.textContent = devMode ? '⚡ DEV MODE ACTIVE • CLICK MAP TO WARP' : '[ESC] TO RETURN';
             actEl.className = devMode ? 'pixel-font text-[10px] text-amber-400' : 'pixel-font text-[10px] text-cyan-300';
         }
     }
@@ -9893,7 +10112,8 @@
         const w = wmCanvas.width;
         const h = wmCanvas.height;
 
-        ctx.fillStyle = '#060913';
+        // 32-Bit Dark Walnut Cartography Backdrop
+        ctx.fillStyle = '#140c06';
         ctx.fillRect(0, 0, w, h);
 
         const border = 24;
@@ -9911,8 +10131,30 @@
         }
         ctx.drawImage(stitchedWorldMapCanvas, innerX, innerY);
 
-        // 2. Translucent Sector Boundary Demarcation Lines
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+        // 2. 32-Bit Hand-Carved Double Timber & Gold Cartography Outer Frame
+        ctx.strokeStyle = '#451a03';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(innerX - 2, innerY - 2, innerW + 4, innerH + 4);
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(innerX - 0.5, innerY - 0.5, innerW + 1, innerH + 1);
+
+        // Ornate Corner Brass Plates
+        const corners = [
+            [innerX, innerY],
+            [innerX + innerW, innerY],
+            [innerX, innerY + innerH],
+            [innerX + innerW, innerY + innerH]
+        ];
+        corners.forEach(([cx, cy]) => {
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(cx - 3, cy - 3, 6, 6);
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(cx - 1, cy - 1, 2, 2);
+        });
+
+        // 3. Warm Aged Ink Sector Boundary Demarcation Lines
+        ctx.strokeStyle = 'rgba(217, 119, 6, 0.42)';
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 4]);
         for (let i = 1; i < 3; i++) {
@@ -9928,7 +10170,7 @@
         }
         ctx.setLineDash([]);
 
-        // 3. Sector Header Badges (SEC [r, c] + Name)
+        // 4. Sector Header Badges: Dark Carved Timber with Warm Gold Filigree
         for (let gr = 0; gr < 3; gr++) {
             for (let gc = 0; gc < 3; gc++) {
                 const mapIdx = OVERWORLD_GRID[gr][gc];
@@ -9936,12 +10178,12 @@
                 if (meta) {
                     const bx = innerX + gc * secW + 5;
                     const by = innerY + gr * secH + 5;
-                    ctx.fillStyle = 'rgba(2, 6, 23, 0.88)';
+                    ctx.fillStyle = 'rgba(24, 15, 8, 0.94)';
                     ctx.fillRect(bx, by, secW - 10, 16);
-                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+                    ctx.strokeStyle = '#b45309';
                     ctx.lineWidth = 1;
                     ctx.strokeRect(bx, by, secW - 10, 16);
-                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillStyle = '#fef3c7';
                     ctx.font = '7px "Press Start 2P", monospace';
                     ctx.textAlign = 'left';
                     const shortName = meta.name.split(':')[0].replace('Map ', 'M');
@@ -9950,18 +10192,18 @@
             }
         }
 
-        // 4. Sector Hover Highlight
+        // 5. Sector Hover Highlight: Golden Sunburst Frame
         if (mapHoverGridPos) {
             const hx = innerX + mapHoverGridPos.col * secW;
             const hy = innerY + mapHoverGridPos.row * secH;
-            ctx.fillStyle = devMode ? 'rgba(251, 191, 36, 0.16)' : 'rgba(56, 189, 248, 0.16)';
+            ctx.fillStyle = devMode ? 'rgba(251, 191, 36, 0.22)' : 'rgba(217, 119, 6, 0.18)';
             ctx.fillRect(hx, hy, secW, secH);
-            ctx.strokeStyle = devMode ? '#fbbf24' : '#38bdf8';
+            ctx.strokeStyle = '#fbbf24';
             ctx.lineWidth = 2.5;
             ctx.strokeRect(hx + 1, hy + 1, secW - 2, secH - 2);
         }
 
-        // 5. Accurate Real-Time Player Location Beacon
+        // 6. 32-Bit Golden Compass Star Player Location Beacon
         const curMeta = MAP_OVERWORLD_POS[currentMapIndex];
         if (curMeta) {
             const mCols = getMapCols(currentMapIndex);
@@ -9970,17 +10212,17 @@
             const py = innerY + curMeta.row * secH + (player.y / (mRows * TILE_SIZE)) * secH;
             const pulse = 1 + 0.3 * Math.sin(performance.now() / 140);
 
-            // Radar ripple ring
-            ctx.strokeStyle = 'rgba(56, 189, 248, 0.9)';
-            ctx.lineWidth = 2.5;
+            // Pulsating golden resonance rings
+            ctx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(px, py, 12 * pulse, 0, Math.PI * 2);
+            ctx.arc(px, py, 11 * pulse, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Flashing Compass Arrow
+            // Flashing Gold Compass Arrow
             const flash = Math.sin(performance.now() / 180) > 0;
             ctx.fillStyle = flash ? '#ef4444' : '#fbbf24';
-            ctx.strokeStyle = '#020617';
+            ctx.strokeStyle = '#26180e';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(px, py - 4);
@@ -9990,15 +10232,15 @@
             ctx.fill();
             ctx.stroke();
 
-            // Overhead "YOU ARE HERE" Banner
-            ctx.fillStyle = 'rgba(2, 6, 23, 0.95)';
-            ctx.strokeStyle = '#38bdf8';
+            // 32-Bit Carved Timber "YOU ARE HERE" Banner
+            ctx.fillStyle = 'rgba(24, 15, 8, 0.95)';
+            ctx.strokeStyle = '#fbbf24';
             ctx.lineWidth = 1.5;
             const pillW = 86;
             const pillH = 17;
             ctx.fillRect(px - pillW / 2, py - 38, pillW, pillH);
             ctx.strokeRect(px - pillW / 2, py - 38, pillW, pillH);
-            ctx.fillStyle = '#38bdf8';
+            ctx.fillStyle = '#fde047';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'center';
             ctx.fillText('YOU ARE HERE', px, py - 26);
