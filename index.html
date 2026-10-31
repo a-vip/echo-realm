@@ -464,44 +464,6 @@
             </div>
         </div>
 
-        <!-- Centered: 32-Bit Epistemic Revelation Modal (Pauses & stays until dismissed with SPACE or Click) -->
-        <div id="epistemicRevelationModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden pointer-events-auto">
-            <div class="max-w-xl w-full retro-box rounded-2xl p-6 border-2 border-cyan-400 shadow-[0_0_35px_rgba(56,189,248,0.35)] bg-slate-900/95 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <div class="flex items-center gap-2">
-                        <span class="text-2xl">💡</span>
-                        <div>
-                            <span class="pixel-font text-[10px] text-amber-400 tracking-wider">EPISTEMIC DECONSTRUCTION // INSIGHT UNLOCKED</span>
-                            <h3 id="revelationHeader" class="text-base font-extrabold text-white">Foundations of Reason</h3>
-                        </div>
-                    </div>
-                    <span class="text-[10px] mono-font text-cyan-400 bg-cyan-950/80 px-2.5 py-1 rounded border border-cyan-500/40 font-bold">CRITICAL ANTIDOTE</span>
-                </div>
-
-                <div class="bg-rose-950/40 border border-rose-500/50 rounded-xl p-3.5">
-                    <div class="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-400 uppercase tracking-wider mb-1">
-                        <span>🚨</span>
-                        <span>Propaganda Distortion / Delusion:</span>
-                    </div>
-                    <p id="revelationMyth" class="text-xs text-rose-200 italic leading-relaxed font-medium">"..."</p>
-                </div>
-
-                <div class="bg-emerald-950/40 border border-emerald-500/50 rounded-xl p-3.5">
-                    <div class="flex items-center gap-1.5 text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider mb-1">
-                        <span>✨</span>
-                        <span>Epistemic Truth & Antidote:</span>
-                    </div>
-                    <p id="revelationTruth" class="text-xs text-emerald-200 font-semibold leading-relaxed">"..."</p>
-                </div>
-
-                <div class="text-center pt-2 border-t border-slate-800">
-                    <button id="btnDismissRevelation" class="pixel-font text-xs text-amber-300 font-bold tracking-wider hover:text-amber-200 animate-pulse cursor-pointer py-2 px-5 rounded-lg bg-amber-400/15 border border-amber-400/40 hover:bg-amber-400/25 transition-all">
-                        [ CLICK OR PRESS SPACEBAR TO DISMISS & RESUME » ]
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <!-- Bottom-Center: Q, E, R, F Combat Action Bar + Interact Prompt -->
         <div id="bottomCombatBar" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto">
             <div id="interactPrompt" class="hidden bg-amber-400 text-slate-950 px-3.5 py-1 rounded-full font-extrabold text-xs shadow-lg animate-bounce">
@@ -1586,10 +1548,79 @@
             }
         }
         drawSubRect(ctx, id, sx, sy, sw, sh, dx, dy, dw, dh) {
-            const s = this.spritesheets.get(id);
+            const s = this.spritesheets.get(id) || this.images.get(id);
             if (!s || !s.loaded || !ctx.drawImage) return false;
             try {
                 ctx.drawImage(s.img, sx, sy, sw, sh, dx, dy, dw, dh);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        registerAnimatedSheet(id, src, frameW, frameH, frameCount = null, frameDurationMs = 120) {
+            const entry = { id, src, frameW, frameH, frameCount, frameDurationMs, loaded: false, img: null };
+            if (!this.animatedSheets) this.animatedSheets = new Map();
+            this.animatedSheets.set(id, entry);
+            if (typeof Image !== 'undefined') {
+                const img = new Image();
+                img.src = src;
+                entry.img = img;
+                img.onload = () => {
+                    entry.loaded = true;
+                    if (!entry.frameCount && entry.frameW > 0) {
+                        entry.frameCount = Math.max(1, Math.floor(img.width / entry.frameW));
+                    }
+                };
+                img.onerror = () => { entry.loaded = false; };
+            }
+            return entry;
+        }
+        hasAnimatedSheet(id) {
+            if (!this.animatedSheets) return false;
+            const s = this.animatedSheets.get(id);
+            return !!(s && s.loaded);
+        }
+        drawAnimatedSheet(ctx, id, tick, dx, dy, dw, dh, flipX = false) {
+            if (!this.animatedSheets) return false;
+            const s = this.animatedSheets.get(id);
+            if (!s || !s.loaded || !ctx.drawImage) return false;
+            try {
+                const totalFrames = s.frameCount || (s.frameW > 0 ? Math.max(1, Math.floor(s.img.width / s.frameW)) : 1);
+                const frameIdx = Math.floor(tick / s.frameDurationMs) % totalFrames;
+                const sx = frameIdx * s.frameW;
+                const sy = 0;
+                if (flipX) {
+                    ctx.save();
+                    ctx.translate(dx + dw / 2, dy + dh / 2);
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(s.img, sx, sy, s.frameW, s.frameH, -dw / 2, -dh / 2, dw, dh);
+                    ctx.restore();
+                } else {
+                    ctx.drawImage(s.img, sx, sy, s.frameW, s.frameH, dx, dy, dw, dh);
+                }
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        drawAnimatedFrame(ctx, id, frameIndex, dx, dy, dw, dh, flipX = false) {
+            if (!this.animatedSheets) return false;
+            const s = this.animatedSheets.get(id);
+            if (!s || !s.loaded || !ctx.drawImage) return false;
+            try {
+                const totalFrames = s.frameCount || (s.frameW > 0 ? Math.max(1, Math.floor(s.img.width / s.frameW)) : 1);
+                const f = Math.abs(frameIndex) % totalFrames;
+                const sx = f * s.frameW;
+                const sy = 0;
+                if (flipX) {
+                    ctx.save();
+                    ctx.translate(dx + dw / 2, dy + dh / 2);
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(s.img, sx, sy, s.frameW, s.frameH, -dw / 2, -dh / 2, dw, dh);
+                    ctx.restore();
+                } else {
+                    ctx.drawImage(s.img, sx, sy, s.frameW, s.frameH, dx, dy, dw, dh);
+                }
                 return true;
             } catch (e) {
                 return false;
@@ -1656,6 +1687,76 @@
     assets.registerImage('alttp_table_wood', 'assets/sprites/alttp_table_wood.png');
     assets.registerImage('zelda_blank_room', 'assets/sprites/zelda_blank_room.png');
 
+    // =========================================================================
+    // PIXEL CRAWLER ASSET PACK INTEGRATION (Full animations & rich 32-bit pixel art)
+    // =========================================================================
+    // Player Character (Body_A) Full Animations (Down, Side [mirrored Left/Right], Up)
+    assets.registerAnimatedSheet('player_idle_down', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Down-Sheet.png', 64, 64, 4, 150);
+    assets.registerAnimatedSheet('player_idle_side', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Side-Sheet.png', 64, 64, 4, 150);
+    assets.registerAnimatedSheet('player_idle_up', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Idle_Base/Idle_Up-Sheet.png', 64, 64, 4, 150);
+
+    assets.registerAnimatedSheet('player_walk_down', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Walk_Base/Walk_Down-Sheet.png', 64, 64, 6, 120);
+    assets.registerAnimatedSheet('player_walk_side', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Walk_Base/Walk_Side-Sheet.png', 64, 64, 6, 120);
+    assets.registerAnimatedSheet('player_walk_up', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Walk_Base/Walk_Up-Sheet.png', 64, 64, 6, 120);
+
+    assets.registerAnimatedSheet('player_run_down', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Run_Base/Run_Down-Sheet.png', 64, 64, 6, 95);
+    assets.registerAnimatedSheet('player_run_side', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Run_Base/Run_Side-Sheet.png', 64, 64, 6, 95);
+    assets.registerAnimatedSheet('player_run_up', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Run_Base/Run_Up-Sheet.png', 64, 64, 6, 95);
+
+    assets.registerAnimatedSheet('player_slice_down', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Slice_Base/Slice_Down-Sheet.png', 64, 64, 8, 45);
+    assets.registerAnimatedSheet('player_slice_side', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Slice_Base/Slice_Side-Sheet.png', 64, 64, 8, 45);
+    assets.registerAnimatedSheet('player_slice_up', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Slice_Base/Slice_Up-Sheet.png', 64, 64, 8, 45);
+
+    assets.registerAnimatedSheet('player_hit_down', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Hit_Base/Hit_Down-Sheet.png', 64, 64, 4, 75);
+    assets.registerAnimatedSheet('player_hit_side', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Hit_Base/Hit_Side-Sheet.png', 64, 64, 4, 75);
+    assets.registerAnimatedSheet('player_hit_up', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Hit_Base/Hit_Up-Sheet.png', 64, 64, 4, 75);
+
+    assets.registerAnimatedSheet('player_death_down', 'assets/Pixel Crawler - Free Pack/Entities/Characters/Body_A/Animations/Death_Base/Death_Down-Sheet.png', 64, 64, 8, 110);
+
+    // NPCs (Professor Avi - Wizzard, Commander Maya - Knight, Ranger Rowan - Rogue, Citizens - Peasant)
+    assets.registerAnimatedSheet('npc_wizzard_idle', "assets/Pixel Crawler - Free Pack/Entities/Npc's/Wizzard/Idle/Idle-Sheet.png", 32, 32, 4, 160);
+    assets.registerAnimatedSheet('npc_wizzard_run', "assets/Pixel Crawler - Free Pack/Entities/Npc's/Wizzard/Run/Run-Sheet.png", 64, 64, 6, 110);
+    assets.registerAnimatedSheet('npc_wizzard_death', "assets/Pixel Crawler - Free Pack/Entities/Npc's/Wizzard/Death/Death-Sheet.png", 32, 32, 12, 90);
+
+    assets.registerAnimatedSheet('npc_knight_idle', "assets/Pixel Crawler - Free Pack/Entities/Npc's/Knight/Idle/Idle-Sheet.png", 32, 32, 4, 160);
+    assets.registerAnimatedSheet('npc_knight_run', "assets/Pixel Crawler - Free Pack/Entities/Npc's/Knight/Run/Run-Sheet.png", 64, 64, 6, 110);
+
+    assets.registerAnimatedSheet('npc_rogue_idle', "assets/Pixel Crawler - Free Pack/Entities/Npc's/Rogue/Idle/Idle-Sheet.png", 32, 32, 4, 160);
+    assets.registerAnimatedSheet('npc_rogue_run', "assets/Pixel Crawler - Free Pack/Entities/Npc's/Rogue/Run/Run-Sheet.png", 64, 64, 6, 110);
+
+    assets.registerAnimatedSheet('npc_peasant_idle', "assets/Pixel Crawler - Free Pack/Entities/Npc's/Citizen_F/Peasant_A/Idle/Idle-Sheet.png", 64, 64, 4, 160);
+    assets.registerAnimatedSheet('npc_peasant_walk', "assets/Pixel Crawler - Free Pack/Entities/Npc's/Citizen_F/Peasant_A/Walk/Walk-Sheet.png", 64, 64, 6, 120);
+
+    // Mobs (Skeleton Crew & Orc Crew)
+    assets.registerAnimatedSheet('mob_skeleton_idle', 'assets/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Idle/Idle-Sheet.png', 32, 32, 4, 150);
+    assets.registerAnimatedSheet('mob_skeleton_run', 'assets/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Run/Run-Sheet.png', 64, 64, 6, 110);
+    assets.registerAnimatedSheet('mob_skeleton_warrior_run', 'assets/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Warrior/Run/Run-Sheet.png', 64, 64, 6, 110);
+    assets.registerAnimatedSheet('mob_skeleton_mage_run', 'assets/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Mage/Run/Run-Sheet.png', 64, 64, 6, 110);
+    assets.registerAnimatedSheet('mob_skeleton_rogue_run', 'assets/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Rogue/Run/Run-Sheet.png', 64, 64, 6, 110);
+
+    assets.registerAnimatedSheet('mob_orc_idle', 'assets/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc/Idle/Idle-Sheet.png', 32, 32, 4, 150);
+    assets.registerAnimatedSheet('mob_orc_run', 'assets/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc/Run/Run-Sheet.png', 64, 64, 6, 110);
+    assets.registerAnimatedSheet('mob_orc_warrior_run', 'assets/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc - Warrior/Run/Run-Sheet.png', 64, 64, 6, 110);
+    assets.registerAnimatedSheet('mob_orc_shaman_run', 'assets/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc - Shaman/Run/Run-Sheet.png', 64, 64, 6, 110);
+
+    // Interactive Animated Stations & Fire Props
+    assets.registerAnimatedSheet('prop_bonfire_01', 'assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_01-Sheet.png', 32, 32, 4, 130);
+    assets.registerAnimatedSheet('prop_bonfire_09', 'assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_09-Sheet.png', 32, 32, 10, 100);
+    assets.registerAnimatedSheet('prop_fire_01', 'assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Fire_01-Sheet.png', 32, 48, 4, 120);
+    assets.registerAnimatedSheet('prop_grill_01', 'assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Grill/Grill_01-Sheet.png', 64, 64, 4, 140);
+    assets.registerAnimatedSheet('prop_cooker_03', 'assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Cooker/Cooker_03-Sheet.png', 32, 32, 6, 120);
+    assets.registerAnimatedSheet('prop_furnace_stone', 'assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Stone_01-Sheet.png', 32, 96, 2, 220);
+    assets.registerAnimatedSheet('prop_anvil_01', 'assets/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil_01-Sheet.png', 64, 50, 8, 120);
+    assets.registerAnimatedSheet('prop_pan_01', 'assets/Pixel Crawler - Free Pack/Environment/Props/Animated/Pan_01-Sheet.png', 32, 32, 4, 120);
+
+    // High-Resolution Nature Trees, Furniture & Props
+    assets.registerImage('tree_pixel_model1', 'assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_01/Size_03.png');
+    assets.registerImage('tree_pixel_model2', 'assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_02/Size_03.png');
+    assets.registerImage('tree_pixel_model3', 'assets/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_03/Size_03.png');
+    assets.registerImage('pixel_furniture', 'assets/Pixel Crawler - Free Pack/Environment/Props/Static/Furniture.png');
+    assets.registerImage('pixel_interior_props', 'assets/Pixel Crawler - Free Pack/Environment/Structures/Buildings/Interior/Interior_Props_01.png');
+    assets.registerImage('pixel_vegetation', 'assets/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png');
+
     // Legacy spritesheet registration for fallback
     assets.registerSpriteSheet('alttp_overworld', 'assets/sprites/alttp_overworld_spritesheet.jpg', 16, 16);
 
@@ -1700,6 +1801,102 @@
             if (assets.drawSprite(ctx, spriteSheetId, frame, dir, Math.round(x - dw / 2), Math.round(y - dh / 2), dw, dh)) {
                 return;
             }
+        }
+
+        // =========================================================================
+        // Pixel Crawler High-Detail Animated Sprite Sheet Integration
+        // =========================================================================
+        const nowTick = performance.now();
+        let pcSheet = null;
+        let pcFlip = false;
+        let pcScaleFactor = 1.0;
+        let pcFootOffsetY = 47;
+        let pcFrameW = 64;
+
+        if (role === 'player' || role === 'hero') {
+            const isAttacking = (typeof player !== 'undefined' && player && player.attackAnimTime > 0) || opts.isAttacking;
+            const isMoving = (typeof player !== 'undefined' && player && player.isMoving) || frame !== 0;
+            let action = 'idle';
+            if (isAttacking) action = 'slice';
+            else if (isHurt) action = 'hit';
+            else if (isMoving) action = 'run';
+
+            const dirSuffix = (dir === 0) ? 'down' : (dir === 1) ? 'up' : 'side';
+            pcFlip = (dir === 2);
+            pcSheet = `player_${action}_${dirSuffix}`;
+            pcScaleFactor = 1.05 * (scale / 2.3);
+            pcFootOffsetY = 47;
+            pcFrameW = 64;
+        } else if (role === 'avi') {
+            const action = (frame !== 0) ? 'run' : 'idle';
+            pcSheet = `npc_wizzard_${action}`;
+            pcFlip = (dir === 2);
+            pcScaleFactor = 1.45 * (scale / 2.3);
+            pcFootOffsetY = 31;
+            pcFrameW = 32;
+        } else if (role === 'maya' || role === 'blackshirt') {
+            const action = (frame !== 0) ? 'run' : 'idle';
+            pcSheet = `npc_knight_${action}`;
+            pcFlip = (dir === 2);
+            pcScaleFactor = 1.45 * (scale / 2.3);
+            pcFootOffsetY = 31;
+            pcFrameW = 32;
+        } else if (role === 'rowan') {
+            const action = (frame !== 0) ? 'run' : 'idle';
+            pcSheet = `npc_rogue_${action}`;
+            pcFlip = (dir === 2);
+            pcScaleFactor = 1.45 * (scale / 2.3);
+            pcFootOffsetY = 31;
+            pcFrameW = 32;
+        } else if (role === 'citizen' || role === 'peasant' || role === 'lyra' || role === 'velvet') {
+            const action = (frame !== 0) ? 'walk' : 'idle';
+            pcSheet = `npc_peasant_${action}`;
+            pcFlip = (dir === 2);
+            pcScaleFactor = 1.05 * (scale / 2.3);
+            pcFootOffsetY = 47;
+            pcFrameW = 64;
+        } else if (role === 'skeleton') {
+            const action = (frame !== 0) ? 'run' : 'idle';
+            pcSheet = `mob_skeleton_${action}`;
+            pcFlip = (dir === 2);
+            pcScaleFactor = 1.45 * (scale / 2.3);
+            pcFootOffsetY = 31;
+            pcFrameW = 32;
+        } else if (role === 'orc') {
+            const action = (frame !== 0) ? 'run' : 'idle';
+            pcSheet = `mob_orc_${action}`;
+            pcFlip = (dir === 2);
+            pcScaleFactor = 1.45 * (scale / 2.3);
+            pcFootOffsetY = 31;
+            pcFrameW = 32;
+        }
+
+        if (pcSheet && assets.hasAnimatedSheet(pcSheet)) {
+            const dw = Math.round(pcFrameW * pcScaleFactor);
+            const dh = dw;
+            const dx = Math.round(x - dw / 2);
+            const dy = Math.round(y - dh * (pcFootOffsetY / pcFrameW) + 8);
+
+            // Ground shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + 6, dw * 0.28, dw * 0.12, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw animated sheet
+            assets.drawAnimatedSheet(ctx, pcSheet, nowTick, dx, dy, dw, dh, pcFlip);
+
+            // Mind Freed serene aura
+            if (isMindFreed) {
+                ctx.save();
+                ctx.strokeStyle = '#34d399';
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.ellipse(x, y - dh * 0.65, dw * 0.25, dw * 0.1, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+            return;
         }
 
         ctx.save();
@@ -4061,7 +4258,34 @@
         return MAP_ROWS;
     }
 
-    const MAPS = [
+        // =========================================================================
+    // INTERACTIVE ANIMATED STATIONS (Bonfires, Forges, Cooking Grills)
+    // =========================================================================
+    const INTERACTIVE_STATIONS = {
+        0: [
+            { type: 'bonfire', col: 20.5, row: 15.5, name: 'Plaza Bonfire of Reason', prompt: '🔥 REST AT BONFIRE [SPACE]' },
+            { type: 'anvil', col: 11.5, row: 12.5, name: 'Armory Blacksmith Forge', prompt: '⚒️ HONE BLADE [SPACE]' },
+            { type: 'grill', col: 25.5, row: 16.5, name: 'Tavern Sizzling Grill', prompt: '🍖 TASTE ROAST [SPACE]' }
+        ],
+        1: [
+            { type: 'bonfire', col: 18.5, row: 18.5, name: 'Encampment Hearth', prompt: '🔥 REST AT BONFIRE [SPACE]' }
+        ],
+        2: [
+            { type: 'bonfire', col: 18.5, row: 18.5, name: 'Glade Flame of Stillness', prompt: '🔥 REST AT BONFIRE [SPACE]' }
+        ],
+        3: [
+            { type: 'anvil', col: 15.5, row: 12.5, name: 'Industrial Smelter & Anvil', prompt: '⚒️ HONE BLADE [SPACE]' },
+            { type: 'bonfire', col: 26.5, row: 20.5, name: 'Union Hearth', prompt: '🔥 REST AT BONFIRE [SPACE]' }
+        ],
+        4: [
+            { type: 'bonfire', col: 18.5, row: 18.5, name: 'Sanctuary Brazier of Truth', prompt: '🔥 REST AT BONFIRE [SPACE]' }
+        ],
+        5: [
+            { type: 'bonfire', col: 18.5, row: 18.5, name: 'Oasis Campfire', prompt: '🔥 REST AT BONFIRE [SPACE]' }
+        ]
+    };
+
+const MAPS = [
         {
             id: 0,
             name: 'Quiet Archive',
@@ -7148,6 +7372,24 @@
         if (!currentInterior && typeof treeStumps !== 'undefined' && treeStumps && treeStumps.length > 0) {
             if (treeStumps.some(s => s.c === col && s.r === row)) return true;
         }
+        if (!currentInterior && typeof INTERACTIVE_STATIONS !== 'undefined' && INTERACTIVE_STATIONS && INTERACTIVE_STATIONS[currentMapIndex]) {
+            for (const st of INTERACTIVE_STATIONS[currentMapIndex]) {
+                const sx = st.col * TILE_SIZE;
+                const sy = st.row * TILE_SIZE;
+                if (Math.hypot(player.x - sx, player.y - sy) < 52) {
+                    return { type: 'station', obj: st, label: st.name };
+                }
+            }
+        }
+        if (!currentInterior && typeof INTERACTIVE_STATIONS !== 'undefined' && INTERACTIVE_STATIONS && INTERACTIVE_STATIONS[currentMapIndex]) {
+            for (const st of INTERACTIVE_STATIONS[currentMapIndex]) {
+                const sx = st.col * TILE_SIZE;
+                const sy = st.row * TILE_SIZE;
+                if (Math.hypot(player.x - sx, player.y - sy) < 56) {
+                    return { type: 'station', obj: st, label: st.name };
+                }
+            }
+        }
         if (!currentInterior && typeof signposts !== 'undefined' && signposts && signposts.length > 0) {
             if (signposts.some(s => Math.floor(s.x / TILE_SIZE) === col && Math.floor(s.y / TILE_SIZE) === row)) return true;
         }
@@ -7697,6 +7939,10 @@
     }
 
     function transitionToNeighborMap(targetMapIndex, spawnX, spawnY, dirName = '') {
+        if (targetMapIndex === 8 && !isCitadelUnlocked()) {
+            triggerCitadelGuardWarning();
+            return;
+        }
         loadMap(targetMapIndex, spawnX, spawnY);
         audio.playFootstep('stone');
         addFloatText(player.x, player.y - 32, `Entered: ${MAPS[targetMapIndex].name}`, '#38bdf8');
@@ -9833,6 +10079,15 @@
                 return { type: 'pedestal', obj: node };
             }
         }
+                if (!currentInterior && typeof INTERACTIVE_STATIONS !== 'undefined' && INTERACTIVE_STATIONS && INTERACTIVE_STATIONS[currentMapIndex]) {
+            for (const st of INTERACTIVE_STATIONS[currentMapIndex]) {
+                const sx = st.col * TILE_SIZE;
+                const sy = st.row * TILE_SIZE;
+                if (Math.hypot(player.x - sx, player.y - sy) < 56) {
+                    return { type: 'station', obj: st, label: st.name };
+                }
+            }
+        }
         if (!currentInterior && typeof signposts !== 'undefined' && signposts && signposts.length > 0) {
             for (const s of signposts) {
                 if (Math.hypot(player.x - s.x, player.y - s.y) < 48) {
@@ -9864,7 +10119,29 @@
         const target = findNearestInteractable();
         if (!target) return;
 
-        if (target.type === 'door') {
+        if (target.type === 'station') {
+            const st = target.obj;
+            const sx = st.col * TILE_SIZE;
+            const sy = st.row * TILE_SIZE;
+            if (st.type === 'bonfire') {
+                player.hp = getTotalMaxHp();
+                updateAllHud();
+                audio.sfxCure();
+                spawnBurst(sx, sy, '#34d399', 24);
+                addFloatText(sx, sy - 36, '🔥 RESTORED CLARITY & SPIRIT (HP FULL)!', '#34d399');
+            } else if (st.type === 'anvil') {
+                audio.sfxHit();
+                spawnBurst(sx, sy, '#f59e0b', 24);
+                addFloatText(sx, sy - 36, '⚒️ AXIOMS HONED! (+15% Critical Focus)', '#fbbf24');
+            } else if (st.type === 'grill') {
+                player.hp = Math.min(getTotalMaxHp(), player.hp + 30);
+                updateAllHud();
+                audio.playFootstep('grass');
+                spawnBurst(sx, sy, '#38bdf8', 20);
+                addFloatText(sx, sy - 36, '🍖 SAVORY FEAST: +30 CLARITY!', '#38bdf8');
+            }
+            return;
+        } else if (target.type === 'door') {
             enterBuildingInterior(target.obj);
         } else if (target.type === 'exit_door') {
             exitBuildingInterior();
@@ -10874,6 +11151,74 @@
             }
         });
 
+        // 4.9 Interactive Animated Stations (Bonfires, Forges, Grills)
+        const mapStations = (typeof INTERACTIVE_STATIONS !== 'undefined' && INTERACTIVE_STATIONS && INTERACTIVE_STATIONS[currentMapIndex]) || [];
+        mapStations.forEach(st => {
+            const sx = st.col * TILE_SIZE;
+            const sy = st.row * TILE_SIZE;
+            renderList.push({
+                type: 'station',
+                baseY: sy + 16,
+                draw: () => {
+                    const dist = Math.hypot(player.x - sx, player.y - sy);
+                    if (st.type === 'bonfire') {
+                        if (assets.hasAnimatedSheet('prop_bonfire_01')) {
+                            assets.drawAnimatedSheet(ctx, 'prop_bonfire_01', nowMs, sx - 24, sy - 24, 48, 48);
+                        } else {
+                            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                            ctx.beginPath();
+                            ctx.ellipse(sx, sy + 6, 14, 6, 0, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = '#78350f';
+                            ctx.fillRect(sx - 10, sy + 2, 20, 4);
+                            const fAnim = Math.sin(nowMs / 80) * 3;
+                            ctx.fillStyle = '#f59e0b';
+                            ctx.beginPath();
+                            ctx.arc(sx, sy - 4 + fAnim, 8, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = '#ef4444';
+                            ctx.beginPath();
+                            ctx.arc(sx, sy - 2, 5, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    } else if (st.type === 'anvil') {
+                        if (assets.hasAnimatedSheet('prop_anvil_01')) {
+                            assets.drawAnimatedSheet(ctx, 'prop_anvil_01', nowMs, sx - 32, sy - 25, 64, 50);
+                        } else {
+                            ctx.fillStyle = '#334155';
+                            ctx.fillRect(sx - 12, sy - 8, 24, 16);
+                            ctx.fillStyle = '#64748b';
+                            ctx.fillRect(sx - 8, sy - 12, 16, 4);
+                        }
+                    } else if (st.type === 'grill') {
+                        if (assets.hasAnimatedSheet('prop_grill_01')) {
+                            assets.drawAnimatedSheet(ctx, 'prop_grill_01', nowMs, sx - 28, sy - 28, 56, 56);
+                        } else {
+                            ctx.fillStyle = '#1e293b';
+                            ctx.fillRect(sx - 14, sy - 10, 28, 20);
+                        }
+                    }
+
+                    // Proximity interaction pill
+                    if (dist < 48 && !currentInterior) {
+                        ctx.save();
+                        ctx.font = 'bold 9px monospace';
+                        ctx.textAlign = 'center';
+                        const pulse = 0.8 + 0.2 * Math.sin(nowMs / 180);
+                        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+                        const textW = ctx.measureText(st.prompt).width + 12;
+                        ctx.fillRect(sx - textW / 2, sy - 34, textW, 16);
+                        ctx.strokeStyle = '#fbbf24';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(sx - textW / 2, sy - 34, textW, 16);
+                        ctx.fillStyle = `rgba(251, 191, 36, ${pulse})`;
+                        ctx.fillText(st.prompt, sx, sy - 23);
+                        ctx.restore();
+                    }
+                }
+            });
+        });
+
         // 5. Chests as physical objects (using Lone Chest asset)
         chests.forEach(ch => {
             renderList.push({
@@ -10996,7 +11341,9 @@
                     if (npc.isQuestGiver && !player.questTurnedIn) {
                         let markerChar = '!';
                         let symbolColor = '#fbbf24';
-                        if (player.questAccepted && !player.questReadyToTurnIn) {
+                        const curZq = player.zoneQuests && player.zoneQuests[currentMapIndex];
+                        const inGuidance = curZq && curZq.inGuidanceStage;
+                        if (player.questAccepted && !inGuidance && !player.questReadyToTurnIn) {
                             markerChar = '?';
                             symbolColor = '#94a3b8';
                         } else if (player.questReadyToTurnIn) {
@@ -11912,6 +12259,7 @@
                             player.zoneQuests[nextMapIdx].inGuidanceStage = true;
                             player.zoneQuests[nextMapIdx].guidanceTitle = `Journey to ${nextMeta.name.replace(/^Map\s+\d+:\s*/i, '')} & Consult ${nextMentor}`;
                         }
+                        addFloatText(player.x, player.y - 45, `📜 NEXT: Journey to ${nextMeta.name.replace(/^Map\s+\d+:\s*/i, '')}!`, '#38bdf8');
                         addFloatText(player.x, player.y - 36, `QUEST COMPLETE! Next: Seek ${nextMentor} in ${nextMeta.name.replace(/^Map\s+\d+:\s*/i, '')}!`, '#34d399');
                     } else {
                         addFloatText(player.x, player.y - 36, 'QUEST COMPLETE! +50💠', '#34d399');

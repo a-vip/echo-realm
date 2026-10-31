@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadGameEnvironment } = require('./testHelper');
@@ -1043,6 +1045,124 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         env.exitBuildingInterior();
         const restoredOutdoorBoss = env.enemies.find(e => e.isBoss);
         assert.equal(restoredOutdoorBoss.name, 'CHANCELLOR VALKOR (CITADEL WARDEN)');
+    });
+
+
+    test('Pixel Crawler asset pack registers animated sheets, stations, mobs, and fallback mechanics', () => {
+        const env = loadGameEnvironment();
+        const assets = env.assets;
+
+        // 1. AssetManager animated sheet methods exist
+        assert.equal(typeof assets.registerAnimatedSheet, 'function');
+        assert.equal(typeof assets.drawAnimatedSheet, 'function');
+        assert.equal(typeof assets.drawAnimatedFrame, 'function');
+
+        // 2. Player Body_A animated sheets are registered
+        const playerSheets = [
+            'player_idle_down', 'player_idle_side', 'player_idle_up',
+            'player_walk_down', 'player_walk_side', 'player_walk_up',
+            'player_run_down', 'player_run_side', 'player_run_up',
+            'player_slice_down', 'player_slice_side', 'player_slice_up'
+        ];
+        playerSheets.forEach(id => {
+            assert.ok(assets.animatedSheets.has(id), `Player animated sheet ${id} must be registered`);
+        });
+
+        // 3. NPC and mob sheets are registered
+        assert.ok(assets.animatedSheets.has('npc_wizzard_idle'), 'Wizzard NPC sheet must be registered for Professor Avi');
+        assert.ok(assets.animatedSheets.has('npc_knight_idle'), 'Knight NPC sheet must be registered for Commander Maya');
+        assert.ok(assets.animatedSheets.has('npc_rogue_idle'), 'Rogue NPC sheet must be registered for Ranger Rowan');
+        assert.ok(assets.animatedSheets.has('npc_peasant_idle'), 'Peasant NPC sheet must be registered for town citizens');
+        assert.ok(assets.animatedSheets.has('mob_skeleton_idle'), 'Skeleton mob sheet must be registered');
+        assert.ok(assets.animatedSheets.has('mob_orc_idle'), 'Orc mob sheet must be registered');
+
+        // 4. Interactive stations and fire props are registered
+        assert.ok(assets.animatedSheets.has('prop_bonfire_01'), 'Bonfire station sheet must be registered');
+        assert.ok(assets.animatedSheets.has('prop_anvil_01'), 'Anvil station sheet must be registered');
+        assert.ok(assets.animatedSheets.has('prop_grill_01'), 'Grill station sheet must be registered');
+    });
+
+    test('Interactive stations spawn on overworld maps and heal/hone player upon interaction', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(0);
+        env.appState = 'PLAYING';
+
+        // Damage player
+        env.player.hp = 10;
+        assert.ok(env.player.hp < env.getTotalMaxHp());
+
+        // Find Plaza Bonfire on Map 0
+        const bonfire = env.INTERACTIVE_STATIONS[0].find(s => s.type === 'bonfire');
+        assert.ok(bonfire, 'Plaza Bonfire must exist on Map 0');
+
+        // Move player close to bonfire
+        env.player.x = bonfire.col * env.TILE_SIZE;
+        env.player.y = bonfire.row * env.TILE_SIZE;
+
+        // Verify nearest interactable finds the bonfire
+        const nearest = env.findNearestInteractable();
+        assert.ok(nearest, 'Player must detect nearby bonfire');
+        assert.equal(nearest.type, 'station');
+        assert.equal(nearest.obj.type, 'bonfire');
+
+        // Trigger interaction [SPACE]
+        env.triggerInteraction();
+
+        // HP must be fully restored!
+        assert.equal(env.player.hp, env.getTotalMaxHp(), 'Interacting with bonfire must fully restore HP');
+    });
+
+    test('Mentor displays golden exclamation mark [!] when player is in guidance stage', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(1); // Performative Valley
+
+        // Set quest into guidance stage
+        env.player.zoneQuests[1] = {
+            mapIndex: 1,
+            title: 'Journey to Performative Valley & Consult Commander Maya',
+            mentor: 'Commander Maya',
+            cured: 0,
+            curedGoal: 5,
+            accepted: true,
+            inGuidanceStage: true,
+            readyToTurnIn: false,
+            completed: false
+        };
+        env.player.questAccepted = true;
+        env.player.questReadyToTurnIn = false;
+        env.player.questTurnedIn = false;
+
+        let capturedSymbol = null;
+        let capturedColor = null;
+        const origDrawSymbol = env.drawPixelQuestSymbol;
+        env.drawPixelQuestSymbol = (ctx, cx, cy, symbol, color) => {
+            capturedSymbol = symbol;
+            capturedColor = color;
+        };
+
+        env.renderGameplay();
+        env.drawPixelQuestSymbol = origDrawSymbol;
+
+        assert.equal(capturedSymbol, '!', 'Mentor must display [!] exclamation mark during guidance stage');
+        assert.equal(capturedColor, '#fbbf24', 'Marker must be golden #fbbf24');
+    });
+
+    test('Strict Citadel transition guard rejects unauthorized crossing into Map 8', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(7);
+        env.player.citadelUnlocked = false;
+
+        // Try to transition to Map 8 (Citadel)
+        env.transitionToNeighborMap(8, 200, 200);
+
+        // Player must NOT be on Map 8
+        assert.notEqual(env.currentMapIndex, 8, 'Player must not transition to Map 8 while citadel is locked');
+    });
+
+    test('Old centered Epistemic Revelation modal is completely purged from DOM', () => {
+        const rawHtml = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+        assert.equal(rawHtml.includes('id="epistemicRevelationModal"'), false, 'epistemicRevelationModal must be completely removed');
+        assert.equal(rawHtml.includes('EPISTEMIC DECONSTRUCTION // INSIGHT UNLOCKED'), false, 'Old revelation modal header must be removed');
     });
 
 });
