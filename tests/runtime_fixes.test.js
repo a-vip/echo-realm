@@ -949,23 +949,100 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         const env = loadGameEnvironment();
         env.loadMap(8);
 
-        // Map 8 must define Keep of the Demagogue with grand 10x6 dimensions and citadel_keep style
+        // Map 8 must define Keep of the Demagogue with grand 14x9 dimensions and citadel_keep style
         const keep = env.MAPS[8].buildings.find(b => b.id === 'demagogue_keep');
         assert.ok(keep, 'Map 8 must define demagogue_keep');
-        assert.equal(keep.wCols, 10, 'Keep exterior width must be 10 columns');
-        assert.equal(keep.hRows, 6, 'Keep exterior height must be 6 rows');
+        assert.equal(keep.wCols, 14, 'Keep exterior width must be 14 columns');
+        assert.equal(keep.hRows, 9, 'Keep exterior height must be 9 rows');
         assert.equal(keep.style, 'citadel_keep', 'Keep exterior style must be citadel_keep');
 
-        // Entering the Keep sets up custom 780x640 grand imperial hall
+        // Entering the Keep sets up custom 1000x800 grand imperial hall
         env.enterBuildingInterior(keep);
         assert.ok(env.currentInterior, 'Interior state must be active');
         assert.ok(env.currentInterior.isDemagogueKeep, 'Interior must be flagged as isDemagogueKeep');
-        assert.equal(env.currentInterior.roomW, 840, 'Throne room interior width must be 840px');
-        assert.equal(env.currentInterior.roomH, 640, 'Throne room interior height must be 640px');
+        assert.equal(env.currentInterior.roomW, 1000, 'Throne room interior width must be 1000px');
+        assert.equal(env.currentInterior.roomH, 800, 'Throne room interior height must be 800px');
 
         // Exit cleanly
         env.exitBuildingInterior();
         assert.equal(env.currentInterior, null, 'Interior must be cleared on exit');
+    });
+
+    test('Quadcopter Surveillance Drone mob renders spinning rotors and optical sensor eye, maintaining ranged kiting distance', () => {
+        const env = loadGameEnvironment();
+        const fillRectCalls = [];
+        const ellipseCalls = [];
+        const mockCtx = {
+            save() {}, restore() {}, translate() {},
+            fillRect(x, y, w, h) { fillRectCalls.push({ fillStyle: this.fillStyle, x, y, w, h }); },
+            beginPath() {}, fill() {}, stroke() {}, arc() {},
+            ellipse(x, y, rx, ry) { ellipseCalls.push({ fillStyle: this.fillStyle, x, y, rx, ry }); }
+        };
+
+        // 1. Drone Sprite Rendering: 4 rotor discs, carbon arms, optical sensor
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'drone', dir: 0, frame: 0 });
+        assert.ok(ellipseCalls.length >= 4, 'Quadcopter must render 4 propeller rotor discs');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#0f172a'), 'Drone must render dark carbon frame');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#ef4444'), 'Hostile Drone must render radiant red optical sensor eye');
+
+        // 2. Mind Freed Drone changes eye to peaceful cyan
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'drone', isMindFreed: true, dir: 0 });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#06b6d4'), 'Mind Freed Drone must render calm cyan optical sensor');
+
+        // 3. Spawns in Map 8
+        env.loadMap(8);
+        const courtyardDrones = env.enemies.filter(e => e.role === 'drone');
+        assert.ok(courtyardDrones.length >= 3, 'Map 8 must spawn at least 3 surveillance drones in courtyard');
+    });
+
+    test('Entering Keep of the Demagogue spawns player safely north of doorway with zero accidental instant exit', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(8);
+        const keep = env.MAPS[8].buildings.find(b => b.id === 'demagogue_keep');
+        env.enterBuildingInterior(keep);
+
+        // Player must spawn at x: 500, y: 705 (safely 70+ px away from exit threshold at 776)
+        assert.equal(env.player.x, 500, 'Player must spawn centered horizontally in grand hall');
+        assert.equal(env.player.y, 705, 'Player must spawn at y=705, well above south threshold');
+
+        // Moving player 10px north (up) must NOT trigger exit
+        env.moveEntityWithCollision(env.player, 0, -10);
+        assert.ok(env.currentInterior, 'Player must remain inside Keep when moving normally');
+
+        // Moving player 5px left/right must NOT trigger exit
+        env.moveEntityWithCollision(env.player, 5, 0);
+        assert.ok(env.currentInterior, 'Player must remain inside Keep when moving laterally');
+
+        env.exitBuildingInterior();
+    });
+
+    test('Outdoor citadel boss is Chancellor Valkor, and Sovereign Demagogue is the final boss inside the Keep with drone sentries', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(8);
+
+        // 1. Outdoor Boss in Map 8 is Chancellor Valkor
+        assert.equal(env.MAPS[8].boss.name, 'CHANCELLOR VALKOR (CITADEL WARDEN)', 'Outdoor boss must be Chancellor Valkor');
+        const outdoorBoss = env.enemies.find(e => e.isBoss);
+        assert.ok(outdoorBoss, 'Outdoor boss must exist in enemies list');
+        assert.equal(outdoorBoss.name, 'CHANCELLOR VALKOR (CITADEL WARDEN)');
+
+        // 2. Entering Keep instantiates The Sovereign Demagogue as the true final boss
+        const keep = env.MAPS[8].buildings.find(b => b.id === 'demagogue_keep');
+        env.enterBuildingInterior(keep);
+        const interiorBoss = env.enemies.find(e => e.isBoss);
+        assert.ok(interiorBoss, 'Interior boss must exist in enemies list');
+        assert.equal(interiorBoss.name, 'THE SOVEREIGN DEMAGOGUE (FINAL BOSS)', 'Keep boss must be The Sovereign Demagogue');
+        assert.equal(interiorBoss.hp, 800, 'Final boss must have 800 HP');
+
+        // 3. Interior also contains 2 treasury surveillance drone sentries
+        const interiorDrones = env.enemies.filter(e => e.role === 'drone');
+        assert.equal(interiorDrones.length, 2, 'Keep must contain 2 treasury surveillance drone sentries');
+
+        // 4. Exiting Keep restores outdoor enemies list
+        env.exitBuildingInterior();
+        const restoredOutdoorBoss = env.enemies.find(e => e.isBoss);
+        assert.equal(restoredOutdoorBoss.name, 'CHANCELLOR VALKOR (CITADEL WARDEN)');
     });
 
 });

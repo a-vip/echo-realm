@@ -298,13 +298,11 @@
                     <!-- Hair Style & Hair Color -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Hair / Headgear</label>
-                            <select id="selectHairStyle" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-bold outline-none">
-                                <option value="0">Spiky Adventurer Crop</option>
-                                <option value="1">Flowing Scholar Locks</option>
-                                <option value="2">Archivist Ranger Hood</option>
-                                <option value="3">Braided Vanguard Crest</option>
-                            </select>
+                            <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Archivist Attire</label>
+                            <div class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-cyan-400 font-bold flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                                Canonical Hero Garb
+                            </div>
                         </div>
                         <div>
                             <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Hair / Hood Color</label>
@@ -1721,6 +1719,82 @@
             ctx.fillStyle = isHurt ? '#ffffff' : col;
             ctx.fillRect(ox + gx * p, oy + gy * p, w * p, h * p);
         };
+
+        if (role === 'drone') {
+            // High-detail 32-bit Quadcopter Surveillance Drone
+            // Features 4 motor pods, spinning rotor discs with blade motion, central carbon chassis, and optical scanner
+            const anim = Math.floor(performance.now() / 45) % 4;
+            const bob = Math.sin(performance.now() * 0.007) * 2 * p;
+
+            // 1. Carbon Frame Arms & Diagonal Struts
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(ox + 2 * p, oy + 4 * p + bob, 12 * p, 2 * p); // Horizontal strut
+            ctx.fillRect(ox + 7 * p, oy + 1 * p + bob, 2 * p, 10 * p); // Vertical strut
+
+            // Motor pods at the 4 arm ends
+            const podCol = '#1e293b';
+            const podHi = '#475569';
+            // Top-Left pod
+            ctx.fillStyle = podCol; ctx.fillRect(ox + 1 * p, oy + 2 * p + bob, 4 * p, 3 * p);
+            ctx.fillStyle = podHi; ctx.fillRect(ox + 2 * p, oy + 2 * p + bob, 2 * p, 1 * p);
+            // Top-Right pod
+            ctx.fillStyle = podCol; ctx.fillRect(ox + 11 * p, oy + 2 * p + bob, 4 * p, 3 * p);
+            ctx.fillStyle = podHi; ctx.fillRect(ox + 12 * p, oy + 2 * p + bob, 2 * p, 1 * p);
+            // Bottom-Left pod
+            ctx.fillStyle = podCol; ctx.fillRect(ox + 1 * p, oy + 9 * p + bob, 4 * p, 3 * p);
+            ctx.fillStyle = podHi; ctx.fillRect(ox + 2 * p, oy + 9 * p + bob, 2 * p, 1 * p);
+            // Bottom-Right pod
+            ctx.fillStyle = podCol; ctx.fillRect(ox + 11 * p, oy + 9 * p + bob, 4 * p, 3 * p);
+            ctx.fillStyle = podHi; ctx.fillRect(ox + 12 * p, oy + 9 * p + bob, 2 * p, 1 * p);
+
+            // 2. High-speed spinning propeller rotors (spinning disc blur with blade cross)
+            ctx.fillStyle = 'rgba(203, 213, 225, 0.45)';
+            [ [3, 3], [13, 3], [3, 10], [13, 10] ].forEach(([rx, ry]) => {
+                ctx.beginPath();
+                ctx.ellipse(ox + rx * p, oy + ry * p + bob, 3.8 * p, 1.8 * p, 0, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            // Spinning blade indicators based on anim
+            ctx.fillStyle = '#f8fafc';
+            const bladeOffset = anim * (Math.PI / 2);
+            [ [3, 3], [13, 3], [3, 10], [13, 10] ].forEach(([rx, ry]) => {
+                const bx1 = Math.cos(bladeOffset) * 2.8 * p;
+                const by1 = Math.sin(bladeOffset) * 1.4 * p;
+                ctx.fillRect(ox + rx * p - bx1, oy + ry * p + bob - by1, 1.5 * p, 1.5 * p);
+                ctx.fillRect(ox + rx * p + bx1, oy + ry * p + bob + by1, 1.5 * p, 1.5 * p);
+            });
+
+            // 3. Central Hexagonal Avionics Chassis
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(ox + 5 * p, oy + 4 * p + bob, 6 * p, 6 * p);
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(ox + 6 * p, oy + 5 * p + bob, 4 * p, 4 * p);
+
+            // 4. Central Optical Surveillance Sensor Eye
+            // Glowing cyan when mind-freed or idle; radiant angry crimson with laser reticle when hostile
+            const eyeCol = isMindFreed ? '#06b6d4' : '#ef4444';
+            const eyeGlint = isMindFreed ? '#a5f3fc' : '#fca5a5';
+            ctx.fillStyle = eyeCol;
+            ctx.fillRect(ox + 6.5 * p, oy + 5.5 * p + bob, 3 * p, 3 * p);
+            ctx.fillStyle = eyeGlint;
+            ctx.fillRect(ox + 7 * p, oy + 6 * p + bob, 1.2 * p, 1.2 * p);
+
+            // 5. Downward Ion Anti-Gravity Thruster Glow
+            ctx.fillStyle = isMindFreed ? 'rgba(56, 189, 248, 0.6)' : 'rgba(239, 68, 68, 0.6)';
+            ctx.fillRect(ox + 6.5 * p, oy + 10 * p + bob, 3 * p, (1.5 + (anim % 2) * 1.5) * p);
+
+            // Mind Freed Aura or Stun
+            if (isMindFreed) {
+                ctx.strokeStyle = '#34d399';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.ellipse(0, -6 * p + bob, 5 * p, 1.8 * p, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+            return;
+        }
 
         // 0. Back Cloak / Quiver / Shield on Back
         if ((role === 'avi' || (equipment && equipment.back)) && dir !== 1) {
@@ -3460,116 +3534,311 @@
         ctx.restore();
     }
 
-        function drawGrandDemagogueKeep(ctx, b, x, y, w, h) {
+    function drawGrandDemagogueKeep(ctx, b, x, y, w, h) {
         ctx.save();
-        // 1. Massive Menacing Fortress Drop Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        const now = performance.now();
+
+        // 1. Massive 3D Drop Shadow & Ambient Ground Occlusion
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
         ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h - 2, w / 2 + 18, 22, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + w / 2, y + h - 2, w / 2 + 24, 28, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        const wallH = Math.floor(h * 0.55);
-        const wallY = y + h - wallH;
-
-        // 2. Central Obsidian Keep Structure
-        ctx.fillStyle = '#06080e';
-        ctx.fillRect(x + 12, wallY, w - 24, wallH);
-
-        // Stone Courses with Crimson Mortar Veins
+        // 2. Multi-tiered Marble Foundation Plinth (3D Depth)
+        const plinthY = y + h - 38;
         ctx.fillStyle = '#1e293b';
-        for (let by = wallY; by < wallY + wallH; by += 10) {
-            ctx.fillRect(x + 14, by, w - 28, 1);
-        }
-        ctx.fillStyle = '#7f1d1d';
-        for (let by = wallY + 5; by < wallY + wallH; by += 10) {
-            const shift = ((by - wallY) / 10) % 2 === 0 ? 0 : 16;
-            for (let bx = x + 16 + shift; bx < x + w - 16; bx += 32) {
-                ctx.fillRect(bx, by, 1, 10);
-            }
+        ctx.fillRect(x + 4, plinthY, w - 8, 36);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x + 8, plinthY + 2, w - 16, 4);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(x + 4, plinthY + 32, w - 8, 4);
+
+        // 3. Cascading Grand 3D Marble Staircase (Front Center)
+        const stairW = Math.floor(w * 0.42);
+        const stairX = x + Math.floor((w - stairW) / 2);
+        for (let s = 0; s < 4; s++) {
+            const stepY = plinthY + s * 8;
+            const stepW = stairW + (3 - s) * 10;
+            const stepX = stairX - (3 - s) * 5;
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(stepX, stepY, stepW, 8);
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillRect(stepX, stepY, stepW, 2);
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(stepX, stepY + 6, stepW, 2);
         }
 
-        // 3. Massive Twin Battlement Flanking Towers
-        const towerW = 38;
-        // West Tower
+        // 4. Twin 3D Fortified Flank Watchtowers (East & West Wings)
+        const towerW = Math.floor(w * 0.26);
+        const wallH = Math.floor(h * 0.62);
+        const wallY = y + h - wallH - 24;
+
+        // West Tower Wing (3D shaded left flank)
         ctx.fillStyle = '#090d16';
-        ctx.fillRect(x, wallY - 14, towerW, wallH + 14);
+        ctx.fillRect(x, wallY - 18, towerW, wallH + 18);
         ctx.fillStyle = '#1e293b';
-        ctx.fillRect(x + 4, wallY - 12, towerW - 8, wallH + 10);
-        // West Tower Crenellations
-        for (let cX = x; cX < x + towerW; cX += 10) {
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(cX, wallY - 22, 7, 9);
-            ctx.fillStyle = '#ef4444';
-            ctx.fillRect(cX + 2, wallY - 20, 3, 2); // Glowing crimson gem standard
+        ctx.fillRect(x + 4, wallY - 14, towerW - 8, wallH + 14);
+        // West Tower Quoins & Stone Mortar
+        ctx.fillStyle = '#475569';
+        for (let qy = wallY - 10; qy < wallY + wallH; qy += 14) {
+            ctx.fillRect(x + 2, qy, 6, 8);
+            ctx.fillRect(x + towerW - 8, qy + 7, 6, 8);
         }
-        // East Tower
-        const eTowerX = x + w - towerW;
-        ctx.fillStyle = '#090d16';
-        ctx.fillRect(eTowerX, wallY - 14, towerW, wallH + 14);
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(eTowerX + 4, wallY - 12, towerW - 8, wallH + 10);
-        // East Tower Crenellations
-        for (let cX = eTowerX; cX < eTowerX + towerW; cX += 10) {
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(cX, wallY - 22, 7, 9);
-            ctx.fillStyle = '#ef4444';
-            ctx.fillRect(cX + 2, wallY - 20, 3, 2);
+        // West Tower High Arched Window (Glowing amber interior)
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(x + Math.floor(towerW / 2) - 8, wallY + 12, 16, 28);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(x + Math.floor(towerW / 2) - 6, wallY + 14, 12, 24);
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(x + Math.floor(towerW / 2) - 4, wallY + 16, 8, 12);
+        // West Tower Battlements / Crenellations
+        for (let c = 0; c < 3; c++) {
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(x + c * (towerW / 3), wallY - 26, towerW / 3 - 4, 10);
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(x + c * (towerW / 3), wallY - 26, towerW / 3 - 4, 2);
         }
 
-        // 4. Grand Gothic Imperial Bloodstone Roof & Spires
-        const roofBaseY = wallY + 4;
-        ctx.fillStyle = '#3f0707';
+        // East Tower Wing (3D shaded right flank)
+        const eastX = x + w - towerW;
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(eastX, wallY - 18, towerW, wallH + 18);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(eastX + 4, wallY - 14, towerW - 8, wallH + 14);
+        // East Tower Quoins
+        ctx.fillStyle = '#475569';
+        for (let qy = wallY - 10; qy < wallY + wallH; qy += 14) {
+            ctx.fillRect(eastX + 2, qy, 6, 8);
+            ctx.fillRect(eastX + towerW - 8, qy + 7, 6, 8);
+        }
+        // East Tower High Arched Window
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(eastX + Math.floor(towerW / 2) - 8, wallY + 12, 16, 28);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(eastX + Math.floor(towerW / 2) - 6, wallY + 14, 12, 24);
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(eastX + Math.floor(towerW / 2) - 4, wallY + 16, 8, 12);
+        // East Tower Battlements / Crenellations
+        for (let c = 0; c < 3; c++) {
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(eastX + c * (towerW / 3), wallY - 26, towerW / 3 - 4, 10);
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(eastX + c * (towerW / 3), wallY - 26, towerW / 3 - 4, 2);
+        }
+
+        // 5. Central Neoclassical Colonnade & Portico ("White House" / Imperial Palace)
+        const porticoX = x + towerW - 4;
+        const porticoW = w - (towerW * 2) + 8;
+        // Central Palace Main Wall (Polished Obsidian & Basalt with Imperial Gold Trim)
+        ctx.fillStyle = '#04060a';
+        ctx.fillRect(porticoX, wallY, porticoW, wallH);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(porticoX + 4, wallY + 4, porticoW - 8, wallH - 8);
+
+        // 6. Imposing Fluted Neoclassical Marble Columns (6 White Pillars)
+        const colCount = 6;
+        const colSpacing = porticoW / (colCount + 1);
+        for (let ci = 1; ci <= colCount; ci++) {
+            const cx = porticoX + ci * colSpacing - 6;
+            // Column Shaft (3D shading with vertical flutes)
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillRect(cx, wallY + 18, 12, wallH - 22);
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(cx + 2, wallY + 18, 5, wallH - 22);
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(cx + 4, wallY + 18, 2, wallH - 22);
+            // Gilded Corinthian Capital
+            ctx.fillStyle = '#d97706';
+            ctx.fillRect(cx - 3, wallY + 14, 18, 5);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(cx - 1, wallY + 13, 14, 2);
+            // Column Base Plinth
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(cx - 2, wallY + wallH - 6, 16, 4);
+        }
+
+        // 7. Classical Portico Triangular Pediment (Front Gable)
+        const pedY = wallY + 14;
+        const pedH = 34;
+        ctx.fillStyle = '#090d16';
         ctx.beginPath();
-        ctx.moveTo(x + 20, roofBaseY);
-        ctx.lineTo(x + w / 2, y - 8);
-        ctx.lineTo(x + w - 20, roofBaseY);
+        ctx.moveTo(porticoX - 6, pedY);
+        ctx.lineTo(porticoX + porticoW / 2, pedY - pedH);
+        ctx.lineTo(porticoX + porticoW + 6, pedY);
         ctx.closePath();
         ctx.fill();
 
-        // Shingle highlight bands
-        ctx.fillStyle = '#7f1d1d';
-        for (let sy = y + 4; sy < roofBaseY; sy += 9) {
-            const frac = (sy - y) / (roofBaseY - y);
-            const span = (w - 40) * frac;
-            ctx.fillRect(x + w / 2 - span / 2, sy, span, 3);
-        }
-
-        // Iron Crown Spires & Imperial Dragon Standard
-        ctx.fillStyle = '#090d16';
-        ctx.fillRect(x + w / 2 - 2, y - 26, 4, 22);
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(x + w / 2 - 4, y - 28, 8, 4); // Golden Crown
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(x + w / 2 - 12, y - 24, 10, 6); // Imperial Crimson Banner
-
-        // 5. Massive Double Iron Portcullis Vault Door
-        const doorW = 44;
-        const doorH = 46;
-        const doorX = x + Math.floor((w - doorW) / 2);
-        const doorY = y + h - doorH - 2;
-
-        ctx.fillStyle = '#090a0f';
-        ctx.fillRect(doorX, doorY, doorW, doorH);
-        ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 2.5;
-        ctx.strokeRect(doorX + 2, doorY + 2, doorW - 4, doorH - 4);
-
-        // Heavy Iron Portcullis Grate
         ctx.fillStyle = '#334155';
-        for (let px = doorX + 6; px < doorX + doorW - 4; px += 8) {
-            ctx.fillRect(px, doorY + 3, 3, doorH - 5);
-        }
-        for (let py = doorY + 8; py < doorY + doorH - 4; py += 10) {
-            ctx.fillRect(doorX + 3, py, doorW - 6, 2.5);
-        }
-
-        // Glowing Crimson Algorithmic Eye Core over vault door
-        ctx.fillStyle = '#ef4444';
         ctx.beginPath();
-        ctx.arc(x + w / 2, doorY - 10, 6, 0, Math.PI * 2);
+        ctx.moveTo(porticoX, pedY - 2);
+        ctx.lineTo(porticoX + porticoW / 2, pedY - pedH + 4);
+        ctx.lineTo(porticoX + porticoW, pedY - 2);
+        ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = '#fef08a';
-        ctx.fillRect(x + w / 2 - 1, doorY - 11, 2, 2);
+
+        // Pediment Moldings & Gold Bas-Relief Imperial Crest
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(porticoX - 6, pedY);
+        ctx.lineTo(porticoX + porticoW / 2, pedY - pedH);
+        ctx.lineTo(porticoX + porticoW + 6, pedY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(porticoX + porticoW / 2, pedY - 14, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 8. Majestic Imperial Dome & Spire (Rising high above center palace)
+        const domeR = 34;
+        const domeX = porticoX + porticoW / 2;
+        const domeY = pedY - pedH - 12;
+        // Dome Base Balustrade
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(domeX - domeR - 4, domeY, (domeR + 4) * 2, 14);
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(domeX - domeR, domeY + 2, domeR * 2, 3);
+        // Copper / Gold Imperial Dome
+        ctx.fillStyle = '#065f46';
+        ctx.beginPath();
+        ctx.arc(domeX, domeY, domeR, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = '#047857';
+        ctx.beginPath();
+        ctx.arc(domeX, domeY, domeR - 4, Math.PI, 0);
+        ctx.fill();
+        // Dome Ribs
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(domeX, domeY - domeR);
+        ctx.lineTo(domeX, domeY);
+        ctx.stroke();
+        // Golden Imperial Spire & Finial Banner
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(domeX - 2, domeY - domeR - 22, 4, 22);
+        ctx.beginPath();
+        ctx.arc(domeX, domeY - domeR - 24, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 9. Grand Imperial Double Vault Gates (Obsidian & Gilded Iron)
+        const doorW = 54;
+        const doorH = 68;
+        const doorX = porticoX + Math.floor((porticoW - doorW) / 2);
+        const doorY = wallY + wallH - doorH;
+
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(doorX - 6, doorY - 8, doorW + 12, doorH + 8);
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(doorX - 4, doorY - 6, doorW + 8, doorH + 6);
+
+        // Vault Door Panels
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(doorX, doorY, Math.floor(doorW / 2) - 1, doorH);
+        ctx.fillRect(doorX + Math.floor(doorW / 2) + 1, doorY, Math.floor(doorW / 2) - 1, doorH);
+        // Gold Studs & Iron Bands
+        ctx.fillStyle = '#d97706';
+        ctx.fillRect(doorX + 2, doorY + 12, doorW - 4, 4);
+        ctx.fillRect(doorX + 2, doorY + 36, doorW - 4, 4);
+        ctx.fillRect(doorX + 2, doorY + 54, doorW - 4, 4);
+
+        // Central Crimson Runic Lock & All-Seeing Sensor
+        const eyePulse = Math.sin(now * 0.005) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(239, 68, 68, ${eyePulse})`;
+        ctx.beginPath();
+        ctx.arc(doorX + doorW / 2, doorY + 34, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 10. EXTERIOR SURVEILLANCE CAMERAS WITH ACTIVE SCANNING BEAMS!
+        const camPositions = [
+            { cx: x + 12, cy: wallY - 14, minAng: 0.1, maxAng: 1.2 },           // West Tower Camera
+            { cx: eastX + towerW - 12, cy: wallY - 14, minAng: 1.9, maxAng: 3.0 }, // East Tower Camera
+            { cx: porticoX + 16, cy: pedY + 8, minAng: 0.3, maxAng: 1.4 },     // Portico West Camera
+            { cx: porticoX + porticoW - 16, cy: pedY + 8, minAng: 1.7, maxAng: 2.8 } // Portico East Camera
+        ];
+
+        camPositions.forEach((cam, cIdx) => {
+            const camCycle = Math.sin(now * 0.002 + cIdx * 1.5) * 0.5 + 0.5;
+            const currentAng = cam.minAng + (cam.maxAng - cam.minAng) * camCycle;
+
+            // Camera Base & Pivot Arm
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(cam.cx - 4, cam.cy - 4, 8, 8);
+            ctx.fillStyle = '#475569';
+            ctx.beginPath();
+            ctx.arc(cam.cx, cam.cy, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Camera Casing
+            const barrelLen = 9;
+            const bx = cam.cx + Math.cos(currentAng) * barrelLen;
+            const by = cam.cy + Math.sin(currentAng) * barrelLen;
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(cam.cx, cam.cy);
+            ctx.lineTo(bx, by);
+            ctx.stroke();
+
+            // Blinking Red LED
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(bx, by, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Active Red Laser Scanning Cone projected onto the Courtyard Ground!
+            const scanRange = 140;
+            const coneSpread = 0.28;
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.12)';
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.arc(bx, by, scanRange, currentAng - coneSpread, currentAng + coneSpread);
+            ctx.closePath();
+            ctx.fill();
+
+            // Laser Beam Edges
+            ctx.strokeStyle = 'rgba(248, 113, 113, 0.35)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx + Math.cos(currentAng - coneSpread) * scanRange, by + Math.sin(currentAng - coneSpread) * scanRange);
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx + Math.cos(currentAng + coneSpread) * scanRange, by + Math.sin(currentAng + coneSpread) * scanRange);
+            ctx.stroke();
+        });
+
+        // 11. Flanking Imperial Gold Braziers with Crackling Flames
+        [doorX - 22, doorX + doorW + 22].forEach(fx => {
+            const fy = doorY + doorH - 24;
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(fx - 6, fy, 12, 24);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(fx - 8, fy - 4, 16, 6);
+            // Crackling Flame Particles
+            const flameH = 14 + (Math.sin(now * 0.01 + fx) * 4);
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.ellipse(fx, fy - 6, 6, flameH, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.ellipse(fx, fy - 6, 3, flameH * 0.6, 0, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // Door Hover Text: Keep of the Demagogue
+        ctx.font = 'bold 12px "Space Grotesk", sans-serif';
+        ctx.fillStyle = '#fde047';
+        ctx.textAlign = 'center';
+        ctx.fillText('🏛️ KEEP OF THE DEMAGOGUE', x + w / 2, y + 16);
 
         ctx.restore();
     }
@@ -4213,7 +4482,7 @@
             groundColor: '#1a0c0e',
             codexKey: 'fascism',
             curedGoal: 5,
-            questTitle: 'Free 5 Blackshirts & Overthrow THE SOVEREIGN DEMAGOGUE',
+            questTitle: 'Defeat CHANCELLOR VALKOR & Infiltrate the Keep of the Demagogue',
             mentorName: 'Professor Avi',
             portalTarget: 0,
             chest: { col: 6, row: 5, itemId: 'aegis_dialectics' },
@@ -4222,11 +4491,11 @@
             buildings: [
                 { id: 'citadel_armory', col: 12, row: 10, wCols: 5, hRows: 3, spriteKey: 'long_tavern', roofColor: 'terracotta', name: "Citadel Armory" },
                 { id: 'propaganda_ministry', col: 34, row: 10, wCols: 5, hRows: 3, spriteKey: 'red_cottage_2', roofColor: 'terracotta', name: "Ministry of Algorithmic Truth" },
-                { id: 'demagogue_keep', col: 21, row: 28, wCols: 10, hRows: 6, spriteKey: 'citadel', style: 'citadel_keep', name: "Keep of the Demagogue" }
+                { id: 'demagogue_keep', col: 19, row: 24, wCols: 14, hRows: 9, spriteKey: 'citadel', style: 'citadel_keep', name: "Keep of the Demagogue" }
             ],
             aviPreDialogues: [
                 'We have reached the heart of the machine: the Obsidian Reich-Citadel. Every echo chamber you dismantled—clout, gender grievance, dogma, and racial fear—was designed to funnel citizens here into totalitarian fascism.',
-                'Claim the Aegis of Dialectics from the northwest vault, liberate 5 ensnared guards, and shatter the Sovereign Demagogue.'
+                'Defeat Chancellor Valkor in the courtyard and bypass his surveillance drones to breach the Keep of the Demagogue!'
             ],
             aviPostDialogues: [
                 'THE SOVEREIGN DEMAGOGUE HAS FALLEN! Across the Echo Realm, the algorithmic towers are powering down and citizens are waking from the nightmare!'
@@ -4236,50 +4505,32 @@
                 col: 21, row: 18,
                 tunicColor: '#059669',
                 dialogues: [
-                    'We are holding the perimeter. Raise our protective sanctuary when the Demagogue unleashes his barrage, and strike when his formation breaks!'
+                    'Valkor controls the courtyard defenses with quadcopter surveillance drones. Break his perimeter guard so you can enter the Keep of the Demagogue!'
                 ]
             },
             boss: {
-                name: 'THE SOVEREIGN DEMAGOGUE (FINAL BOSS)',
-                hp: 600,
-                maxHp: 600,
+                name: 'CHANCELLOR VALKOR (CITADEL WARDEN)',
+                hp: 520,
+                maxHp: 520,
                 role: 'blackshirt',
-                quote: '"Surrender your freedom to the Mythic Past! One Voice! One Reich!"',
+                quote: '"The masses crave order, not freedom! You will bow to the Citadel!"',
                 duel: {
-                    threshold: 0.75,
-                    claim: '"Our enemies are simultaneously weak subhumans AND an omnipotent global cabal! Surrender your rights to me, and I will restore our mythic golden age!"',
+                    threshold: 0.50,
+                    claim: '"Order requires absolute submission to the Citadel! Individual thinking is the seed of chaos and treason!"',
                     options: [
-                        { text: 'Fascist Doublethink & Palingenetic Ultranationalism (portraying scapegoats as both weak and omnipotent to justify tyranny).', correct: true },
-                        { text: 'Pledge obedience to the Sovereign Demagogue.', correct: false },
-                        { text: 'Replace the Demagogue with a new authoritarian algorithm.', correct: false }
+                        { text: 'Authoritarian False Dilemma (falsely equating forced obedience with genuine social stability).', correct: true },
+                        { text: 'Pledge total obedience to the Chancellor.', correct: false },
+                        { text: 'Embrace total chaos without principles.', correct: false }
                     ]
                 },
                 duels: [
                     {
-                        threshold: 0.75,
-                        claim: '"Our enemies are simultaneously weak subhumans AND an omnipotent global cabal! Surrender your rights to me, and I will restore our mythic golden age!"',
-                        options: [
-                            { text: 'Fascist Doublethink & Paradoxical Enemy Fallacy (portraying scapegoats as both weak and omnipotent).', correct: true },
-                            { text: 'Pledge obedience to the Sovereign Demagogue.', correct: false },
-                            { text: 'Replace the Demagogue with a new authoritarian algorithm.', correct: false }
-                        ]
-                    },
-                    {
                         threshold: 0.50,
-                        claim: '"Nuanced institutions and democratic courts are corrupt and slow! I alone embody the true will of the people! My decrees supersede law!"',
+                        claim: '"Order requires absolute submission to the Citadel! Individual thinking is the seed of chaos and treason!"',
                         options: [
-                            { text: 'Authoritarian Strongman Myth & Institutional Nihilism (dismantling accountability to rule by fiat).', correct: true },
-                            { text: 'Dissolve all courts and independent press.', correct: false },
-                            { text: 'Applaud decree by executive command.', correct: false }
-                        ]
-                    },
-                    {
-                        threshold: 0.25,
-                        claim: '"History has chosen our blood for a thousand-year victory! Only blood, soil, and total surrender to the State will cleanse us!"',
-                        options: [
-                            { text: 'Palingenetic Mythic Ultranationalism & Cleansing Dogma (dehumanizing outsiders to fuel unending tyranny).', correct: true },
-                            { text: 'Join the uniform marching columns.', correct: false },
-                            { text: 'Surrender individual conscience to the totalitarian collective.', correct: false }
+                            { text: 'Authoritarian False Dilemma (falsely equating forced obedience with genuine social stability).', correct: true },
+                            { text: 'Pledge total obedience to the Chancellor.', correct: false },
+                            { text: 'Embrace total chaos without principles.', correct: false }
                         ]
                     }
                 ]
@@ -6480,6 +6731,12 @@
                 const eRole = (mapIndex === 3 && i % 2 === 1) ? 'velvet' : secRole;
                 enemies.push(createEnemy(spot.x, spot.y, eRole, 'Radicalized Citizen', false));
             }
+            if (mapIndex === 8) {
+                // Spawn 3 Quadcopter Surveillance Drones patrolling the Citadel Courtyard
+                enemies.push(createEnemy(16 * TILE_SIZE, 22 * TILE_SIZE, 'drone', 'Citadel Surveillance Quadcopter Alpha', false));
+                enemies.push(createEnemy(36 * TILE_SIZE, 22 * TILE_SIZE, 'drone', 'Citadel Surveillance Quadcopter Beta', false));
+                enemies.push(createEnemy(26 * TILE_SIZE, 34 * TILE_SIZE, 'drone', 'Keep Perimeter Sentry Drone', false));
+            }
 
             if (mapMeta.boss) {
                 enemies.push({
@@ -6925,28 +7182,41 @@
         if (!Number.isFinite(dy)) dy = 0;
         const r = ent.radius || 14;
 
-        // Inside building interior: continuous 760x580 pixel room with solid furniture boxes
-        // Strictly isolated from overworld tile grid to eliminate chest approaching teleport bug!
+        // Inside building interior: dynamic bounds based on roomW and roomH
         if (currentInterior) {
-            const minX = 42;
-            const maxX = 718;
-            const minY = 138;
-            const maxY = 525;
-            const doorMinX = 336;
-            const doorMaxX = 424;
-            const doorMaxY = 565;
+            const isKeep = !!currentInterior.isDemagogueKeep;
+            const roomW = currentInterior.roomW || 760;
+            const roomH = currentInterior.roomH || 580;
+            const minX = 46;
+            const maxX = roomW - 46;
+            const minY = isKeep ? 150 : 138;
+            const maxY = roomH - 52;
+            const doorMinX = Math.floor(roomW / 2) - 48;
+            const doorMaxX = Math.floor(roomW / 2) + 48;
+            const doorMaxY = roomH - 12;
 
             // Solid Physical Interior Obstacle Boxes { x1, y1, x2, y2 }
-            const obstacles = [
+            const obstacles = isKeep ? [
+                // Grand Colonnade Fluted Marble Pillars
+                { x1: 220, y1: 260, x2: 270, y2: 340 },
+                { x1: 220, y1: 480, x2: 270, y2: 560 },
+                { x1: roomW - 270, y1: 260, x2: roomW - 220, y2: 340 },
+                { x1: roomW - 270, y1: 480, x2: roomW - 220, y2: 560 },
+                // Elevated Throne Dais (top center)
+                { x1: Math.floor(roomW / 2) - 110, y1: 90, x2: Math.floor(roomW / 2) + 110, y2: 225 },
+                // Treasury gold mounds (left and right alcove boundaries)
+                { x1: 40, y1: 180, x2: 120, y2: 380 },
+                { x1: roomW - 120, y1: 180, x2: roomW - 40, y2: 380 }
+            ] : [
                 // Bookshelves (left wall)
                 { x1: 0, y1: 0, x2: 76, y2: 215 },
                 // Reading desk (left side)
                 { x1: 96, y1: 232, x2: 172, y2: 286 },
                 // Dining Table & Turned-Wood Chairs (center room)
                 { x1: 276, y1: 278, x2: 476, y2: 366 },
-                // Treasure Chest (right alcove: 640, 220, w:44, h:44)
+                // Treasure Chest
                 { x1: 616, y1: 196, x2: 664, y2: 244 },
-                // Central Fireplace hearth (back wall)
+                // Central Fireplace hearth
                 { x1: 318, y1: 0, x2: 442, y2: 140 }
             ];
 
@@ -6969,10 +7239,10 @@
                 }
             }
 
-            // Doorway and south threshold clamping
+            // Doorway and south threshold exit: ONLY triggered when player is in south doorway and moves to edge
             if (ent.x >= doorMinX && ent.x <= doorMaxX) {
                 ent.y = Math.max(minY, Math.min(doorMaxY, ent.y));
-                if (ent === player && ent.y >= 538) {
+                if (ent === player && ent.y >= roomH - 24) {
                     exitBuildingInterior();
                     return;
                 }
@@ -7755,36 +8025,83 @@
             }
 
             const dPlayer = Math.hypot(player.x - en.x, player.y - en.y);
-            const aggroRange = (en.isBoss ? 380 : 220) * diff.aggroMult;
+            const aggroRange = (en.role === 'drone' ? 320 : (en.isBoss ? 380 : 220)) * diff.aggroMult;
 
             if (dPlayer < aggroRange) {
                 en.isAggroed = true;
                 const ang = Math.atan2(player.y - en.y, player.x - en.x);
-                const spd = en.isBoss ? 78 : 92;
-                moveEntityWithCollision(en, Math.cos(ang) * spd * dt, Math.sin(ang) * spd * dt);
 
-                if (Math.abs(player.x - en.x) > Math.abs(player.y - en.y)) {
-                    en.dir = player.x > en.x ? 3 : 2;
+                if (en.role === 'drone') {
+                    // Quadcopter Drone: RANGED KITING AI (maintains 150-200px distance & strafes)
+                    const desiredDist = 175;
+                    let moveAngle = ang;
+                    let droneSpd = 105;
+
+                    if (dPlayer < desiredDist - 35) {
+                        // Too close: retreat backwards away from player!
+                        moveAngle = ang + Math.PI;
+                    } else if (dPlayer > desiredDist + 35) {
+                        // Too far: close in smoothly
+                        moveAngle = ang;
+                    } else {
+                        // Optimal range: circle/strafe around player
+                        if (!en.strafeDir) en.strafeDir = Math.random() < 0.5 ? 1 : -1;
+                        moveAngle = ang + (Math.PI / 2) * en.strafeDir;
+                    }
+                    moveEntityWithCollision(en, Math.cos(moveAngle) * droneSpd * dt, Math.sin(moveAngle) * droneSpd * dt);
+
+                    // Facing direction towards player
+                    en.dir = Math.abs(player.x - en.x) > Math.abs(player.y - en.y) ? (player.x > en.x ? 3 : 2) : (player.y > en.y ? 0 : 1);
+
+                    // Drone Ranged Lock-On & Rapid Projectile Firing
+                    if (!Number.isFinite(en.lockOnTimer)) en.lockOnTimer = 0;
+                    en.lockOnTimer += dt;
+
+                    // Charge lock-on for 0.75s, then fire 2 quick laser darts
+                    if (en.lockOnTimer >= 0.75) {
+                        en.lockOnTimer = -1.6; // Cooldown before next lock-on cycle
+                        audio.sfxBeam();
+                        for (let k = 0; k < 2; k++) {
+                            const dartOffset = (k === 0 ? -0.1 : 0.1);
+                            projectiles.push({
+                                x: en.x,
+                                y: en.y,
+                                vx: Math.cos(ang + dartOffset) * 280,
+                                vy: Math.sin(ang + dartOffset) * 280,
+                                dmg: Math.round(12 * diff.dmgTakenMult),
+                                color: '#ef4444',
+                                life: 2.0,
+                                isDroneDart: true
+                            });
+                        }
+                    }
                 } else {
-                    en.dir = player.y > en.y ? 0 : 1;
-                }
-                en.frame = Math.floor(performance.now() / 180) % 4;
+                    const spd = en.isBoss ? 78 : 92;
+                    moveEntityWithCollision(en, Math.cos(ang) * spd * dt, Math.sin(ang) * spd * dt);
 
-                en.attackTimer -= dt;
-                if (en.attackTimer <= 0) {
-                    en.attackTimer = en.isBoss ? 1.7 : 2.5;
-                    const count = en.isBoss ? 3 : 1;
-                    for (let k = 0; k < count; k++) {
-                        const offset = count === 1 ? 0 : (k - 1) * 0.28;
-                        projectiles.push({
-                            x: en.x,
-                            y: en.y,
-                            vx: Math.cos(ang + offset) * 210,
-                            vy: Math.sin(ang + offset) * 210,
-                            dmg: Math.round((10 + currentMapIndex * 3) * diff.dmgTakenMult),
-                            color: en.role === 'blackshirt' ? '#ef4444' : '#f59e0b',
-                            life: 2.2
-                        });
+                    if (Math.abs(player.x - en.x) > Math.abs(player.y - en.y)) {
+                        en.dir = player.x > en.x ? 3 : 2;
+                    } else {
+                        en.dir = player.y > en.y ? 0 : 1;
+                    }
+                    en.frame = Math.floor(performance.now() / 180) % 4;
+
+                    en.attackTimer -= dt;
+                    if (en.attackTimer <= 0) {
+                        en.attackTimer = en.isBoss ? 1.7 : 2.5;
+                        const count = en.isBoss ? 3 : 1;
+                        for (let k = 0; k < count; k++) {
+                            const offset = count === 1 ? 0 : (k - 1) * 0.28;
+                            projectiles.push({
+                                x: en.x,
+                                y: en.y,
+                                vx: Math.cos(ang + offset) * 210,
+                                vy: Math.sin(ang + offset) * 210,
+                                dmg: Math.round((10 + currentMapIndex * 3) * diff.dmgTakenMult),
+                                color: en.role === 'blackshirt' ? '#ef4444' : '#f59e0b',
+                                life: 2.2
+                            });
+                        }
                     }
                 }
             } else {
@@ -7978,18 +8295,17 @@
 
     function enterBuildingInterior(building) {
         const isKeep = (building.id === 'demagogue_keep' || building.style === 'citadel_keep');
-        const roomW = isKeep ? 840 : 760;
-        const roomH = isKeep ? 640 : 580;
+        // Vast, expansive dimensions for Keep of the Demagogue boss arena!
+        const roomW = isKeep ? 1000 : 760;
+        const roomH = isKeep ? 800 : 580;
 
         const prop = getBuildingNarrativeProp(building);
-        // Physical interactive chest using the user's lone chest asset
         const chest = {
-            x: roomW - 120, y: 220,
+            x: roomW - 140, y: 240,
             w: 44, h: 44,
             opened: !!building.interiorChestOpened
         };
 
-        // Physical wooden table
         const table = {
             x: Math.floor(roomW / 2) - 60, y: 310,
             w: 120, h: 80
@@ -8000,8 +8316,8 @@
             buildingId: building.id,
             name: building.name,
             isDemagogueKeep: isKeep,
-            cols: 15,
-            rows: 13,
+            cols: isKeep ? 20 : 15,
+            rows: isKeep ? 16 : 13,
             roomW,
             roomH,
             table,
@@ -8010,27 +8326,59 @@
             pots: [],
             returnX: player.x,
             returnY: player.y,
-            mapIndex: currentMapIndex
+            mapIndex: currentMapIndex,
+            savedOverworldEnemies: enemies.slice(),
+            savedOverworldProjectiles: projectiles.slice()
         };
 
         if (isKeep && !player.mapBossDefeated) {
-            // Instantiate The Sovereign Demagogue on the elevated obsidian throne!
+            // Instantiate The Sovereign Demagogue (TRUE FINAL BOSS) on the imperial throne!
             demagogueBossEntity = {
                 x: Math.floor(roomW / 2),
-                y: 195,
-                radius: 28,
+                y: 190,
+                radius: 30,
                 name: 'THE SOVEREIGN DEMAGOGUE (FINAL BOSS)',
                 role: 'blackshirt',
                 isBoss: true,
                 state: 'hostile',
-                hp: 600,
-                maxHp: 600,
+                hp: 800,
+                maxHp: 800,
                 clarity: 0,
                 stunTimer: 0,
                 dir: 0,
                 frame: 0,
+                attackTimer: 1.8,
                 confrontationTriggered: false,
-                quote: '"Surrender your freedom to the Mythic Past! One Voice! One Reich!"',
+                quote: '"I gave their darkness an empire! Kneel before the Sovereign Algorithm—or drown in the echo!"',
+                duels: [
+                    {
+                        threshold: 0.75,
+                        claim: '"Our enemies are simultaneously weak subhumans AND an omnipotent global cabal! Surrender your rights to me, and I will restore our mythic golden age!"',
+                        options: [
+                            { text: 'Fascist Doublethink & Palingenetic Ultranationalism (portraying scapegoats as both weak and omnipotent to justify tyranny).', correct: true },
+                            { text: 'Pledge obedience to the Sovereign Demagogue.', correct: false },
+                            { text: 'Replace the Demagogue with a new authoritarian algorithm.', correct: false }
+                        ]
+                    },
+                    {
+                        threshold: 0.50,
+                        claim: '"Nuance is treason in wartime! A strong leader decides truth—individual inquiry only breeds chaos and defeat!"',
+                        options: [
+                            { text: 'Totalitarian Leader Principle & Manufactured Outrage (sacrificing epistemic agency to a tyrant creates slaughter, not safety).', correct: true },
+                            { text: 'Surrender all doubts to the Leader.', correct: false },
+                            { text: 'Attack everyone who asks questions.', correct: false }
+                        ]
+                    },
+                    {
+                        threshold: 0.25,
+                        claim: '"Humanity is fundamentally rotten! You cannot cure the darkness—you can only rule it with iron fury!"',
+                        options: [
+                            { text: 'Authoritarian Nihilism & Projection (demagogues claim humanity is evil to legitimize their own sociopathy).', correct: true },
+                            { text: 'Agree that everyone is hopeless.', correct: false },
+                            { text: 'Submit to despair.', correct: false }
+                        ]
+                    }
+                ],
                 duelData: {
                     threshold: 0.75,
                     claim: '"Our enemies are simultaneously weak subhumans AND an omnipotent global cabal! Surrender your rights to me, and I will restore our mythic golden age!"',
@@ -8041,11 +8389,21 @@
                     ]
                 }
             };
+
+            // Two elite surveillance drones guarding the gold vaults in the throne room
+            const droneLeft = createEnemy(240, 320, 'drone', 'Treasury Surveillance Drone Alpha', false);
+            droneLeft.hp = 120; droneLeft.maxHp = 120;
+            const droneRight = createEnemy(roomW - 240, 320, 'drone', 'Treasury Surveillance Drone Beta', false);
+            droneRight.hp = 120; droneRight.maxHp = 120;
+
+            // Inside Keep, enemies list becomes the Final Boss and his drone sentries!
+            enemies = [ demagogueBossEntity, droneLeft, droneRight ];
+            projectiles = [];
         }
 
-        // Spawn player right inside south doorway facing UP
+        // Spawn player right inside south doorway facing UP, safely 90px north of exit threshold
         player.x = Math.floor(roomW / 2);
-        player.y = roomH - 70;
+        player.y = roomH - 95;
         player.dir = 1; // Facing Up
         player.holdingPot = null;
 
@@ -8429,6 +8787,12 @@
         if (!currentInterior) return;
         const b = currentInterior.building;
         const bName = currentInterior.name;
+        if (currentInterior.savedOverworldEnemies) {
+            enemies = currentInterior.savedOverworldEnemies;
+        }
+        if (currentInterior.savedOverworldProjectiles) {
+            projectiles = currentInterior.savedOverworldProjectiles;
+        }
         currentInterior = null;
         if (player.holdingPot) player.holdingPot = null;
 
@@ -8509,160 +8873,335 @@
 
     let demagogueBossEntity = null;
 
-        function renderDemagogueKeepInterior(ctx, w, h) {
-        ctx.fillStyle = '#040203';
+    function renderDemagogueKeepInterior(ctx, w, h) {
+        ctx.fillStyle = '#020306';
         ctx.fillRect(0, 0, w, h);
 
-        const roomW = currentInterior.roomW || 840;
-        const roomH = currentInterior.roomH || 640;
+        const roomW = currentInterior.roomW || 1000;
+        const roomH = currentInterior.roomH || 800;
         const offX = Math.floor((w - roomW) / 2);
         const offY = Math.floor((h - roomH) / 2);
+        const now = performance.now();
 
         ctx.save();
 
         // 1. Heavy Ambient Vault Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-        ctx.fillRect(offX - 12, offY - 12, roomW + 24, roomH + 24);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+        ctx.fillRect(offX - 16, offY - 16, roomW + 32, roomH + 32);
 
-        // 2. Imperial Obsidian Flagstone Flooring with Crimson Mortar
-        ctx.fillStyle = '#080a10';
-        ctx.fillRect(offX, offY + 110, roomW, roomH - 110);
-        ctx.fillStyle = '#1e293b';
-        for (let fy = offY + 110; fy < offY + roomH; fy += 32) {
-            ctx.fillRect(offX, fy, roomW, 1.5);
-        }
-        for (let fx = offX; fx < offX + roomW; fx += 44) {
-            ctx.fillRect(fx, offY + 110, 1.5, roomH - 110);
-        }
-
-        // 3. Grand Imperial Crimson Velvet Carpet leading to the Throne
-        const carpetW = 160;
-        const carpetX = offX + Math.floor((roomW - carpetW) / 2);
-        const carpetY = offY + 170;
-        const carpetH = roomH - 220;
-
-        ctx.fillStyle = '#450a0a';
-        ctx.fillRect(carpetX - 6, carpetY - 4, carpetW + 12, carpetH + 8);
-        ctx.fillStyle = '#7f1d1d';
-        ctx.fillRect(carpetX, carpetY, carpetW, carpetH);
-        ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(carpetX + 6, carpetY + 4, carpetW - 12, carpetH - 8);
-
-        // 4. Colonnade of 6 Massive Basalt Pillars draped in Imperial Banners
-        const pillarPositions = [
-            { x: offX + 110, y: offY + 200 },
-            { x: offX + 110, y: offY + 360 },
-            { x: offX + 110, y: offY + 500 },
-            { x: offX + roomW - 110, y: offY + 200 },
-            { x: offX + roomW - 110, y: offY + 360 },
-            { x: offX + roomW - 110, y: offY + 500 }
-        ];
-        pillarPositions.forEach(pos => {
-            // Pillar Base
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(pos.x - 24, pos.y - 20, 48, 50);
-            ctx.fillStyle = '#1e293b';
-            ctx.fillRect(pos.x - 20, pos.y - 16, 40, 42);
-            // Hanging Crimson Imperial Banner
-            ctx.fillStyle = '#991b1b';
-            ctx.fillRect(pos.x - 12, pos.y + 6, 24, 46);
-            ctx.fillStyle = '#fbbf24';
-            ctx.fillRect(pos.x - 4, pos.y + 14, 8, 8); // Gold Eagle crest
-        });
-
-        // 5. Searing Iron Braziers with Animated Crimson Flames
-        const brazierTime = performance.now() / 150;
-        const brazierFlicker = Math.sin(brazierTime) * 4;
-        [
-            { x: offX + 220, y: offY + 210 },
-            { x: offX + roomW - 220, y: offY + 210 }
-        ].forEach(br => {
-            // Brazier Stand
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(br.x - 14, br.y, 28, 26);
-            ctx.fillStyle = '#334155';
-            ctx.fillRect(br.x - 18, br.y - 4, 36, 6);
-            // Dancing Crimson Flame
-            ctx.fillStyle = '#ef4444';
-            ctx.beginPath();
-            ctx.arc(br.x, br.y - 12 + brazierFlicker, 14, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#fde047';
-            ctx.beginPath();
-            ctx.arc(br.x, br.y - 10 + brazierFlicker, 7, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // 6. Elevated Obsidian Throne Dais & The Grand Obsidian Skull Throne
-        const daisX = offX + Math.floor(roomW / 2) - 120;
-        const daisY = offY + 110;
-        const daisW = 240;
-        const daisH = 100;
-        ctx.fillStyle = '#020617';
-        ctx.fillRect(daisX, daisY, daisW, daisH);
-        ctx.strokeStyle = '#d97706';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(daisX + 2, daisY + 2, daisW - 4, daisH - 4);
-
-        // Massive Obsidian Throne
-        const thX = offX + Math.floor(roomW / 2);
-        const thY = daisY + 50;
-        ctx.fillStyle = '#090d16';
-        ctx.fillRect(thX - 32, thY - 42, 64, 52);
-        ctx.fillStyle = '#7f1d1d';
-        ctx.fillRect(thX - 22, thY - 32, 44, 40); // Velvet Throne Cushion
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(thX - 36, thY - 20, 8, 30); // Gold Armrests
-        ctx.fillRect(thX + 28, thY - 20, 8, 30);
-        // Golden Skull Crest atop Throne
-        ctx.fillRect(thX - 8, thY - 50, 16, 12);
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(thX - 4, thY - 46, 3, 3);
-        ctx.fillRect(thX + 2, thY - 46, 3, 3);
-
-        // 7. Interactive Treasury Chest in northwest alcove
-        if (currentInterior.chest) {
-            const ch = currentInterior.chest;
-            const cx = offX + ch.x;
-            const cy = offY + ch.y;
-            drawPixelRelicChest(ctx, cx, cy, ch.opened);
-            if (!ch.opened && Math.hypot(player.x - ch.x, player.y - ch.y) < 58) {
-                ctx.font = 'bold 10px monospace';
-                ctx.fillStyle = '#fde047';
-                ctx.textAlign = 'center';
-                ctx.fillText('TREASURE CHEST [SPACE]', cx + ch.w / 2, cy - 12);
+        // 2. Opulent Checkerboard Marble Floor (Polished Obsidian & White Marble with Gold Grout)
+        const tileSize = 40;
+        for (let ry = 0; ry < roomH; ry += tileSize) {
+            for (let rx = 0; rx < roomW; rx += tileSize) {
+                const isEven = ((rx / tileSize) + (ry / tileSize)) % 2 === 0;
+                ctx.fillStyle = isEven ? '#0a0e17' : '#1e293b';
+                ctx.fillRect(offX + rx, offY + ry, tileSize, tileSize);
+                // Subtle gold grout lines
+                ctx.strokeStyle = 'rgba(217, 119, 6, 0.15)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(offX + rx, offY + ry, tileSize, tileSize);
             }
         }
 
-        // 8. The Sovereign Demagogue (Final Boss) on the Dais!
+        // 3. Grand Imperial Velvet Carpet (Down Central Aisle to Dais)
+        const carpetW = 160;
+        const carpetX = offX + Math.floor((roomW - carpetW) / 2);
+        ctx.fillStyle = '#7f1d1d';
+        ctx.fillRect(carpetX, offY + 120, carpetW, roomH - 120);
+        ctx.fillStyle = '#991b1b';
+        ctx.fillRect(carpetX + 8, offY + 120, carpetW - 16, roomH - 120);
+        // Braided Gold Trim along carpet
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(carpetX + 4, offY + 120, 3, roomH - 120);
+        ctx.fillRect(carpetX + carpetW - 7, offY + 120, 3, roomH - 120);
+
+        // 4. Grand Back Wall with Gold Moulding & Imperial Sunburst Emblem
+        ctx.fillStyle = '#06080e';
+        ctx.fillRect(offX, offY, roomW, 140);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(offX + 10, offY + 10, roomW - 20, 120);
+        // Imperial Gold Cornice
+        ctx.fillStyle = '#d97706';
+        ctx.fillRect(offX, offY + 134, roomW, 6);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(offX, offY + 136, roomW, 2);
+
+        // Massive Gilded Authoritarian Crest (Sunburst & Eagle on back wall)
+        const crestX = offX + Math.floor(roomW / 2);
+        const crestY = offY + 70;
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 3;
+        for (let ray = 0; ray < 12; ray++) {
+            const rAng = (ray / 12) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(crestX, crestY);
+            ctx.lineTo(crestX + Math.cos(rAng) * 48, crestY + Math.sin(rAng) * 48);
+            ctx.stroke();
+        }
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(crestX, crestY, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 5. WEALTH & RICHES: VAST GILDED TREASURY ALCOVES!
+        // Left Treasury Alcove: Mounds of Gold Coins, Bullion & Chests
+        const drawGoldMound = (gx, gy, mw, mh) => {
+            ctx.fillStyle = '#854d0e';
+            ctx.beginPath();
+            ctx.ellipse(gx, gy, mw, mh, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ca8a04';
+            ctx.beginPath();
+            ctx.ellipse(gx, gy - 4, mw * 0.85, mh * 0.85, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#eab308';
+            ctx.beginPath();
+            ctx.ellipse(gx, gy - 8, mw * 0.65, mh * 0.65, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.ellipse(gx, gy - 12, mw * 0.35, mh * 0.35, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sparkling Gold Coin Highlights
+            for (let c = 0; c < 8; c++) {
+                const spk = Math.sin(now * 0.008 + c * 1.5) * 0.5 + 0.5;
+                if (spk > 0.6) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(gx - mw * 0.5 + (c * mw * 0.12), gy - 8 + (c % 3) * 4, 3, 3);
+                }
+            }
+        };
+
+        // Left Treasury Vault (Gold Mounds & Chests)
+        drawGoldMound(offX + 110, offY + 260, 65, 32);
+        drawGoldMound(offX + 160, offY + 360, 80, 38);
+        drawGoldMound(offX + 90, offY + 480, 55, 28);
+        // Stacks of Gold Bullion Ingots (Left Vault)
+        for (let b = 0; b < 4; b++) {
+            ctx.fillStyle = '#ca8a04';
+            ctx.fillRect(offX + 80, offY + 200 + b * 10, 42, 8);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(offX + 82, offY + 200 + b * 10, 38, 2);
+        }
+
+        // Right Treasury Vault (Gold Mounds, Golden Statues & Gems)
+        drawGoldMound(offX + roomW - 110, offY + 260, 65, 32);
+        drawGoldMound(offX + roomW - 160, offY + 360, 80, 38);
+        drawGoldMound(offX + roomW - 90, offY + 480, 55, 28);
+        // Golden Statue on Marble Pedestal (Right Vault)
+        const statX = offX + roomW - 130;
+        const statY = offY + 200;
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(statX - 16, statY, 32, 24);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(statX - 18, statY, 36, 4);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(statX - 8, statY - 32, 16, 32);
+        ctx.beginPath();
+        ctx.arc(statX, statY - 38, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Treasury Vault Open Chests
+        [ { cx: offX + 150, cy: offY + 290 }, { cx: offX + roomW - 150, cy: offY + 290 } ].forEach(ch => {
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(ch.cx - 20, ch.cy - 14, 40, 28);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(ch.cx - 22, ch.cy - 16, 44, 4);
+            // Glowing gems inside chest
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath(); ctx.arc(ch.cx - 8, ch.cy - 4, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath(); ctx.arc(ch.cx + 8, ch.cy - 4, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#34d399';
+            ctx.beginPath(); ctx.arc(ch.cx, ch.cy - 6, 4, 0, Math.PI * 2); ctx.fill();
+        });
+
+        // 6. Fluted Marble Colonnade Pillars with Imperial Banners
+        const colPairs = [
+            { lx: offX + 245, rx: offX + roomW - 245, y: offY + 300 },
+            { lx: offX + 245, rx: offX + roomW - 245, y: offY + 520 }
+        ];
+
+        colPairs.forEach((pair, pi) => {
+            [pair.lx, pair.rx].forEach(colX => {
+                // Column Drop Shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                ctx.beginPath();
+                ctx.ellipse(colX, pair.y + 24, 26, 12, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Marble Shaft
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillRect(colX - 18, pair.y - 60, 36, 80);
+                ctx.fillStyle = '#cbd5e1';
+                ctx.fillRect(colX - 12, pair.y - 60, 24, 80);
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(colX - 4, pair.y - 60, 8, 80);
+                // Corinthian Gilded Capital & Base
+                ctx.fillStyle = '#d97706';
+                ctx.fillRect(colX - 22, pair.y - 66, 44, 8);
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(colX - 20, pair.y - 68, 40, 3);
+                ctx.fillStyle = '#475569';
+                ctx.fillRect(colX - 22, pair.y + 18, 44, 8);
+
+                // Vertical Imperial Crimson Banner hanging from column
+                ctx.fillStyle = '#7f1d1d';
+                ctx.fillRect(colX - 8, pair.y - 56, 16, 50);
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(colX - 1, pair.y - 56, 2, 50);
+                ctx.beginPath();
+                ctx.moveTo(colX - 8, pair.y - 6);
+                ctx.lineTo(colX, pair.y + 4);
+                ctx.lineTo(colX + 8, pair.y - 6);
+                ctx.closePath();
+                ctx.fill();
+            });
+        });
+
+        // 7. SURVEILLANCE CAMERAS WITH ACTIVE ROTATING LASER BEAMS INSIDE THE KEEP!
+        const intCams = [
+            { x: offX + 60, y: offY + 155, minAng: 0.2, maxAng: 1.4 },          // North-West Camera
+            { x: offX + roomW - 60, y: offY + 155, minAng: 1.7, maxAng: 2.9 }, // North-East Camera
+            { x: offX + 60, y: offY + 580, minAng: -0.4, maxAng: 0.8 },        // South-West Camera
+            { x: offX + roomW - 60, y: offY + 580, minAng: 2.3, maxAng: 3.5 }  // South-East Camera
+        ];
+
+        intCams.forEach((cam, i) => {
+            const cycle = Math.sin(now * 0.0025 + i * 1.8) * 0.5 + 0.5;
+            const camAng = cam.minAng + (cam.maxAng - cam.minAng) * cycle;
+
+            // Camera Wall Bracket & Body
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(cam.x - 7, cam.y - 7, 14, 14);
+            ctx.fillStyle = '#334155';
+            ctx.beginPath();
+            ctx.arc(cam.x, cam.y, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            const cLensX = cam.x + Math.cos(camAng) * 11;
+            const cLensY = cam.y + Math.sin(camAng) * 11;
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(cam.x, cam.y);
+            ctx.lineTo(cLensX, cLensY);
+            ctx.stroke();
+
+            // Glowing Red CCTV Lens
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(cLensX, cLensY, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sweeping Translucent Red Laser Surveillance Cone
+            const coneDist = 220;
+            const coneAngle = 0.26;
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.13)';
+            ctx.beginPath();
+            ctx.moveTo(cLensX, cLensY);
+            ctx.arc(cLensX, cLensY, coneDist, camAng - coneAngle, camAng + coneAngle);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(248, 113, 113, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cLensX, cLensY);
+            ctx.lineTo(cLensX + Math.cos(camAng - coneAngle) * coneDist, cLensY + Math.sin(camAng - coneAngle) * coneDist);
+            ctx.moveTo(cLensX, cLensY);
+            ctx.lineTo(cLensX + Math.cos(camAng + coneAngle) * coneDist, cLensY + Math.sin(camAng + coneAngle) * coneDist);
+            ctx.stroke();
+        });
+
+        // 8. Elevated 3-Step Dais & Obsidian Skull Throne
+        const daisX = offX + Math.floor(roomW / 2);
+        const daisY = offY + 185;
+
+        // Step 1
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(daisX - 110, daisY - 50, 220, 75);
+        ctx.fillStyle = '#d97706';
+        ctx.fillRect(daisX - 110, daisY - 50, 220, 3);
+        // Step 2
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(daisX - 90, daisY - 40, 180, 60);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(daisX - 90, daisY - 40, 180, 2);
+        // Step 3 (Top Platform)
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(daisX - 70, daisY - 30, 140, 48);
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(daisX - 70, daisY - 30, 140, 2);
+
+        // The Grand Golden Throne with Crimson Velvet
+        const throneW = 56;
+        const throneH = 68;
+        const throneLeft = daisX - Math.floor(throneW / 2);
+        const throneTop = daisY - 48;
+
+        // Throne Backrest
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(throneLeft, throneTop, throneW, throneH);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(throneLeft + 3, throneTop + 3, throneW - 6, throneH - 6);
+        // Velvet Cushioning
+        ctx.fillStyle = '#7f1d1d';
+        ctx.fillRect(throneLeft + 8, throneTop + 8, throneW - 16, throneH - 24);
+        ctx.fillStyle = '#991b1b';
+        ctx.fillRect(throneLeft + 12, throneTop + 12, throneW - 24, throneH - 32);
+        // Throne Gilded Finials
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath(); ctx.arc(throneLeft + 4, throneTop, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(throneLeft + throneW - 4, throneTop, 5, 0, Math.PI * 2); ctx.fill();
+
+        // Flanking Dais Braziers with Crimson Fire
+        [-75, 75].forEach(bx => {
+            const brazX = daisX + bx;
+            const brazY = daisY - 10;
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(brazX - 8, brazY, 16, 26);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(brazX - 10, brazY - 4, 20, 6);
+            const fH = 16 + Math.sin(now * 0.01 + brazX) * 5;
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath(); ctx.ellipse(brazX, brazY - 6, 8, fH, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath(); ctx.ellipse(brazX, brazY - 6, 4, fH * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+        });
+
+        // 9. THE SOVEREIGN DEMAGOGUE (FINAL BOSS) & DRONES COMBAT
         if (demagogueBossEntity && demagogueBossEntity.hp > 0) {
             const bx = offX + demagogueBossEntity.x;
             const by = offY + demagogueBossEntity.y;
-            drawCharacterSprite(ctx, bx, by, 3.6, {
+            drawCharacterSprite(ctx, bx, by, 3.8, {
                 role: 'blackshirt',
                 dir: 0,
-                frame: 0,
+                frame: demagogueBossEntity.frame || 0,
                 skinColor: '#e0ac69'
             });
 
             // Boss Overhead Name & Delusion HP Bar
-            ctx.font = 'bold 12px "Space Grotesk", sans-serif';
+            ctx.font = 'bold 13px "Space Grotesk", sans-serif';
             ctx.fillStyle = '#ef4444';
             ctx.textAlign = 'center';
-            ctx.fillText(demagogueBossEntity.name, bx, by - 44);
+            ctx.fillText(demagogueBossEntity.name, bx, by - 48);
 
-            const hpW = 140;
+            const hpW = 160;
             ctx.fillStyle = '#020617';
-            ctx.fillRect(bx - hpW / 2, by - 36, hpW, 8);
+            ctx.fillRect(bx - hpW / 2, by - 38, hpW, 9);
             ctx.fillStyle = '#ef4444';
-            ctx.fillRect(bx - hpW / 2 + 1, by - 35, (hpW - 2) * (demagogueBossEntity.hp / demagogueBossEntity.maxHp), 6);
+            ctx.fillRect(bx - hpW / 2 + 1, by - 37, (hpW - 2) * (demagogueBossEntity.hp / demagogueBossEntity.maxHp), 7);
             ctx.strokeStyle = '#fbbf24';
             ctx.lineWidth = 1;
-            ctx.strokeRect(bx - hpW / 2, by - 36, hpW, 8);
+            ctx.strokeRect(bx - hpW / 2, by - 38, hpW, 9);
 
-            // Proximity Pre-Combat Confrontation Trigger
-            if (!demagogueBossEntity.confrontationTriggered && Math.hypot(player.x - demagogueBossEntity.x, player.y - demagogueBossEntity.y) < 180) {
+            // Pre-Combat Confrontation Trigger
+            if (!demagogueBossEntity.confrontationTriggered && Math.hypot(player.x - demagogueBossEntity.x, player.y - demagogueBossEntity.y) < 220) {
                 demagogueBossEntity.confrontationTriggered = true;
                 appState = 'DIALOGUE';
                 activeDialogueList = [
@@ -8676,10 +9215,46 @@
             }
         }
 
-        // 9. Draw Player inside the Keep
+        // Draw Interior Drones if any
+        enemies.forEach(en => {
+            if (en !== demagogueBossEntity) {
+                const ex = offX + en.x;
+                const ey = offY + en.y;
+                drawCharacterSprite(ctx, ex, ey, 2.4, {
+                    role: en.role,
+                    isMindFreed: (en.state === 'cured'),
+                    dir: en.dir,
+                    frame: en.frame,
+                    isStunned: en.state === 'stunned'
+                });
+
+                // Drone Targeting Line
+                if (en.role === 'drone' && en.lockOnTimer > 0 && en.state !== 'cured') {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.75)';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(ex, ey);
+                    ctx.lineTo(offX + player.x, offY + player.y);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        });
+
+        // 10. Draw Projectiles inside Keep
+        projectiles.forEach(p => {
+            ctx.fillStyle = p.color || '#ef4444';
+            ctx.beginPath();
+            ctx.arc(offX + p.x, offY + p.y, 6, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // 11. Draw Player inside the Keep
         const px = offX + player.x;
         const py = offY + player.y;
-        drawCharacterSprite(ctx, px, py, 2.3, {
+        drawCharacterSprite(ctx, px, py, 2.4, {
             role: 'player',
             dir: player.dir,
             frame: player.animFrame,
@@ -8690,14 +9265,15 @@
             equipment: player.equipment
         });
 
-        // 10. South Doorway Exit Prompt
-        const exitDoorY = offY + roomH - 30;
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
-        ctx.fillRect(offX + Math.floor(roomW / 2) - 30, exitDoorY, 60, 20);
+        // 12. South Doorway Exit Prompt (Deep south at threshold)
+        const exitDoorY = offY + roomH - 28;
+        const doorCenterX = offX + Math.floor(roomW / 2);
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+        ctx.fillRect(doorCenterX - 45, exitDoorY, 90, 24);
         ctx.font = 'bold 11px monospace';
         ctx.fillStyle = '#fca5a5';
         ctx.textAlign = 'center';
-        ctx.fillText('▼ EXIT', offX + Math.floor(roomW / 2), exitDoorY + 14);
+        ctx.fillText('▼ EXIT', doorCenterX, exitDoorY + 16);
 
         ctx.restore();
     }
@@ -11987,6 +12563,34 @@
     // 17. EVENT LISTENERS & CHARACTER CREATOR WIRING
     // =========================================================================
     window.addEventListener('keydown', (e) => {
+        // Socratic Inoculation Duel Priority Controls ([Q], [E], [R] or [1], [2], [3])
+        const duelModal = document.getElementById('socraticDuelModal');
+        if (duelModal && !duelModal.classList.contains('hidden')) {
+            const k = (e.key || '').toLowerCase();
+            const code = e.code || '';
+            if (code === 'KeyQ' || code === 'Digit1' || k === 'q' || k === '1') {
+                e.preventDefault();
+                e.stopPropagation();
+                selectSocraticDuelOption(0);
+                return;
+            }
+            if (code === 'KeyE' || code === 'Digit2' || k === 'e' || k === '2') {
+                e.preventDefault();
+                e.stopPropagation();
+                selectSocraticDuelOption(1);
+                return;
+            }
+            if (code === 'KeyR' || code === 'Digit3' || k === 'r' || k === '3') {
+                e.preventDefault();
+                e.stopPropagation();
+                selectSocraticDuelOption(2);
+                return;
+            }
+            if (code === 'Escape') {
+                e.preventDefault();
+                return;
+            }
+        }
         audio.init();
         keys[e.code] = true;
 
@@ -12034,13 +12638,7 @@
                 }
                 openMenu('pauseModal');
             }
-        // Socratic Inoculation Duel Keyboard Controls ([Q], [E], [R] or [1], [2], [3])
-        const duelModal = document.getElementById('socraticDuelModal');
-        if (duelModal && !duelModal.classList.contains('hidden')) {
-            if (e.code === 'KeyQ' || e.code === 'Digit1') { e.preventDefault(); selectSocraticDuelOption(0); return; }
-            if (e.code === 'KeyE' || e.code === 'Digit2') { e.preventDefault(); selectSocraticDuelOption(1); return; }
-            if (e.code === 'KeyR' || e.code === 'Digit3') { e.preventDefault(); selectSocraticDuelOption(2); return; }
-        }
+
 
         } else if (appState === 'PAUSED') {
             if (e.code === 'KeyM') {
@@ -12163,9 +12761,8 @@
         };
     });
 
-    document.getElementById('selectHairStyle').onchange = (e) => {
-        player.hairStyle = parseInt(e.target.value, 10);
-    };
+    // Hair style canonical hero locks
+    player.hairStyle = 0;
 
     document.querySelectorAll('#hairColorButtons button').forEach(btn => {
         btn.onclick = () => {
