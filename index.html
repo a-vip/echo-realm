@@ -1557,6 +1557,26 @@
                 return false;
             }
         }
+        registerPokemonSheet(id, src) {
+            return this.registerImage(id, src);
+        }
+        hasPokemonSheet(id) {
+            return this.hasImage(id);
+        }
+        drawPokemonSprite(ctx, id, frameCol, dx, dy, dw, dh) {
+            const im = this.images.get(id);
+            if (!im || !im.loaded || !ctx.drawImage) return false;
+            try {
+                const sx = frameCol * 18;
+                const sy = 0;
+                const sw = 18;
+                const sh = 26;
+                ctx.drawImage(im.img, sx, sy, sw, sh, dx, dy, dw, dh);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
         registerAnimatedSheet(id, src, frameW, frameH, frameCount = null, frameDurationMs = 120) {
             const entry = { id, src, frameW, frameH, frameCount, frameDurationMs, loaded: false, img: null };
             if (!this.animatedSheets) this.animatedSheets = new Map();
@@ -1760,6 +1780,254 @@
     // Legacy spritesheet registration for fallback
     assets.registerSpriteSheet('alttp_overworld', 'assets/sprites/alttp_overworld_spritesheet.jpg', 16, 16);
 
+    // =========================================================================
+    // IN-GAME POKEMON-STYLE CHARACTER SPRITE SHEETS & 64x64 TRAINER PORTRAITS
+    // =========================================================================
+    // Sourced cleanly from assets/ingame/ with 12 frames (216x26) per sheet:
+    // South walk/idle (cols 0-2), East (cols 3-5), West (cols 6-8), North (cols 9-11)
+    assets.registerPokemonSheet('char_player_m', 'assets/ingame/characters/player/player_male.png');
+    assets.registerPokemonSheet('char_player_f', 'assets/ingame/characters/player/player_female.png');
+    assets.registerPokemonSheet('char_mentor_avi', 'assets/ingame/characters/mentors/mentor_avi.png');
+    assets.registerPokemonSheet('char_mentor_maya', 'assets/ingame/characters/mentors/mentor_maya.png');
+    assets.registerPokemonSheet('char_mentor_lyra', 'assets/ingame/characters/mentors/mentor_lyra.png');
+    assets.registerPokemonSheet('char_mentor_tariq', 'assets/ingame/characters/mentors/mentor_tariq.png');
+    assets.registerPokemonSheet('char_mentor_elena', 'assets/ingame/characters/mentors/mentor_elena.png');
+    assets.registerPokemonSheet('char_mentor_rowan', 'assets/ingame/characters/mentors/mentor_rowan.png');
+    assets.registerPokemonSheet('char_mentor_kaelen', 'assets/ingame/characters/mentors/mentor_kaelen.png');
+    assets.registerPokemonSheet('char_mentor_zephyr', 'assets/ingame/characters/mentors/mentor_zephyr.png');
+    assets.registerPokemonSheet('char_citizen_villager_m', 'assets/ingame/characters/citizens/citizen_villager_m.png');
+    assets.registerPokemonSheet('char_citizen_villager_f', 'assets/ingame/characters/citizens/citizen_villager_f.png');
+    assets.registerPokemonSheet('char_citizen_scholar', 'assets/ingame/characters/citizens/citizen_scholar.png');
+    assets.registerPokemonSheet('char_citizen_miner', 'assets/ingame/characters/citizens/citizen_miner.png');
+    assets.registerPokemonSheet('char_citizen_noble', 'assets/ingame/characters/citizens/citizen_noble.png');
+    assets.registerPokemonSheet('char_citizen_waterfolk', 'assets/ingame/characters/citizens/citizen_waterfolk.png');
+
+    // High-Detail 64x64 Close-up Trainer Dialogue Portraits
+    assets.registerImage('portrait_player_m', 'assets/ingame/characters/portraits/portrait_player_m.png');
+    assets.registerImage('portrait_player_f', 'assets/ingame/characters/portraits/portrait_player_f.png');
+    assets.registerImage('portrait_avi', 'assets/ingame/characters/portraits/portrait_avi.png');
+    assets.registerImage('portrait_maya', 'assets/ingame/characters/portraits/portrait_maya.png');
+    assets.registerImage('portrait_lyra', 'assets/ingame/characters/portraits/portrait_lyra.png');
+    assets.registerImage('portrait_tariq', 'assets/ingame/characters/portraits/portrait_tariq.png');
+    assets.registerImage('portrait_elena', 'assets/ingame/characters/portraits/portrait_elena.png');
+    assets.registerImage('portrait_rowan', 'assets/ingame/characters/portraits/portrait_rowan.png');
+    assets.registerImage('portrait_kaelen', 'assets/ingame/characters/portraits/portrait_kaelen.png');
+    assets.registerImage('portrait_zephyr', 'assets/ingame/characters/portraits/portrait_zephyr.png');
+    assets.registerImage('portrait_boss_valkor', 'assets/ingame/characters/portraits/portrait_boss_valkor.png');
+    assets.registerImage('portrait_boss_demagogue', 'assets/ingame/characters/portraits/portrait_boss_demagogue.png');
+    assets.registerImage('portrait_citizen_villager_m', 'assets/ingame/characters/portraits/portrait_citizen_villager_m.png');
+    assets.registerImage('portrait_citizen_villager_f', 'assets/ingame/characters/portraits/portrait_citizen_villager_f.png');
+    assets.registerImage('portrait_citizen_scholar', 'assets/ingame/characters/portraits/portrait_citizen_scholar.png');
+    assets.registerImage('portrait_citizen_miner', 'assets/ingame/characters/portraits/portrait_citizen_miner.png');
+    assets.registerImage('portrait_citizen_noble', 'assets/ingame/characters/portraits/portrait_citizen_noble.png');
+    assets.registerImage('portrait_citizen_waterfolk', 'assets/ingame/characters/portraits/portrait_citizen_waterfolk.png');
+
+    // =========================================================================
+    // IN-GAME BUILDING SPRITES SLICED FROM terribleCOTTAGES.png
+    // =========================================================================
+    assets.registerImage('cottage_stone_small', 'assets/ingame/buildings/cottage_stone_small.png');
+    assets.registerImage('cottage_wood_medium', 'assets/ingame/buildings/cottage_wood_medium.png');
+    assets.registerImage('cottage_red_large', 'assets/ingame/buildings/cottage_red_large.png');
+    assets.registerImage('cottage_blue_medium', 'assets/ingame/buildings/cottage_blue_medium.png');
+    assets.registerImage('cottage_red_medium', 'assets/ingame/buildings/cottage_red_medium.png');
+    assets.registerImage('village_inn_long', 'assets/ingame/buildings/village_inn_long.png');
+    assets.registerImage('archive_library_large', 'assets/ingame/buildings/archive_library_large.png');
+    assets.registerImage('archive_sanctuary_tower', 'assets/ingame/buildings/archive_sanctuary_tower.png');
+    assets.registerImage('cottage_brick_large', 'assets/ingame/buildings/cottage_brick_large.png');
+    assets.registerImage('armory_bastion', 'assets/ingame/buildings/armory_bastion.png');
+    assets.registerImage('hermitage_lodge', 'assets/ingame/buildings/hermitage_lodge.png');
+    assets.registerImage('manor_grand', 'assets/ingame/buildings/manor_grand.png');
+    assets.registerImage('keep_citadel_fortress', 'assets/ingame/buildings/keep_citadel_fortress.png');
+    assets.registerImage('temple_shrine', 'assets/ingame/buildings/temple_shrine.png');
+
+    // Backward compatibility aliases for existing spriteKeys in MAPS
+    assets.registerImage('red_cottage_1', 'assets/ingame/buildings/cottage_red_medium.png');
+    assets.registerImage('red_cottage_2', 'assets/ingame/buildings/cottage_red_large.png');
+    assets.registerImage('blue_cottage_1', 'assets/ingame/buildings/cottage_blue_medium.png');
+    assets.registerImage('blue_cottage_2', 'assets/ingame/buildings/cottage_stone_small.png');
+    assets.registerImage('cyan_house', 'assets/ingame/buildings/cottage_brick_large.png');
+    assets.registerImage('long_tavern', 'assets/ingame/buildings/village_inn_long.png');
+    assets.registerImage('shed', 'assets/ingame/buildings/cottage_wood_medium.png');
+    assets.registerImage('citadel', 'assets/ingame/buildings/keep_citadel_fortress.png');
+    assets.registerImage('citadel_keep', 'assets/ingame/buildings/keep_citadel_fortress.png');
+    assets.registerImage('archive_tower', 'assets/ingame/buildings/archive_sanctuary_tower.png');
+
+    // =========================================================================
+    // MODULAR NPC & PLAYER SPRITE REGISTRY
+    // =========================================================================
+    const NPC_SPRITE_REGISTRY = {
+        player_m: {
+            id: 'player_male',
+            name: 'Adventurer (Male)',
+            sheet: 'char_player_m',
+            src: 'assets/ingame/characters/player/player_male.png',
+            portrait: 'portrait_player_m',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        player_f: {
+            id: 'player_female',
+            name: 'Adventurer (Female)',
+            sheet: 'char_player_f',
+            src: 'assets/ingame/characters/player/player_female.png',
+            portrait: 'portrait_player_f',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        avi: {
+            id: 'mentor_avi',
+            name: 'Professor Avi',
+            sheet: 'char_mentor_avi',
+            src: 'assets/ingame/characters/mentors/mentor_avi.png',
+            portrait: 'portrait_avi',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        maya: {
+            id: 'mentor_maya',
+            name: 'Commander Maya',
+            sheet: 'char_mentor_maya',
+            src: 'assets/ingame/characters/mentors/mentor_maya.png',
+            portrait: 'portrait_maya',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        lyra: {
+            id: 'mentor_lyra',
+            name: 'Bridgekeeper Lyra',
+            sheet: 'char_mentor_lyra',
+            src: 'assets/ingame/characters/mentors/mentor_lyra.png',
+            portrait: 'portrait_lyra',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        tariq: {
+            id: 'mentor_tariq',
+            name: 'Comrade Tariq',
+            sheet: 'char_mentor_tariq',
+            src: 'assets/ingame/characters/mentors/mentor_tariq.png',
+            portrait: 'portrait_tariq',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        elena: {
+            id: 'mentor_elena',
+            name: 'Elena Vance',
+            sheet: 'char_mentor_elena',
+            src: 'assets/ingame/characters/mentors/mentor_elena.png',
+            portrait: 'portrait_elena',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        rowan: {
+            id: 'mentor_rowan',
+            name: 'Ranger Rowan',
+            sheet: 'char_mentor_rowan',
+            src: 'assets/ingame/characters/mentors/mentor_rowan.png',
+            portrait: 'portrait_rowan',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        kael: {
+            id: 'mentor_kaelen',
+            name: 'Kaelen',
+            sheet: 'char_mentor_kaelen',
+            src: 'assets/ingame/characters/mentors/mentor_kaelen.png',
+            portrait: 'portrait_kaelen',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        zephyr: {
+            id: 'mentor_zephyr',
+            name: 'Elder Zephyr',
+            sheet: 'char_mentor_zephyr',
+            src: 'assets/ingame/characters/mentors/mentor_zephyr.png',
+            portrait: 'portrait_zephyr',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        villager_m: {
+            id: 'citizen_villager_m',
+            name: 'Townsman',
+            sheet: 'char_citizen_villager_m',
+            src: 'assets/ingame/characters/citizens/citizen_villager_m.png',
+            portrait: 'portrait_citizen_villager_m',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        villager_f: {
+            id: 'citizen_villager_f',
+            name: 'Townswoman',
+            sheet: 'char_citizen_villager_f',
+            src: 'assets/ingame/characters/citizens/citizen_villager_f.png',
+            portrait: 'portrait_citizen_villager_f',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        scholar: {
+            id: 'citizen_scholar',
+            name: 'Scholar',
+            sheet: 'char_citizen_scholar',
+            src: 'assets/ingame/characters/citizens/citizen_scholar.png',
+            portrait: 'portrait_citizen_scholar',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        miner: {
+            id: 'citizen_miner',
+            name: 'Miner',
+            sheet: 'char_citizen_miner',
+            src: 'assets/ingame/characters/citizens/citizen_miner.png',
+            portrait: 'portrait_citizen_miner',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        noble: {
+            id: 'citizen_noble',
+            name: 'Noble',
+            sheet: 'char_citizen_noble',
+            src: 'assets/ingame/characters/citizens/citizen_noble.png',
+            portrait: 'portrait_citizen_noble',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        waterfolk: {
+            id: 'citizen_waterfolk',
+            name: 'Waterfolk',
+            sheet: 'char_citizen_waterfolk',
+            src: 'assets/ingame/characters/citizens/citizen_waterfolk.png',
+            portrait: 'portrait_citizen_waterfolk',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        }
+    };
+
+    function getPokemonSpriteFrameCol(dir, isMoving, walkStep) {
+        // dir: 0: Down (South), 1: Up (North), 2: Left (West), 3: Right (East)
+        const dirBase = {
+            0: 0, // South: 0, 1, 2 (1 is idle)
+            1: 9, // North: 9, 10, 11 (10 is idle)
+            2: 6, // West: 6, 7, 8 (7 is idle)
+            3: 3  // East: 3, 4, 5 (4 is idle)
+        }[dir] ?? 0;
+
+        if (!isMoving) {
+            return dirBase + 1; // Idle frame
+        }
+        const step = walkStep % 4;
+        const offset = (step === 0) ? 0 : (step === 1 || step === 3) ? 1 : 2;
+        return dirBase + offset;
+    }
+
+    function getSpriteRegistryKey(role, opts = {}) {
+        if (role === 'player' || role === 'hero') {
+            const isFem = (opts.gender === 'female' || (typeof player !== 'undefined' && player && player.gender === 'female'));
+            return isFem ? 'player_f' : 'player_m';
+        }
+        if (role === 'avi') return 'avi';
+        if (role === 'maya') return 'maya';
+        if (role === 'lyra') return 'lyra';
+        if (role === 'tariq') return 'tariq';
+        if (role === 'elena') return 'elena';
+        if (role === 'rowan') return 'rowan';
+        if (role === 'kael') return 'kael';
+        if (role === 'zephyr') return 'zephyr';
+        if (role === 'iron') return 'miner';
+        if (role === 'velvet') return 'noble';
+        if (role === 'inquisitor') return 'scholar';
+        if (role === 'border') return 'miner';
+        if (role === 'blackshirt') return 'villager_m';
+        if (role === 'masked') return 'villager_m';
+        if (role === 'citizen') return 'villager_f';
+        if (role === 'ally') return 'villager_m';
+        return null;
+    }
+
+
     const ALTTP_SPRITE_RECTS = {
         red_cottage_1:  { sx: 0,   sy: 190, sw: 66,  sh: 66 },
         red_cottage_2:  { sx: 65,  sy: 190, sw: 70,  sh: 58 },
@@ -1793,6 +2061,62 @@
             equipment = null,
             spriteSheetId = null
         } = opts;
+
+        // =========================================================================
+        // In-Game Pokemon-Style NPC & Character Sprite Integration
+        // =========================================================================
+        const regKey = getSpriteRegistryKey(role, opts);
+        const regEntry = regKey ? NPC_SPRITE_REGISTRY[regKey] : null;
+
+        if (regEntry && assets.hasPokemonSheet(regEntry.sheet)) {
+            const isAttacking = (typeof player !== 'undefined' && player && player.attackAnimTime > 0) || opts.isAttacking;
+            const isMoving = (typeof player !== 'undefined' && player && player.isMoving) || frame !== 0;
+            const nowTick = performance.now();
+            const walkStep = Math.floor(nowTick / 130) % 4;
+            const frameCol = getPokemonSpriteFrameCol(dir, isMoving, walkStep);
+
+            const dw = Math.round(regEntry.frameW * (regEntry.scale || 2.2));
+            const dh = Math.round(regEntry.frameH * (regEntry.scale || 2.2));
+            const dx = Math.round(x - dw / 2);
+            const dy = Math.round(y - dh + 6);
+
+            ctx.save();
+            // Ground drop shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + 4, dw * 0.38, dw * 0.16, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw character frame
+            assets.drawPokemonSprite(ctx, regEntry.sheet, frameCol, dx, dy, dw, dh);
+
+            // Mind Freed serene aura: Keeps their own model and gender, never turns into player copy!
+            if (isMindFreed) {
+                ctx.strokeStyle = '#34d399';
+                ctx.lineWidth = 1.6;
+                ctx.beginPath();
+                ctx.ellipse(x, dy - 4, dw * 0.32, dw * 0.12, 0, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = '#fde047';
+                for (let i = 0; i < 3; i++) {
+                    const spX = x + Math.sin(nowTick * 0.003 + i * 2.1) * (dw * 0.4);
+                    const spY = (dy - 6) + Math.cos(nowTick * 0.004 + i * 1.7) * 4;
+                    ctx.fillRect(spX - 1, spY - 1, 2, 2);
+                }
+            }
+
+            // Dynamic Hair Color Overlay for Player Character
+            if ((role === 'player' || role === 'hero') && hairColor && hairColor !== '#f59e0b') {
+                ctx.fillStyle = hairColor;
+                ctx.globalAlpha = 0.55;
+                ctx.fillRect(dx + 5, dy + 2, dw - 10, 6);
+                ctx.globalAlpha = 1.0;
+            }
+
+            ctx.restore();
+            return;
+        }
 
         // Custom sprite sheet fallback check
         if (spriteSheetId && assets.hasSpriteSheet(spriteSheetId)) {
@@ -3186,13 +3510,52 @@
         const w = b.wCols * TILE_SIZE;
         const h = b.hRows * TILE_SIZE;
 
-        // Render distinct regional architectural styles (Citadel gothic basalt vs Alttp timber cottage)
-        if (typeof currentMapIndex !== 'undefined' && (currentMapIndex === 8 || b.style === 'citadel')) {
-            drawCitadelFortressBuilding(ctx, b, x, y, w, h);
+        // 1. Try rendering sliced cottage asset from terribleCOTTAGES if available
+        const bKey = b.spriteKey || b.style || b.id;
+        let imgKey = null;
+        if (b.id === 'demagogue_keep' || b.style === 'citadel_keep') {
+            imgKey = 'keep_citadel_fortress';
         } else if (b.id === 'archive_sanctuary' || b.style === 'archive_tower') {
-            drawGrandArchiveWizardTower(ctx, b, x, y, w, h);
-        } else {
-            drawAuthenticAlttpBuilding(ctx, b, x, y, w, h);
+            imgKey = 'archive_sanctuary_tower';
+        } else if (assets.hasImage(bKey)) {
+            imgKey = bKey;
+        } else if (b.spriteKey && assets.hasImage(b.spriteKey)) {
+            imgKey = b.spriteKey;
+        }
+
+        let drewSprite = false;
+        if (imgKey && assets.hasImage(imgKey)) {
+            const entry = assets.images.get(imgKey);
+            if (entry && entry.img && (entry.img.naturalWidth || entry.img.width)) {
+                const nw = entry.img.naturalWidth || entry.img.width || 100;
+                const nh = entry.img.naturalHeight || entry.img.height || 180;
+                const aspect = nh / nw;
+                const drawW = Math.round(w * 1.08);
+                const drawH = Math.round(drawW * aspect);
+                const drawX = Math.round(x + (w - drawW) / 2);
+                const drawY = Math.round(y + h - drawH - 2);
+
+                ctx.save();
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+                ctx.beginPath();
+                ctx.ellipse(x + w / 2, y + h - 2, w / 2 + 10, 16, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.drawImage(entry.img, drawX, drawY, drawW, drawH);
+                ctx.restore();
+                drewSprite = true;
+            }
+        }
+
+        if (!drewSprite) {
+            // Fallback to procedural architectural rendering (for headless testing and fallback)
+            if (typeof currentMapIndex !== 'undefined' && (currentMapIndex === 8 || b.style === 'citadel' || b.style === 'citadel_keep')) {
+                drawCitadelFortressBuilding(ctx, b, x, y, w, h);
+            } else if (b.id === 'archive_sanctuary' || b.style === 'archive_tower') {
+                drawGrandArchiveWizardTower(ctx, b, x, y, w, h);
+            } else {
+                drawAuthenticAlttpBuilding(ctx, b, x, y, w, h);
+            }
         }
 
         // Overhead Building Name Plaque on proximity
@@ -7763,12 +8126,21 @@ const MAPS = [
             pctx.clearRect(0, 0, 56, 56);
             pctx.fillStyle = '#090d16';
             pctx.fillRect(0, 0, 56, 56);
-            drawCharacterSprite(pctx, 28, 38, 2.8, {
-                role: boss.role || 'blackshirt',
-                dir: 0,
-                frame: 0,
-                skinColor: '#e0ac69'
-            });
+
+            const bPortKey = (boss.id === 'demagogue_keep' || boss.role === 'demagogue' || (boss.name && boss.name.includes('DEMAGOGUE')))
+                ? 'portrait_boss_demagogue'
+                : 'portrait_boss_valkor';
+
+            if (assets.hasImage(bPortKey)) {
+                assets.drawImage(pctx, bPortKey, 0, 0, 56, 56);
+            } else {
+                drawCharacterSprite(pctx, 28, 38, 2.8, {
+                    role: boss.role || 'blackshirt',
+                    dir: 0,
+                    frame: 0,
+                    skinColor: '#e0ac69'
+                });
+            }
         }
         const wrap = document.getElementById('duelChoicesContainer');
         wrap.innerHTML = '';
@@ -7788,16 +8160,43 @@ const MAPS = [
             const col = hotkeyColors[idx] || 'bg-slate-700 text-white';
             btn.innerHTML = `<span class="${col} font-extrabold text-[10px] px-2 py-0.5 rounded mono-font shrink-0">${hk}</span> <span class="text-xs leading-tight flex-1">${opt.text}</span>`;
             btn.onclick = () => selectSocraticDuelOption(idx);
-            wrap.appendChild(btn);
+wrap.appendChild(btn);
         });
 
         modal.classList.remove('hidden');
     }
 
     function selectSocraticDuelOption(idx) {
+        const wrap = document.getElementById('duelChoicesContainer');
+        if (wrap && wrap.children && wrap.children[idx]) {
+            const btn = wrap.children[idx];
+            btn.classList.add('ring-2', 'ring-amber-400', 'scale-[0.98]');
+        }
+
         if (!activeDuelBoss || !activeDuelOptions || !activeDuelOptions[idx]) return;
         const opt = activeDuelOptions[idx];
         const modal = document.getElementById('socraticDuelModal');
+
+        // Handle Socratic Pedestal puzzle resolution
+        if (activeDuelBoss.label && !activeDuelBoss.isBoss) {
+            if (opt.correct) {
+                activeDuelBoss.solved = true;
+                audio.sfxSwitchClick();
+                modal.classList.add('hidden');
+                appState = 'PLAYING';
+                spawnBurst(activeDuelBoss.x, activeDuelBoss.y, '#34d399', 28);
+                addFloatText(activeDuelBoss.x, activeDuelBoss.y - 30, `✨ ${activeDuelBoss.label.toUpperCase()} SOLVED!`, '#34d399');
+                unlockRiverBridgeIfReady();
+                activeDuelBoss = null;
+                activeDuelOptions = [];
+            } else {
+                audio.sfxHit();
+                triggerShake(0.15);
+                player.hp = Math.max(10, player.hp - 5);
+                addFloatText(player.x, player.y - 30, 'Look closer at the epistemic distortion!', '#f43f5e');
+            }
+            return;
+        }
 
         if (opt.correct) {
             audio.sfxCure();
@@ -8647,7 +9046,7 @@ const MAPS = [
             projectiles = [];
         }
 
-        // Spawn player right inside south doorway facing UP, safely 90px north of exit threshold
+        // Spawn player safely north of doorway, completely preventing accidental instant exit
         player.x = Math.floor(roomW / 2);
         player.y = roomH - 95;
         player.dir = 1; // Facing Up
@@ -10204,26 +10603,23 @@ const MAPS = [
         document.getElementById('duelClaimText').textContent = pedestal.claim;
         const wrap = document.getElementById('duelChoicesContainer');
         wrap.innerHTML = '';
+        activeDuelBoss = pedestal;
+        activeDuelOptions = pedestal.options;
 
-        pedestal.options.forEach(opt => {
+        const hotkeys = ['Q', 'E', 'R'];
+        const hotkeyColors = [
+            'bg-cyan-500 text-slate-950 border-cyan-400',
+            'bg-amber-400 text-slate-950 border-amber-300',
+            'bg-purple-400 text-slate-950 border-purple-300'
+        ];
+
+        pedestal.options.forEach((opt, idx) => {
+            const hk = hotkeys[idx] || (idx + 1);
+            const col = hotkeyColors[idx] || 'bg-slate-700 text-white';
             const btn = document.createElement('button');
             btn.className = 'w-full text-left p-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border-2 border-slate-700 hover:border-cyan-400 text-slate-100 font-semibold transition-all';
-            btn.textContent = `▶ ${opt.text}`;
-            btn.onclick = () => {
-                if (opt.correct) {
-                    pedestal.solved = true;
-                    audio.sfxSwitchClick();
-                    modal.classList.add('hidden');
-                    appState = 'PLAYING';
-                    spawnBurst(pedestal.x, pedestal.y, '#34d399', 28);
-                    addFloatText(pedestal.x, pedestal.y - 30, `✨ ${pedestal.label.toUpperCase()} SOLVED!`, '#34d399');
-                    unlockRiverBridgeIfReady();
-                } else {
-                    audio.sfxHit();
-                    btn.className = 'w-full text-left p-3.5 rounded-xl bg-rose-950/60 border-2 border-rose-500 text-rose-300 font-bold';
-                    btn.textContent = '✖ Look closer at the epistemic principle and try again!';
-                }
-            };
+            btn.innerHTML = `<span class="${col} font-extrabold text-[10px] px-2 py-0.5 rounded mono-font shrink-0">${hk}</span> <span class="text-xs leading-tight flex-1">${opt.text}</span>`;
+            btn.onclick = () => selectSocraticDuelOption(idx);
             wrap.appendChild(btn);
         });
 
@@ -12096,7 +12492,29 @@ const MAPS = [
         dCtx.clearRect(0, 0, 64, 64);
         if (opts.type === 'item') {
             drawPixelRelicIcon(dCtx, 32, 32, 42, opts.item);
-        } else if (opts.type === 'player') {
+            return;
+        }
+
+        // Check if high-detail trainer portrait is registered & loaded
+        let portKey = null;
+        if (opts.type === 'player') {
+            const isFem = (typeof player !== 'undefined' && player && player.gender === 'female');
+            portKey = isFem ? 'portrait_player_f' : 'portrait_player_m';
+        } else if (opts.npc && opts.npc.role) {
+            const rk = getSpriteRegistryKey(opts.npc.role, opts.npc);
+            if (rk && NPC_SPRITE_REGISTRY[rk] && NPC_SPRITE_REGISTRY[rk].portrait) {
+                portKey = NPC_SPRITE_REGISTRY[rk].portrait;
+            }
+        } else if (opts.type === 'citizen') {
+            portKey = 'portrait_citizen_villager_f';
+        }
+
+        if (portKey && assets.hasImage(portKey)) {
+            assets.drawImage(dCtx, portKey, 0, 0, 64, 64);
+            return;
+        }
+
+        if (opts.type === 'player') {
             drawCharacterSprite(dCtx, 32, 38, 2.6, {
                 role: 'hero',
                 dir: 0,
@@ -12916,19 +13334,19 @@ const MAPS = [
         if (duelModal && !duelModal.classList.contains('hidden')) {
             const k = (e.key || '').toLowerCase();
             const code = e.code || '';
-            if (code === 'KeyQ' || code === 'Digit1' || k === 'q' || k === '1') {
+            if (code === 'KeyQ' || code === 'Digit1' || code === 'Numpad1' || k === 'q' || k === '1') {
                 e.preventDefault();
                 e.stopPropagation();
                 selectSocraticDuelOption(0);
                 return;
             }
-            if (code === 'KeyE' || code === 'Digit2' || k === 'e' || k === '2') {
+            if (code === 'KeyE' || code === 'Digit2' || code === 'Numpad2' || k === 'e' || k === '2') {
                 e.preventDefault();
                 e.stopPropagation();
                 selectSocraticDuelOption(1);
                 return;
             }
-            if (code === 'KeyR' || code === 'Digit3' || k === 'r' || k === '3') {
+            if (code === 'KeyR' || code === 'Digit3' || code === 'Numpad3' || k === 'r' || k === '3') {
                 e.preventDefault();
                 e.stopPropagation();
                 selectSocraticDuelOption(2);
