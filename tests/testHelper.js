@@ -70,6 +70,7 @@ function loadGameEnvironment() {
         isCitadelUnlocked,
         get grassBushes() { return grassBushes; },
         get treeStumps() { return treeStumps; },
+        get puzzleNodes() { return puzzleNodes; },
         get signposts() { return signposts; },
         get enemies() { return enemies; },
         get document() { return document; },

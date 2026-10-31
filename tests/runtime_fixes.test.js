@@ -718,4 +718,113 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         assert.ok(modalHtml.includes('Close [ESC]'), 'Close button must say Close [ESC]');
         assert.ok(!modalHtml.includes('[PRESS M TO CLOSE]'), 'Action prompt must not say [PRESS M TO CLOSE]');
     });
+
+    test('Bridges across all zones span seamlessly without gaps and are never orphaned on dry land without river adjacency', () => {
+        const env = loadGameEnvironment();
+        for (let m = 0; m <= 8; m++) {
+            env.loadMap(m);
+            const grid = env.mapGrid;
+            const rows = grid.length;
+            const cols = grid[0].length;
+            for (let r = 1; r < rows - 1; r++) {
+                for (let c = 1; c < cols - 1; c++) {
+                    if (grid[r][c] === 8) {
+                        const neighbors = [grid[r - 1][c], grid[r + 1][c], grid[r][c - 1], grid[r][c + 1]];
+                        const adjacentToWaterOrBridge = neighbors.some(n => n === 4 || n === 8);
+                        assert.ok(
+                            adjacentToWaterOrBridge,
+                            `Orphaned bridge tile 8 on Map ${m} at [${c}, ${r}] with zero water/bridge adjacency!`
+                        );
+                    }
+                }
+            }
+        }
+    });
+
+    test('Puzzle-gated bridges in Bright Interlude zones (Maps 2, 5, 7) have accessible puzzle nodes and properly extend contiguous crossing upon completion', () => {
+        const env = loadGameEnvironment();
+
+        // Map 2: Sunlit Riverfront (3 Crystal Switches on West Bank)
+        env.loadMap(2);
+        assert.equal(env.mapGrid[14][27], 4, 'Map 2 river crossing must start as water before puzzle');
+        assert.equal(env.puzzleNodes.length, 3, 'Map 2 must define 3 crystal switches');
+        env.puzzleNodes.forEach(node => {
+            assert.ok(node.x / env.TILE_SIZE < 25, `Switch ${node.label} must be accessible on West Bank`);
+            node.solved = true;
+        });
+        env.unlockRiverBridgeIfReady();
+        assert.equal(env.mapGrid[14][27], 8, 'Map 2 river crossing must be extended to bridge tile 8');
+
+        // Map 5: Whispering Woods (2 Mirror Blocks + 1 Stele in Sacred Glade)
+        env.loadMap(5);
+        assert.equal(env.mapGrid[7][27], 4, 'Map 5 brook crossing must start as water before puzzle');
+        assert.equal(env.puzzleNodes.length, 3, 'Map 5 must define 3 glade puzzle trials');
+        env.puzzleNodes.forEach(node => {
+            assert.ok(node.y / env.TILE_SIZE > 10, `Trial ${node.label} must be accessible in Sacred Glade`);
+            node.solved = true;
+        });
+        env.unlockRiverBridgeIfReady();
+        assert.equal(env.mapGrid[7][27], 8, 'Map 5 brook crossing must be extended to bridge tile 8');
+
+        // Map 7: Highland Oasis (3 Socratic Pedestals along Western Promenade)
+        env.loadMap(7);
+        assert.equal(env.mapGrid[14][27], 4, 'Map 7 inlet crossing must start as water before puzzle');
+        assert.equal(env.puzzleNodes.length, 3, 'Map 7 must define 3 Socratic Pillars');
+        env.puzzleNodes.forEach(node => {
+            assert.ok(node.x / env.TILE_SIZE < 25, `Pillar ${node.label} must be accessible on Western Promenade`);
+            node.solved = true;
+        });
+        env.unlockRiverBridgeIfReady();
+        assert.equal(env.mapGrid[14][27], 8, 'Map 7 inlet crossing must be extended to bridge tile 8');
+    });
+
+    test('Player and Mentor NPC sprites render high-detail 32-bit pixel art models with distinct hair, facial features, and role-specific attire', () => {
+        const env = loadGameEnvironment();
+        const fillRectCalls = [];
+        const mockCtx = {
+            save() {}, restore() {}, translate() {},
+            fillRect(x, y, w, h) { fillRectCalls.push({ fillStyle: this.fillStyle, x, y, w, h }); },
+            beginPath() {}, ellipse() {}, fill() {}, stroke() {}, arc() {}
+        };
+
+        // 1. Auron (Player Sprite): Multi-tone hair, cobalt iris, specular eye glint, collar, belt buckle
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'player', dir: 0, frame: 0 });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#0284c7'), 'Auron must render cobalt iris');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#ffffff'), 'Auron must render specular eye glint');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#fde047'), 'Auron must render golden hair highlight');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#92400e'), 'Auron must render amber hair shadow');
+
+        // 2. Commander Maya: Vanguard armor, officer circlet & sash
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'maya', dir: 0, frame: 0 });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#fbbf24'), 'Maya must render golden armor/circlet');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#dc2626'), 'Maya must render crimson officer sash');
+
+        // 3. Bridgekeeper Lyra: Water lily floral garland & riverkeeper turquoise dress
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'lyra', dir: 0, frame: 0 });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#06b6d4' || c.fillStyle === '#38bdf8'), 'Lyra must render riverkeeper turquoise garb');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#ffffff'), 'Lyra must render water lily petals');
+
+        // 4. Comrade Tariq: Crimson beret, dark beard & leather tool harness
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'tariq', dir: 0, frame: 0 });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#dc2626'), 'Tariq must render crimson beret');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#1c1917'), 'Tariq must render dark beard');
+
+        // 5. Sister Elena: Violet habit & ivory wimple
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'elena', dir: 0, frame: 0 });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#581c87'), 'Elena must render violet habit');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#f8fafc'), 'Elena must render ivory monastic wimple');
+
+        // 6. Velvet Femsphere: Long flowing brunette hair with highlights, cobalt bikini & soft skin tones
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'velvet', dir: 0, frame: 0 });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#2563eb'), 'Velvet must render cobalt bikini');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#92400e'), 'Velvet must render voluminous brunette hair');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#d97706'), 'Velvet must render hair highlights and navel');
+    });
+
 });

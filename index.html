@@ -1669,15 +1669,15 @@
     // 5. 32-BIT ZELDA-STYLE 16x20 PIXEL SPRITE RENDERER
     // =========================================================================
     function drawCharacterSprite(ctx, x, y, scale, opts) {
-        // Draws the crisp 16x20 pixel-art character centered at (x, y)
+        // Draws crisp, high-detail 32-bit Zelda/Chrono-style 16x20 pixel-art characters centered at (x, y)
         const {
             dir = 0, // 0: Down, 1: Up, 2: Left, 3: Right
             frame = 0,
-            skinColor = '#fde6d8',
+            skinColor = '#ffedd5',
             hairStyle = 0,
             hairColor = '#f59e0b',
             tunicColor = '#0284c7',
-            role = 'player', // 'player', 'avi', 'ally', 'masked', 'iron', 'velvet', 'inquisitor', 'border', 'blackshirt'
+            role = 'player', // 'player', 'avi', 'ally', 'maya', 'lyra', 'tariq', 'elena', 'rowan', 'kael', 'zephyr', 'masked', 'iron', 'velvet', 'inquisitor', 'border', 'blackshirt'
             isStunned = false,
             isHurt = false,
             holdingItemOverhead = false,
@@ -1701,7 +1701,7 @@
         const ox = -8 * p;
         const oy = -12 * p;
 
-        // Ground shadow
+        // Ground contact shadow
         ctx.fillStyle = 'rgba(0,0,0,0.45)';
         ctx.beginPath();
         ctx.ellipse(0, 7 * p, 6 * p, 2.5 * p, 0, 0, Math.PI * 2);
@@ -1712,29 +1712,63 @@
             ctx.fillRect(ox + gx * p, oy + gy * p, w * p, h * p);
         };
 
-        // 0. Back Cloak (Professor Avi or Equipped Back Cloak)
+        // 0. Back Cloak / Quiver / Shield on Back
         if ((role === 'avi' || (equipment && equipment.back)) && dir !== 1) {
             const cloakCol = role === 'avi' ? '#1e1b4b' : (equipment.back.visualColor || '#4338ca');
             px(2, 10, 12, 7, cloakCol);
+            px(3, 11, 10, 6, '#312e81');
+        } else if (role === 'rowan' && dir === 1) {
+            // Ranger Rowan arrow quiver on back
+            px(10, 8, 3, 7, '#78350f');
+            px(10, 6, 1, 2, '#f8fafc');
+            px(12, 5, 1, 3, '#f8fafc');
         }
 
         // Walking foot bob
         const leftFootY = (frame === 1) ? 16 : 17;
         const rightFootY = (frame === 3) ? 16 : 17;
 
-        // 1. Boots
-        const bootCol = (role === 'player' && equipment && equipment.feet && equipment.feet.visualColor)
-            ? equipment.feet.visualColor
-            : (role === 'velvet' ? skinColor : '#1e293b');
+        // 1. High-Detail Boots & Trousers
+        let bootCol = '#1e293b';
+        let bootCuff = '#334155';
+        if (role === 'player') {
+            bootCol = (equipment && equipment.feet && equipment.feet.visualColor) ? equipment.feet.visualColor : '#78350f';
+            bootCuff = '#92400e';
+            // Dark adventurer breeches above boots
+            px(4, 15, 3, 2, '#0f172a');
+            px(9, 15, 3, 2, '#0f172a');
+        } else if (role === 'maya') {
+            bootCol = '#78350f';
+            bootCuff = '#fbbf24'; // Golden knee guard
+        } else if (role === 'tariq') {
+            bootCol = '#1c1917';
+            bootCuff = '#78350f';
+        } else if (role === 'rowan') {
+            bootCol = '#451a03';
+            bootCuff = '#15803d';
+        } else if (role === 'kael') {
+            bootCol = '#292524';
+            bootCuff = '#c2410c';
+        } else if (role === 'velvet') {
+            bootCol = skinColor;
+            bootCuff = '#1d4ed8';
+        }
+
         px(4, leftFootY, 3, 3, bootCol);
         px(9, rightFootY, 3, 3, bootCol);
-        if (role === 'velvet') {
+        if (role !== 'velvet') {
+            // Cuffed boot folds and sole tread shadow
+            px(4, leftFootY, 3, 1, bootCuff);
+            px(9, rightFootY, 3, 1, bootCuff);
+            px(4, leftFootY + 2, 3, 1, '#0f172a');
+            px(9, rightFootY + 2, 3, 1, '#0f172a');
+        } else {
             // Delicate cobalt ankle straps
             px(4, leftFootY + 2, 3, 1, '#1d4ed8');
             px(9, rightFootY + 2, 3, 1, '#1d4ed8');
         }
 
-        // 2. Tunic & Cloak Body
+        // 2. High-Detail Tunic, Armor & Body Garment
         let bodyCol = (role === 'player' && equipment && equipment.chest && equipment.chest.visualColor)
             ? equipment.chest.visualColor
             : tunicColor;
@@ -1756,37 +1790,91 @@
         else if (role === 'ally') { bodyCol = tunicColor || '#059669'; trimCol = '#34d399'; }
 
         if (role === 'velvet') {
-            // Slender bikini femsphere model (reference art style: bikini, slender waist, bare skin)
+            // Slender bikini femsphere model (reference art style: bikini, slender waist, bare skin, voluptuous 32-bit pixel art)
             const bikiniCol = '#2563eb';
             const bikiniShade = '#1d4ed8';
-            // Slender bare shoulders and décolletage
+            // Slender bare shoulders and décolletage with soft highlights
             px(4, 9, 8, 2, skinColor);
-            // Cobalt blue bikini top
+            px(5, 9, 6, 1, '#fef08a'); // soft clavicle highlight
+            // Cobalt blue bikini top with center clasp
             px(4, 11, 3, 2, bikiniCol);
             px(9, 11, 3, 2, bikiniCol);
-            px(5, 10, 1, 1, bikiniShade); // straps
+            px(5, 10, 1, 1, bikiniShade); // shoulder straps
             px(10, 10, 1, 1, bikiniShade);
-            px(7, 11, 2, 1, '#93c5fd'); // center clasp
-            // Slender bare waist & midriff
+            px(7, 11, 2, 1, '#93c5fd'); // center metallic clasp
+            // Slender bare waist & midriff with natural curves
             px(5, 13, 6, 2, skinColor);
-            px(8, 13, 1, 1, '#d97706'); // navel
-            // Cobalt blue bikini bottom / shorts
+            px(7, 13, 2, 1, '#fef08a'); // soft abdomen highlight
+            px(8, 14, 1, 1, '#d97706'); // defined navel
+            // Cobalt blue bikini bottom / shorts with side ties
             px(4, 15, 8, 2, bikiniCol);
+            px(5, 15, 6, 1, bikiniShade);
             px(3, 15, 1, 1, '#93c5fd'); // side ties
             px(12, 15, 1, 1, '#93c5fd');
         } else {
-            // Torso
+            // Torso Base
             px(3, 10, 10, 7, bodyCol);
-            // Belt & Buckle (Buckle only rendered on front/sides, NEVER when facing away dir === 1)
+
+            // Detailed 32-bit fold shading on sides
+            px(3, 10, 1, 6, '#0f172a');
+            px(12, 10, 1, 6, '#0f172a');
+
+            if (role === 'player') {
+                // High-detail Adventurer Tunic highlights & folds
+                px(6, 10, 4, 3, '#38bdf8'); // chest highlight
+                px(5, 11, 6, 2, '#0284c7');
+                // V-neck collar showing undershirt/skin
+                px(7, 10, 2, 2, '#fed7aa');
+                px(6, 10, 1, 2, '#fbbf24');
+                px(9, 10, 1, 2, '#fbbf24');
+            } else if (role === 'maya') {
+                // Gold Vanguard Breastplate & Gorget
+                px(5, 10, 6, 4, '#fbbf24');
+                px(6, 10, 4, 3, '#fef08a');
+                px(7, 11, 2, 2, '#f59e0b');
+            } else if (role === 'lyra') {
+                // River-wave layered silk tunic
+                px(4, 10, 8, 2, '#38bdf8');
+                px(5, 12, 6, 2, '#67e8f9');
+                px(7, 10, 2, 4, '#f0fdf4');
+            } else if (role === 'tariq') {
+                // Heavy engineer tool harness & canvas vest
+                px(4, 10, 8, 4, '#78350f');
+                px(6, 10, 4, 4, '#92400e');
+            } else if (role === 'elena') {
+                // Ivory scapular over purple vestments
+                px(6, 10, 4, 7, '#f8fafc');
+                px(7, 11, 2, 5, '#e2e8f0');
+            } else if (role === 'rowan') {
+                // Leather hunting jerkin
+                px(5, 10, 6, 4, '#15803d');
+                px(6, 11, 4, 2, '#86efac');
+            } else if (role === 'kael') {
+                // Resistance field coat
+                px(4, 10, 8, 4, '#ea580c');
+                px(6, 10, 4, 4, '#fed7aa');
+            } else if (role === 'zephyr') {
+                // Flowing desert silk sash
+                px(6, 10, 4, 7, '#f8fafc');
+                px(7, 11, 2, 5, '#0d9488');
+            }
+
+            // Belt & Buckle
             const waistCol = (role === 'player' && equipment && equipment.waist && equipment.waist.visualColor)
                 ? equipment.waist.visualColor
                 : trimCol;
-            px(3, 14, 10, 1, '#0f172a');
+            px(3, 14, 10, 1, '#0f172a'); // Belt strap
+
+            // Buckle only rendered on front/sides (dir !== 1), NEVER when facing away!
             if (dir !== 1) {
-                px(7, 14, 2, 1, waistCol);
+                px(7, 14, 2, 1, waistCol); // Gold Buckle (matches test assertion)
+                px(7, 14, 1, 1, '#ffffff'); // Specular glint
+                if (role === 'player') {
+                    // Leather utility pouch on right hip & scabbard loop on left
+                    px(11, 13, 2, 2, '#78350f');
+                    px(3, 13, 1, 3, '#94a3b8');
+                }
             }
-            // Shoulder trim / collar
-            px(4, 10, 8, 1, trimCol);
         }
 
         // Front emblems & medallions rendered ONLY when facing camera/sides (dir !== 1)
@@ -1796,10 +1884,11 @@
                 px(6, 10, 4, 7, '#fbbf24');
                 px(7, 11, 2, 5, '#38bdf8');
             } else if (role === 'maya') {
-                // Commander Maya: Gold sash & shoulder armor
+                // Commander Maya: Gold sash & articulated pauldrons
                 px(4, 9, 8, 2, '#fbbf24');
                 px(1, 9, 3, 3, '#f59e0b');
                 px(12, 9, 3, 3, '#f59e0b');
+                px(6, 11, 4, 1, '#dc2626'); // officer crimson ribbon
             } else if (role === 'lyra') {
                 // Bridgekeeper Lyra: Water lily river medallion
                 px(6, 11, 4, 3, '#38bdf8');
@@ -1808,6 +1897,7 @@
                 // Comrade Tariq: Cross-chest harness strap & steel buckle
                 px(4, 10, 2, 5, '#78350f');
                 px(7, 12, 2, 2, '#94a3b8');
+                px(11, 14, 2, 3, '#64748b'); // Hanging spanner wrench
             } else if (role === 'elena') {
                 // Sister Elena: Glowing golden Prism rosary
                 px(6, 11, 4, 2, '#fbbf24');
@@ -1834,7 +1924,7 @@
             px(11, 9, 3, 2, shCol);
         }
 
-        // Arms (animated swing or raised overhead for Zelda Item-Get pose!)
+        // Arms & Vambraces (animated swing or raised overhead for Zelda Item-Get pose!)
         const armSwing = (frame === 1) ? -1 : (frame === 3 ? 1 : 0);
         const handCol = (role === 'player' && equipment && equipment.hands && equipment.hands.visualColor)
             ? equipment.hands.visualColor
@@ -1846,7 +1936,7 @@
             px(13, 5, 2, 6, bodyCol);
             px(13, 3, 2, 2, handCol);
         } else if (role === 'iron') {
-            // Manosphere Gym-Bro muscular bare arms + gold chain
+            // Muscular bare arms + gold chain
             px(1, 10 + armSwing, 2, 6, skinColor);
             px(13, 10 - armSwing, 2, 6, skinColor);
             px(6, 11, 4, 1, '#fbbf24');
@@ -1861,171 +1951,273 @@
             px(1, 14 + armSwing, 2, 2, handCol);
             px(13, 10 - armSwing, 2, 5, armCol);
             px(13, 14 - armSwing, 2, 2, handCol);
-            if (role === 'avi') {
+
+            if (role === 'player') {
+                // Leather bracers & gold rivets on adventurer wrists
+                px(1, 12 + armSwing, 2, 2, '#92400e');
+                px(13, 12 - armSwing, 2, 2, '#92400e');
+                px(1, 12 + armSwing, 1, 1, '#fbbf24');
+                px(14, 12 - armSwing, 1, 1, '#fbbf24');
+            } else if (role === 'avi') {
                 // Gold wizard robe cuffs
                 px(1, 13 + armSwing, 2, 1, '#fbbf24');
                 px(13, 13 - armSwing, 2, 1, '#fbbf24');
-            }
-            if (role === 'blackshirt') {
+            } else if (role === 'blackshirt') {
                 // Red authoritarian armband
                 px(13, 11 - armSwing, 2, 1, '#ef4444');
             }
         }
 
-        // 3. Head & Face (Professor Avi has warm lighter brown skin and distinguished sage features)
+        // 3. Head & Sculpted Facial Contours
         const headSkin = role === 'avi' ? '#b87747' : skinColor;
         px(3, 3, 10, 7, headSkin);
 
-        // Role-specific Masks / Helmets / Details
+        if (dir !== 1) {
+            // Jawline & Cheek contour shadow
+            px(4, 9, 8, 1, role === 'avi' ? '#92400e' : '#fed7aa');
+            // Ear contours
+            px(2, 6, 1, 2, '#fed7aa');
+            px(13, 6, 1, 2, '#fed7aa');
+        }
+
+        // Eyes, Masks & Helmets
         if (role === 'masked') {
-            // Golden Performative Mask
-            px(4, 4, 8, 6, '#fbbf24');
-            px(5, 6, 2, 2, '#090a0f');
-            px(9, 6, 2, 2, '#090a0f');
-            px(6, 9, 4, 1, '#78350f');
+            // Venetian Gilded Performative Mask with filigree
+            px(4, 3, 8, 6, '#fbbf24');
+            px(5, 3, 6, 2, '#fef08a');
+            px(5, 5, 2, 2, '#090a0f');
+            px(9, 5, 2, 2, '#090a0f');
+            px(5, 5, 1, 1, '#38bdf8'); // theatrical gem eye
+            px(10, 5, 1, 1, '#38bdf8');
+            px(6, 8, 4, 1, '#d97706'); // stylized lips
         } else if (role === 'blackshirt') {
-            // Fascist Stahlhelm + Red Visor
-            px(2, 2, 12, 4, '#1f2937');
+            // Authoritarian Stahlhelm & Red Visor Slit
+            px(2, 1, 12, 5, '#1f2937');
+            px(1, 4, 14, 2, '#111827');
             px(4, 6, 8, 2, '#ef4444');
+            px(5, 6, 6, 1, '#fca5a5'); // glowing eye slit
             px(3, 8, 10, 2, '#111827');
         } else if (role === 'inquisitor') {
-            // Pointed Dogma Hood
+            // Gothic Dogma Hood
             px(3, 0, 10, 5, '#581c87');
             px(5, -2, 6, 2, '#581c87');
             px(5, 6, 2, 2, '#fde047');
             px(9, 6, 2, 2, '#fde047');
-        } else {
-            // Eyes or Role Shades
-            if (dir !== 1) {
-                if (role === 'iron') {
-                    // Dark clout shades
-                    px(4, 5, 8, 2, '#090a0f');
-                    px(5, 5, 2, 1, '#ef4444');
-                    px(9, 5, 2, 1, '#ef4444');
-                } else if (role === 'velvet') {
-                    // Rose-tinted separatist visor glasses
-                    px(4, 5, 8, 2, '#701a75');
-                    px(5, 6, 2, 1, '#f472b6');
-                    px(9, 6, 2, 1, '#f472b6');
-                } else if (dir === 0) {
-                    px(5, 6, 2, 2, '#0f172a');
-                    px(9, 6, 2, 2, '#0f172a');
-                    px(5, 6, 1, 1, '#ffffff');
-                    px(9, 6, 1, 1, '#ffffff');
-                } else if (dir === 2) {
-                    px(4, 6, 2, 2, '#0f172a');
-                } else if (dir === 3) {
-                    px(10, 6, 2, 2, '#0f172a');
-                }
+        } else if (dir !== 1) {
+            if (role === 'iron') {
+                // Dark clout shades with red reflection
+                px(4, 5, 8, 2, '#090a0f');
+                px(5, 5, 2, 1, '#ef4444');
+                px(9, 5, 2, 1, '#ef4444');
+            } else if (role === 'velvet') {
+                // Alluring feminine eyes with dark lashes & soft shadow
+                px(4, 5, 3, 1, '#701a75');
+                px(9, 5, 3, 1, '#701a75');
+                px(5, 6, 2, 2, '#1d4ed8');
+                px(9, 6, 2, 2, '#1d4ed8');
+                px(5, 6, 1, 1, '#ffffff');
+                px(9, 6, 1, 1, '#ffffff');
+                px(7, 8, 2, 1, '#f43f5e'); // rose lips
+            } else if (dir === 0) {
+                // Expressive 32-bit Eyes (Hero / Ally)
+                const irisCol = role === 'player' ? '#0284c7' : (role === 'maya' ? '#059669' : '#0f172a');
+                px(5, 5, 2, 1, '#0f172a'); // upper lash
+                px(9, 5, 2, 1, '#0f172a');
+                px(5, 6, 2, 2, irisCol);    // iris
+                px(9, 6, 2, 2, irisCol);
+                px(5, 6, 1, 1, '#ffffff');   // specular glint
+                px(9, 6, 1, 1, '#ffffff');
+                px(5, 7, 2, 1, '#0f172a');   // lower lid
+                px(9, 7, 2, 1, '#0f172a');
+            } else if (dir === 2) {
+                // Looking Left
+                const irisCol = role === 'player' ? '#0284c7' : '#0f172a';
+                px(4, 5, 2, 1, '#0f172a');
+                px(4, 6, 2, 2, irisCol);
+                px(4, 6, 1, 1, '#ffffff');
+            } else if (dir === 3) {
+                // Looking Right
+                const irisCol = role === 'player' ? '#0284c7' : '#0f172a';
+                px(10, 5, 2, 1, '#0f172a');
+                px(10, 6, 2, 2, irisCol);
+                px(10, 6, 1, 1, '#ffffff');
             }
+        }
 
-            // Hair / Hood styles
-            const hCol = role === 'avi' ? '#1e1b4b' : hairColor;
-            if (role === 'velvet') {
-                // Voluminous long flowing brunette hair cascading down to waist with top bun
-                const vHair = '#92400e';
-                const vHi = '#d97706';
-                px(3, 0, 10, 3, vHair);
-                px(4, 0, 8, 1, vHi);
-                px(6, -2, 4, 2, vHair); // Top hair bun
-                // Flowing locks framing face & cascading down past shoulders
-                px(2, 2, 2, 12, vHair);
-                px(12, 2, 2, 12, vHair);
-                px(1, 4, 1, 8, vHair);
-                px(14, 4, 1, 8, vHair);
-                if (dir === 1) {
-                    px(3, 2, 10, 12, vHair);
-                    px(4, 4, 8, 8, vHi);
-                }
-            } else if (role === 'avi') {
-                // Distinguished Sage Wizard Cowl & Golden Brocade Rim
-                px(2, 0, 12, 3, '#1e1b4b');
-                px(2, 3, 2, 6, '#1e1b4b');
-                px(12, 3, 2, 6, '#1e1b4b');
-                px(3, 2, 10, 1, '#fbbf24');
+        // Hair & Bespoke Role Headdresses
+        if (role === 'velvet') {
+            // Voluminous long flowing brunette hair cascading down to waist with top bun
+            const vHair = '#92400e';
+            const vHi = '#d97706';
+            px(3, 0, 10, 3, vHair);
+            px(4, 0, 8, 1, vHi);
+            px(6, -2, 4, 2, vHair); // Top hair bun
+            // Flowing locks framing face & cascading down past shoulders
+            px(2, 2, 2, 12, vHair);
+            px(12, 2, 2, 12, vHair);
+            px(1, 4, 1, 8, vHair);
+            px(14, 4, 1, 8, vHair);
+            if (dir === 1) {
+                px(3, 2, 10, 12, vHair);
+                px(4, 4, 8, 8, vHi);
+            }
+        } else if (role === 'avi') {
+            // Distinguished Sage Wizard Cowl & Golden Brocade Rim
+            px(2, 0, 12, 3, '#1e1b4b');
+            px(2, 3, 2, 6, '#1e1b4b');
+            px(12, 3, 2, 6, '#1e1b4b');
+            px(3, 2, 10, 1, '#fbbf24');
 
-                // Sage Wisdom Circlet with Glowing Azure Mind Gem
-                px(4, 3, 8, 1, '#fbbf24');
-                px(7, 2, 2, 2, '#38bdf8');
-                px(7, 2, 1, 1, '#ffffff');
+            // Sage Wisdom Circlet with Glowing Azure Mind Gem
+            px(4, 3, 8, 1, '#fbbf24');
+            px(7, 2, 2, 2, '#38bdf8');
+            px(7, 2, 1, 1, '#ffffff');
 
-                if (dir === 1) {
-                    // Back of wizard cowl
-                    px(2, 0, 12, 10, '#1e1b4b');
-                    px(4, 3, 8, 2, '#312e81');
-                    px(4, 1, 8, 1, '#fbbf24');
-                } else {
-                    // Long Silver Sage Beard & Moustache
-                    px(5, 7, 6, 2, '#e2e8f0');
-                    px(4, 8, 8, 4, '#cbd5e1');
-                    px(5, 9, 6, 4, '#f8fafc');
-                    px(6, 13, 4, 3, '#cbd5e1');
-                    px(7, 16, 2, 2, '#94a3b8');
-                }
-            } else if (role === 'maya') {
-                // High braided warrior hair with golden circlet
-                px(3, 0, 10, 3, '#f59e0b');
-                px(6, -3, 4, 3, '#d97706'); // Top braid knot
-                px(4, 3, 8, 1, '#f8fafc'); // Silver circlet
-                px(7, 3, 2, 1, '#38bdf8');
-            } else if (role === 'lyra') {
-                // River keeper floral garland & wavy turquoise hair
-                px(3, 0, 10, 3, '#06b6d4');
-                px(2, 3, 2, 8, '#0891b2');
-                px(12, 3, 2, 8, '#0891b2');
-                px(4, 2, 8, 1, '#34d399'); // Floral wreath
-                px(6, 2, 2, 1, '#fde047');
-            } else if (role === 'tariq') {
-                // Red resistance beret & neat beard
-                px(4, 0, 9, 3, '#dc2626');
-                px(3, 1, 3, 2, '#991b1b');
-                if (dir !== 1) {
-                    px(5, 8, 6, 2, '#292524');
-                }
-            } else if (role === 'elena') {
-                // Ivory monastic wimple
-                px(2, 0, 12, 3, '#581c87');
-                px(3, 2, 10, 2, '#f8fafc');
-                px(2, 3, 2, 7, '#f8fafc');
-                px(12, 3, 2, 7, '#f8fafc');
-            } else if (role === 'rowan') {
-                // Forest hunter cap with red pheasant feather
-                px(3, 0, 10, 3, '#15803d');
-                px(11, -3, 2, 4, '#dc2626'); // Feather
-            } else if (role === 'kael') {
-                // Field visor cap
-                px(3, 0, 10, 2, '#c2410c');
-                px(2, 2, 12, 1, '#9a3412');
-            } else if (role === 'zephyr') {
-                // White desert keffiyeh & sage beard
-                px(2, 0, 12, 3, '#f8fafc');
-                px(4, 2, 8, 1, '#1e293b');
-                px(2, 3, 2, 8, '#f8fafc');
-                px(12, 3, 2, 8, '#f8fafc');
-                if (dir !== 1) {
-                    px(5, 8, 6, 3, '#e2e8f0');
-                }
-            } else if (hairStyle == 0) {
-                px(3, 1, 10, 3, hCol);
-                px(2, 2, 2, 3, hCol);
-                px(12, 2, 2, 3, hCol);
-                if (dir === 1) px(3, 3, 10, 6, hCol);
-            } else if (hairStyle == 1) {
-                px(2, 1, 12, 3, hCol);
-                px(2, 4, 2, 6, hCol);
-                px(12, 4, 2, 6, hCol);
-                if (dir === 1) px(3, 3, 10, 7, hCol);
-            } else if (hairStyle == 2) {
-                px(2, 1, 12, 3, tunicColor);
-                px(2, 3, 2, 7, tunicColor);
-                px(12, 3, 2, 7, tunicColor);
-                px(4, 2, 8, 1, trimCol);
-                if (dir === 1) px(3, 3, 10, 7, tunicColor);
+            if (dir === 1) {
+                // Back of wizard cowl
+                px(2, 0, 12, 10, '#1e1b4b');
+                px(4, 3, 8, 2, '#312e81');
+                px(4, 1, 8, 1, '#fbbf24');
             } else {
-                px(4, 0, 8, 3, hCol);
-                px(6, -1, 4, 2, hCol);
-                if (dir === 1) px(4, 3, 8, 7, hCol);
+                // Long Silver Sage Beard & Moustache
+                px(5, 7, 6, 2, '#e2e8f0');
+                px(4, 8, 8, 4, '#cbd5e1');
+                px(5, 9, 6, 4, '#f8fafc');
+                px(6, 13, 4, 3, '#cbd5e1');
+                px(7, 16, 2, 2, '#94a3b8');
             }
+        } else if (role === 'maya') {
+            // Commander Maya: High braided warrior hair with golden officer circlet & sapphire
+            px(3, 0, 10, 3, '#92400e');
+            px(4, 0, 8, 1, '#b45309');
+            px(6, -3, 4, 3, '#78350f'); // Braided crown knot
+            px(7, -3, 2, 1, '#fbbf24'); // Gold ribbon
+            px(3, 2, 10, 1, '#fbbf24'); // Officer circlet
+            px(7, 2, 2, 2, '#38bdf8'); // Sapphire
+            px(2, 3, 2, 5, '#92400e'); // Side braids
+            px(12, 3, 2, 5, '#92400e');
+            if (dir === 1) {
+                px(3, 2, 10, 8, '#78350f');
+                px(6, 4, 4, 8, '#b45309');
+            }
+        } else if (role === 'lyra') {
+            // Bridgekeeper Lyra: Long river-turquoise waves & white water lily wreath
+            px(3, 0, 10, 3, '#06b6d4');
+            px(4, 0, 8, 1, '#67e8f9');
+            px(2, 3, 2, 10, '#0891b2');
+            px(12, 3, 2, 10, '#0891b2');
+            px(4, 2, 8, 1, '#34d399'); // Lily garland
+            px(5, 1, 2, 2, '#ffffff'); // Water lily blossom
+            px(10, 1, 2, 2, '#ffffff');
+            px(6, 2, 1, 1, '#fde047');
+            if (dir === 1) {
+                px(3, 2, 10, 10, '#0891b2');
+                px(4, 4, 8, 6, '#06b6d4');
+            }
+        } else if (role === 'tariq') {
+            // Comrade Tariq: Crimson resistance beret & neat beard
+            px(3, 0, 10, 3, '#dc2626');
+            px(2, 1, 4, 2, '#991b1b');
+            px(7, 1, 2, 2, '#fbbf24'); // Brass gear badge
+            if (dir !== 1) {
+                px(5, 7, 6, 2, '#1c1917');
+                px(6, 9, 4, 1, '#292524');
+            } else {
+                px(3, 2, 10, 6, '#1c1917');
+            }
+        } else if (role === 'elena') {
+            // Sister Elena: Royal purple habit & ivory monastic wimple
+            px(2, -1, 12, 4, '#581c87');
+            px(3, 2, 10, 2, '#f8fafc');
+            px(2, 3, 2, 8, '#f8fafc');
+            px(12, 3, 2, 8, '#f8fafc');
+            if (dir === 1) {
+                px(2, 0, 12, 11, '#581c87');
+                px(4, 2, 8, 8, '#6b21a8');
+            }
+        } else if (role === 'rowan') {
+            // Ranger Rowan: Forest hunter bycocket cap & pheasant feather
+            px(3, 0, 10, 3, '#15803d');
+            px(4, 0, 8, 1, '#22c55e');
+            px(12, -4, 2, 5, '#dc2626'); // Feather
+            px(13, -2, 1, 3, '#fbbf24');
+            px(2, 3, 2, 4, '#78350f');
+            px(12, 3, 2, 4, '#78350f');
+            if (dir === 1) {
+                px(3, 2, 10, 6, '#15803d');
+            }
+        } else if (role === 'kael') {
+            // Organizer Kael: Resistance bandana & field visor
+            px(3, 0, 10, 3, '#c2410c');
+            px(2, 2, 12, 1, '#fed7aa'); // Bandana band
+            px(7, 2, 2, 1, '#ef4444'); // Resistance badge
+            px(2, 3, 2, 4, '#44403c');
+            px(12, 3, 2, 4, '#44403c');
+            if (dir === 1) {
+                px(3, 2, 10, 6, '#c2410c');
+            }
+        } else if (role === 'zephyr') {
+            // Elder Zephyr: Solar laurel wreath & braided white sage beard
+            px(2, 0, 12, 3, '#f8fafc');
+            px(3, 2, 10, 1, '#fbbf24'); // Solar wreath
+            px(6, 1, 4, 1, '#fde047');
+            px(2, 3, 2, 8, '#f8fafc');
+            px(12, 3, 2, 8, '#f8fafc');
+            if (dir !== 1) {
+                px(5, 7, 6, 2, '#e2e8f0');
+                px(6, 9, 4, 4, '#f8fafc');
+                px(7, 13, 2, 2, '#fbbf24'); // Golden beard clasp
+            } else {
+                px(2, 2, 12, 8, '#f8fafc');
+            }
+        } else if (role === 'player') {
+            // Auron: High-Detail 32-Bit Golden Adventurer Hair (3-tone shading + bangs + crown tufts)
+            const hDark = '#92400e';
+            const hMid = '#f59e0b';
+            const hLight = '#fde047';
+            const hGlint = '#fef08a';
+
+            // Crown volume & highlights
+            px(3, 0, 10, 3, hMid);
+            px(4, 0, 8, 1, hLight);
+            px(5, -1, 6, 2, hLight);
+            px(4, 1, 2, 1, hGlint);
+
+            if (dir !== 1) {
+                // Layered front bangs sweeping across forehead
+                px(3, 3, 3, 2, hMid);
+                px(7, 3, 3, 2, hLight);
+                px(11, 3, 2, 2, hDark);
+                // Sideburn tufts
+                px(2, 2, 2, 4, hDark);
+                px(12, 2, 2, 4, hDark);
+            } else {
+                // Back of hero hair with layered nape locks
+                px(3, 2, 10, 7, hDark);
+                px(4, 1, 8, 3, hMid);
+                px(5, 0, 6, 2, hLight);
+                px(4, 7, 8, 2, '#78350f');
+            }
+        } else if (hairStyle == 0) {
+            px(3, 1, 10, 3, hairColor);
+            px(2, 2, 2, 3, hairColor);
+            px(12, 2, 2, 3, hairColor);
+            if (dir === 1) px(3, 3, 10, 6, hairColor);
+        } else if (hairStyle == 1) {
+            px(2, 1, 12, 3, hairColor);
+            px(2, 4, 2, 6, hairColor);
+            px(12, 4, 2, 6, hairColor);
+            if (dir === 1) px(3, 3, 10, 7, hairColor);
+        } else if (hairStyle == 2) {
+            px(2, 1, 12, 3, tunicColor);
+            px(2, 3, 2, 7, tunicColor);
+            px(12, 3, 2, 7, tunicColor);
+            px(4, 2, 8, 1, trimCol);
+            if (dir === 1) px(3, 3, 10, 7, tunicColor);
+        } else {
+            px(4, 0, 8, 3, hairColor);
+            px(6, -1, 4, 2, hairColor);
+            if (dir === 1) px(4, 3, 8, 7, hairColor);
         }
 
         // Equipped Head Circlet on Player
@@ -2039,6 +2231,7 @@
         if ((role === 'avi' || (equipment && equipment.back)) && dir === 1) {
             const cloakCol = role === 'avi' ? '#1e1b4b' : (equipment.back.visualColor || '#4338ca');
             px(3, 10, 10, 7, cloakCol);
+            px(4, 11, 8, 5, '#312e81');
         }
 
         // 4. Weapons & Shields
@@ -2050,16 +2243,18 @@
             px(13, -2, 4, 3, '#38bdf8');
             px(14, -1, 2, 1, '#ffffff');
         } else if (role === 'player' && !holdingItemOverhead && !opts.hideWeapons) {
-            // Off-Hand Shield (only if equipped and not hidden)
+            // Off-Hand Shield (heraldic boss & trim)
             if (equipment && equipment.offHand) {
                 const shColor = equipment.offHand.visualColor || '#fbbf24';
                 px(13, 11, 3, 5, shColor);
                 px(14, 12, 1, 3, '#0284c7');
+                px(14, 11, 1, 1, '#ffffff');
             }
-            // Main-Hand Prism Crystal (only if equipped and not hidden)
+            // Main-Hand Prism Crystal
             if (equipment && equipment.mainHand) {
                 const mhColor = equipment.mainHand.visualColor || '#38bdf8';
                 px(0, 11, 2, 4, mhColor);
+                px(0, 11, 1, 1, '#ffffff');
             }
         }
 
@@ -3442,20 +3637,21 @@
             themeColor: '#064e3b',
             groundColor: '#15803d',
             isBrightAlttpZone: true,
-            riverRows: [9, 10, 11],
+            riverRows: [13, 14, 15],
+            riverCols: [26, 27, 28, 29, 30],
             codexKey: 'river_nuance',
             curedGoal: 3,
             puzzleGoal: 3,
             questTitle: 'Activate 3 Crystal Switches & Free 3 River Citizens',
             mentorName: 'Bridgekeeper Lyra',
             portalTarget: 3,
-            chest: { col: 7, row: 5, itemId: 'prism_sunburst' },
+            chest: { col: 31, row: 5, itemId: 'prism_sunburst' },
             cols: 52,
             rows: 48,
             buildings: [
-                { id: 'river_lodge', col: 12, row: 8, wCols: 4, hRows: 3, spriteKey: 'blue_cottage_1', roofColor: 'blue', name: "Ferryman's Lodge" },
+                { id: 'river_lodge', col: 8, row: 7, wCols: 4, hRows: 3, spriteKey: 'blue_cottage_1', roofColor: 'blue', name: "Ferryman's Lodge" },
                 { id: 'river_mill', col: 36, row: 12, wCols: 4, hRows: 3, spriteKey: 'cyan_house', roofColor: 'slate', name: "Sunlit Mill" },
-                { id: 'river_haven', col: 14, row: 30, wCols: 4, hRows: 3, spriteKey: 'shed', roofColor: 'wood', name: "Nuance Rest Haven" }
+                { id: 'river_haven', col: 8, row: 28, wCols: 4, hRows: 3, spriteKey: 'shed', roofColor: 'wood', name: "Nuance Rest Haven" }
             ],
             aviPreDialogues: [
                 'Welcome to the Sunlit Riverfront of Nuance. Outrage algorithms washed out the bridge here so communities could no longer verify the truth together.',
@@ -3469,7 +3665,7 @@
             ally: {
                 name: 'Bridgekeeper Lyra',
                 role: 'lyra',
-                col: 21, row: 16,
+                col: 18, row: 14,
                 tunicColor: '#0284c7',
                 dialogues: [
                     'Those three crystal conduits along the riverbank resonate with clarity. Attune each one to restore the ancient wooden bridge.'
@@ -3618,14 +3814,15 @@
             themeColor: '#065f46',
             groundColor: '#166534',
             isBrightAlttpZone: true,
-            riverRows: [8, 9],
+            riverRows: [7, 8],
+            riverCols: [26, 27, 28, 29],
             codexKey: 'woods_inquiry',
             curedGoal: 3,
             puzzleGoal: 3,
             questTitle: 'Solve the Glade Block & Beacon Trial and Free 3 Seekers',
             mentorName: 'Ranger Rowan',
             portalTarget: 6,
-            chest: { col: 26, row: 5, itemId: 'raiment_solidarity' },
+            chest: { col: 26, row: 4, itemId: 'raiment_solidarity' },
             cols: 58,
             rows: 54,
             buildings: [
@@ -3732,14 +3929,15 @@
             themeColor: '#0c4a6e',
             groundColor: '#15803d',
             isBrightAlttpZone: true,
-            riverRows: [9, 10],
+            riverRows: [13, 14, 15],
+            riverCols: [26, 27, 28, 29, 30],
             codexKey: 'oasis_solidarity',
             curedGoal: 4,
             puzzleGoal: 3,
             questTitle: 'Complete the 3 Socratic Pillars & Free 4 Vanguard Citizens',
             mentorName: 'Elder Zephyr',
             portalTarget: 8,
-            chest: { col: 7, row: 5, itemId: 'crown_veritas' },
+            chest: { col: 31, row: 5, itemId: 'crown_veritas' },
             cols: 58,
             rows: 54,
             buildings: [
@@ -5320,53 +5518,45 @@
         // 2. Tailored sector topography & bespoke road networks for each individual zone
         // (Seamlessly connects ONLY adjacent valid sector gateways without cloned crossroads)
         if (mapIndex === 2) {
-            // MAP 3: Sunlit Riverfront of Nuance (Diagonal River Delta & Socratic Bridge)
+            // MAP 3: Sunlit Riverfront of Nuance (Cohesive River Corridor & Socratic Bridge)
             // Exits: West (r 10..18) and South (c 14..22)
             for (let r = 1; r < rows - 1; r++) {
-                const riverC = Math.round((cols - 10) - (r / rows) * (cols - 22) + 4 * Math.sin(r * 0.2));
                 for (let c = 1; c < cols - 1; c++) {
-                    if (Math.abs(c - riverC) <= 2) {
-                        grid[r][c] = 4; // Sparkling River Water
-                    } else if (c < riverC - 3 && Math.sin(r * 0.3 + c * 0.2) > 0.46) {
+                    if (c >= 26 && c <= 30) {
+                        grid[r][c] = 4; // Sparkling River Water (Clean N-S Channel)
+                    } else if (c < 24 && Math.sin(r * 0.3 + c * 0.2) > 0.46) {
                         grid[r][c] = 3; // West forest grove
-                    } else if (c > riverC + 3 && Math.cos(r * 0.25 + c * 0.2) > 0.44) {
+                    } else if (c > 32 && Math.cos(r * 0.25 + c * 0.2) > 0.44) {
                         grid[r][c] = 3; // East willow grove
                     } else if (Math.sin(r * 0.4 + c * 0.3) < -0.42) {
                         grid[r][c] = 9; // Wildflower glades
                     }
                 }
             }
-            // Arched Wooden Bridge across river
-            for (const r of [13, 14, 15, 16]) {
-                const riverC = Math.round((cols - 10) - (r / rows) * (cols - 22) + 4 * Math.sin(r * 0.2));
-                for (let c = riverC - 2; c <= riverC + 2; c++) {
-                    if (c > 0 && c < cols - 1) grid[r][c] = 8;
-                }
+            // West gate road leading directly to riverbank crossing
+            for (let r = 13; r <= 15; r++) {
+                for (let c = 1; c <= 25; c++) grid[r][c] = 1;
             }
-            // West gate road leading to river bridge
-            for (let r = 12; r <= 16; r++) {
-                const riverC = Math.round((cols - 10) - (r / rows) * (cols - 22) + 4 * Math.sin(r * 0.2));
-                for (let c = 1; c <= riverC - 2; c++) grid[r][c] = 1;
-            }
-            // East bank riverfront road leading from bridge down to South gate
+            // West bank road leading south to Map 6 (The Borderlands) North entrance
             for (let r = 14; r < rows - 1; r++) {
-                const riverC = Math.round((cols - 10) - (r / rows) * (cols - 22) + 4 * Math.sin(r * 0.2));
-                for (let dc = 1; dc <= 4; dc++) {
-                    if (riverC + dc < cols - 1) grid[r][riverC + dc] = 1;
-                }
+                for (let c = 16; c <= 20; c++) grid[r][c] = 1;
             }
-            for (let r = rows - 6; r < rows - 1; r++) {
-                for (let c = 15; c <= 21; c++) grid[r][c] = 1;
+            // East bank road extending from bridge to Sunlit Mill and Far Shore
+            for (let r = 13; r <= 15; r++) {
+                for (let c = 31; c <= 44; c++) grid[r][c] = 1;
+            }
+            // Sunlit Mill access path
+            for (let r = 15; r <= 18; r++) {
+                for (let c = 37; c <= 39; c++) grid[r][c] = 1;
             }
         } else if (mapIndex === 3) {
             // MAP 4: The Iron & Velvet Divide (Scenic dividing stream & unified bridge)
             // Exits: North (c 14..22) and East (r 10..18)
             for (let r = 1; r < rows - 1; r++) {
                 for (let c = 1; c < cols - 1; c++) {
-                    // Natural crystal dividing brook down the center
-                    if (c === midC || c === midC + 1) {
+                    if (c >= 25 && c <= 27) {
                         grid[r][c] = 4; // Dividing stream (water)
-                    } else if (c < midC) {
+                    } else if (c < 25) {
                         // Western Iron Bastion: Cobblestone parade grounds & trees
                         if (c >= 8 && c <= 20 && r >= 18 && r <= 30) {
                             grid[r][c] = 1;
@@ -5391,15 +5581,16 @@
                 for (let c = 15; c <= 21; c++) grid[r][c] = 1;
             }
             // Connecting highway from West bastion across to East promenade
-            for (let r = 12; r <= 16; r++) {
+            for (let r = 13; r <= 15; r++) {
                 for (let c = 18; c < cols - 1; c++) {
-                    if (c !== midC && c !== midC + 1) grid[r][c] = 1;
+                    if (c < 25 || c > 27) grid[r][c] = 1;
                 }
             }
             // Arched wooden causeway bridges across the central dividing stream
-            for (let r = 12; r <= 16; r++) {
-                grid[r][midC] = 8;
-                grid[r][midC + 1] = 8;
+            for (let r = 13; r <= 15; r++) {
+                for (let c = 25; c <= 27; c++) {
+                    grid[r][c] = 8;
+                }
             }
         } else if (mapIndex === 4) {
             // MAP 5: The Dogma Catacombs (Gothic Cruciform Cathedral Crypt)
@@ -5409,13 +5600,11 @@
                     if (c === 10 || c === cols - 11 || r === 8 || r === rows - 9) {
                         grid[r][c] = 1; // Outer Cloister Ambulatory
                     } else if (c % 6 === 0 && r % 6 === 0) {
-                        // Vaulted Stone Pillar
-                        grid[r][c] = 1;
+                        grid[r][c] = 1; // Vaulted Stone Pillar
                     } else if ((c === 12 || c === cols - 13) && (r === 12 || r === rows - 13)) {
                         grid[r][c] = 10; // Outrage Vent in crypt alcove
                     } else if (Math.sin(r * 0.38 + c * 0.38) > 0.52) {
-                        // Clear Crypt Floor
-                        grid[r][c] = 0;
+                        grid[r][c] = 0; // Clear Crypt Floor
                     }
                 }
             }
@@ -5431,7 +5620,6 @@
             for (let r = 3; r <= 12; r++) {
                 for (let c = midC - 5; c <= midC + 5; c++) grid[r][c] = 1;
             }
-            // Pillars cleared
         } else if (mapIndex === 5) {
             // MAP 6: Whispering Woods of Inquiry (Labyrinthine Forest with Rings & Creek)
             // Exits: South (c 14..22) and East (r 10..18)
@@ -5447,20 +5635,10 @@
                     }
                 }
             }
-            // Northern meandering woodland brook (isolated in deep north forest)
+            // Northern woodland brook (crossing north grove)
             for (let c = 1; c < cols - 1; c++) {
-                const brookR = Math.round(7 + 2 * Math.sin(c * 0.22));
-                if (brookR > 1 && brookR < rows - 2) {
-                    grid[brookR][c] = 4;
-                    grid[brookR + 1][c] = 4;
-                }
-            }
-            for (let c = 26; c <= 29; c++) {
-                const brookR = Math.round(7 + 2 * Math.sin(c * 0.22));
-                if (brookR > 1 && brookR < rows - 2) {
-                    grid[brookR][c] = 8;
-                    grid[brookR + 1][c] = 8;
-                }
+                grid[7][c] = 4;
+                grid[8][c] = 4;
             }
             // South entrance path leading to central glade
             for (let r = 16; r < rows - 1; r++) {
@@ -5470,11 +5648,14 @@
             for (let r = 12; r <= 16; r++) {
                 for (let c = 18; c < cols - 1; c++) grid[r][c] = 1;
             }
+            // Path from central glade north to ancient bridge crossing
+            for (let r = 9; r <= 16; r++) {
+                for (let c = 26; c <= 29; c++) grid[r][c] = 1;
+            }
         } else if (mapIndex === 6) {
             // MAP 7: Borderland of Scapegoats (Scenic River Corridor, Checkpoint Courtyard & Ruined Ramparts)
             // Exits: North (c 14..22), South (c 14..22), West (r 10..18)
             for (let r = 1; r < rows - 1; r++) {
-                // Diagonal earthen ramparts with wide breaches so movement is never blocked
                 const wallC = Math.round(20 + (r / rows) * (cols - 30));
                 for (let c = 1; c < cols - 1; c++) {
                     const isBreach = (r >= 10 && r <= 18) || (r >= 26 && r <= 32) || (r >= 40 && r <= 46);
@@ -5483,7 +5664,7 @@
                     } else if (Math.abs(c - (wallC - 4)) <= 1 || Math.abs(c - (wallC + 4)) <= 1) {
                         grid[r][c] = 1; // Patrol roadway
                     } else if (Math.sin(c * 0.45) * Math.cos(r * 0.45) > 0.65 && c > 4 && c < cols - 4 && r > 4 && r < rows - 4) {
-                        grid[r][c] = 3; // Natural organic tree copses (NEVER continuous diagonal walls)
+                        grid[r][c] = 3; // Natural organic tree copses
                     } else if (Math.sin(r * 0.35 + c * 0.25) < -0.45) {
                         grid[r][c] = 9; // Grassy meadow patches
                     }
@@ -5492,46 +5673,40 @@
 
             // Continental River flowing from North (from Sunlit Riverfront Map 2) to South (into Highland Oasis Map 7)
             for (let r = 1; r < rows - 1; r++) {
-                const rivC = Math.round(18 + 3 * Math.sin(r * 0.15));
-                for (let c = rivC - 2; c <= rivC + 2; c++) {
-                    if (c > 0 && c < cols - 1) grid[r][c] = 4; // Sparkling River
+                for (let c = 26; c <= 30; c++) {
+                    grid[r][c] = 4; // Sparkling River Water (Width 5)
                 }
             }
 
             // Arched Wooden Causeway Bridges crossing river at highway intersection
-            for (let r = 12; r <= 16; r++) {
-                const rivC = Math.round(18 + 3 * Math.sin(r * 0.15));
-                for (let c = rivC - 2; c <= rivC + 2; c++) {
-                    if (c > 0 && c < cols - 1) grid[r][c] = 8;
+            for (let r = 13; r <= 15; r++) {
+                for (let c = 26; c <= 30; c++) {
+                    grid[r][c] = 8;
                 }
             }
 
-            // Checkpoint Gatehouse Courtyard at highway junction
-            for (let r = 11; r <= 17; r++) {
-                for (let c = 13; c <= 23; c++) {
-                    if (grid[r][c] !== 8) grid[r][c] = 1;
-                }
+            // West highway connecting from Citadel to Bridge
+            for (let r = 13; r <= 15; r++) {
+                for (let c = 1; c <= 25; c++) grid[r][c] = 1;
             }
-            // West entrance supply road from Citadel
+
+            // Checkpoint Gatehouse Courtyard at eastern highway junction
             for (let r = 12; r <= 16; r++) {
-                for (let c = 1; c <= 14; c++) grid[r][c] = 1;
+                for (let c = 31; c <= 46; c++) grid[r][c] = 1;
             }
-            // North patrol road to Riverfront exit
-            for (let r = 1; r <= 12; r++) {
-                for (let c = 15; c <= 21; c++) {
-                    if (grid[r][c] !== 4 && grid[r][c] !== 8) grid[r][c] = 1;
-                }
+
+            // North patrol road to Riverfront exit (aligned seamlessly on West Bank)
+            for (let r = 1; r <= 13; r++) {
+                for (let c = 16; c <= 20; c++) grid[r][c] = 1;
             }
-            // South patrol road to Highland Oasis exit
-            for (let r = 16; r < rows - 1; r++) {
-                for (let c = 15; c <= 21; c++) {
-                    if (grid[r][c] !== 4 && grid[r][c] !== 8) grid[r][c] = 1;
-                }
+
+            // South patrol road to Highland Oasis exit (aligned seamlessly on West Bank)
+            for (let r = 15; r < rows - 1; r++) {
+                for (let c = 16; c <= 20; c++) grid[r][c] = 1;
             }
         } else if (mapIndex === 7) {
             // MAP 8: Highland Oasis of Solidarity (Mountain Oasis Lake & Shrine Island)
             // Exits: North (c 14..22) and West (r 10..18)
-            // Lake centered at (cols - 16, rows - 14)
             for (let r = 1; r < rows - 1; r++) {
                 for (let c = 1; c < cols - 1; c++) {
                     const lakeDist = Math.hypot((c - (cols - 16)) * 0.9, r - (rows - 14));
@@ -5541,7 +5716,6 @@
                     } else if (lakeDist <= 17) {
                         grid[r][c] = 1; // Complete Circular Lakeside Promenade
                     } else {
-                        // Organic isolated palm & tree groves (NO diagonal unbroken walls!)
                         const groveNoise = Math.sin(c * 0.42) * Math.cos(r * 0.42);
                         if (groveNoise > 0.68 && c > 5 && c < cols - 5 && r > 5 && r < rows - 5) {
                             grid[r][c] = 3; // Lush tree copses
@@ -5553,17 +5727,9 @@
             }
 
             // River inlet from North (flowing down from Map 6 into the Oasis Lake)
-            for (let r = 1; r <= rows - 26; r++) {
-                const rivC = Math.round(18 + 2 * Math.sin(r * 0.18));
-                for (let c = rivC - 2; c <= rivC + 2; c++) {
-                    if (c > 0 && c < cols - 1) grid[r][c] = 4;
-                }
-            }
-            // Arched wooden causeway bridges across the inlet
-            for (let r = 12; r <= 16; r++) {
-                const rivC = Math.round(18 + 2 * Math.sin(r * 0.18));
-                for (let c = rivC - 2; c <= rivC + 2; c++) {
-                    if (c > 0 && c < cols - 1) grid[r][c] = 8;
+            for (let r = 1; r <= 20; r++) {
+                for (let c = 26; c <= 30; c++) {
+                    grid[r][c] = 4;
                 }
             }
 
@@ -5579,21 +5745,17 @@
                 if (grid[pierR + 1] && c > 0 && c < cols - 1) grid[pierR + 1][c] = 8;
             }
 
-            // West gate avenue connecting all the way to Platonic Villa (c 1..42)
-            for (let r = 12; r <= 16; r++) {
-                for (let c = 1; c <= 42; c++) {
-                    if (grid[r][c] !== 4 && grid[r][c] !== 8) grid[r][c] = 1;
-                }
+            // West gate avenue connecting from Citadel to Promenade and Causeway
+            for (let r = 13; r <= 15; r++) {
+                for (let c = 1; c <= 25; c++) grid[r][c] = 1;
             }
-            // Grand North-South Avenue connecting North exit down to Promenade
+            // East bank avenue extending to Platonic Villa
+            for (let r = 13; r <= 15; r++) {
+                for (let c = 31; c <= 42; c++) grid[r][c] = 1;
+            }
+            // Grand North-South Avenue connecting North exit down to Promenade (aligned on West Bank)
             for (let r = 1; r <= rows - 18; r++) {
-                for (let c = 15; c <= 21; c++) {
-                    if (grid[r][c] !== 4 && grid[r][c] !== 8) grid[r][c] = 1;
-                }
-            }
-            // South avenue connecting to Solidarity Pavilion (col 16, row 32)
-            for (let r = 16; r <= 38; r++) {
-                for (let c = 14; c <= 18; c++) {
+                for (let c = 16; c <= 20; c++) {
                     if (grid[r][c] !== 4 && grid[r][c] !== 8) grid[r][c] = 1;
                 }
             }
@@ -5603,11 +5765,11 @@
                 { c: 12, r: 10, w: 7, h: 5 }, // oasis_lodge
                 { c: 36, r: 10, w: 6, h: 5 }, // platonic_villa
                 { c: 16, r: 32, w: 6, h: 5 }, // solidarity_pavillion
-                { c: 7, r: 5, w: 4, h: 4 },   // chest
+                { c: 42, r: 6, w: 4, h: 4 },  // chest
                 { c: 21, r: 16, w: 5, h: 5 }, // Elder Zephyr
-                { c: 9, r: 12, w: 4, h: 4 },  // Pillar 1
-                { c: 17, r: 12, w: 4, h: 4 }, // Pillar 2
-                { c: 25, r: 12, w: 4, h: 4 }  // Pillar 3
+                { c: 12, r: 10, w: 4, h: 4 }, // Pillar 1
+                { c: 12, r: 18, w: 4, h: 4 }, // Pillar 2
+                { c: 12, r: 26, w: 4, h: 4 }  // Pillar 3
             ];
             clears.forEach(cl => {
                 for (let cr = cl.r - 2; cr <= cl.r + cl.h + 2; cr++) {
@@ -5883,11 +6045,11 @@
 
         // Spawn Zelda ALTTP-style Puzzles in the 3 Bright Interlude Zones
         if (mapIndex === 2) {
-            // Map 3 (Sunlit Riverfront): 3 Crystal Orbs activated by [Q] Prism Beam or [E] Axiom Strike!
+            // Map 3 (Sunlit Riverfront): 3 Crystal Orbs on accessible West Bank activated by [Q] Prism Beam or [E] Axiom Strike!
             [
-                { col: 9, row: 13, label: 'West Crystal Switch' },
-                { col: 17, row: 12, label: 'Center Crystal Switch' },
-                { col: 25, row: 13, label: 'East Crystal Switch' }
+                { col: 10, row: 12, label: 'West Crystal Switch' },
+                { col: 18, row: 10, label: 'North Crystal Switch' },
+                { col: 16, row: 20, label: 'South Crystal Switch' }
             ].forEach((sw, idx) => {
                 puzzleNodes.push({
                     id: `crys_${idx}`,
@@ -5900,14 +6062,14 @@
                 });
             });
         } else if (mapIndex === 5) {
-            // Map 6 (Whispering Woods): 2 Pushable Mirror Blocks + 1 Socratic Forest Pedestal!
+            // Map 6 (Whispering Woods): 2 Pushable Mirror Blocks + 1 Socratic Forest Pedestal in accessible Sacred Glade!
             puzzleNodes.push({
                 id: 'block_west',
                 type: 'push_block',
-                x: 10.5 * TILE_SIZE,
-                y: 14.5 * TILE_SIZE,
-                targetX: 10.5 * TILE_SIZE,
-                targetY: 11.5 * TILE_SIZE,
+                x: 14.5 * TILE_SIZE,
+                y: 22.5 * TILE_SIZE,
+                targetX: 14.5 * TILE_SIZE,
+                targetY: 18.5 * TILE_SIZE,
                 solved: false,
                 label: 'West Mirror Block'
             });
@@ -5915,17 +6077,17 @@
                 id: 'block_east',
                 type: 'push_block',
                 x: 24.5 * TILE_SIZE,
-                y: 14.5 * TILE_SIZE,
+                y: 22.5 * TILE_SIZE,
                 targetX: 24.5 * TILE_SIZE,
-                targetY: 11.5 * TILE_SIZE,
+                targetY: 18.5 * TILE_SIZE,
                 solved: false,
                 label: 'East Mirror Block'
             });
             puzzleNodes.push({
                 id: 'stele_woods',
                 type: 'socratic_pedestal',
-                x: 17.5 * TILE_SIZE,
-                y: 11.5 * TILE_SIZE,
+                x: 19.5 * TILE_SIZE,
+                y: 18.5 * TILE_SIZE,
                 solved: false,
                 label: 'Tablet of Lateral Inquiry',
                 claim: '"A viral post claims the river is poisoned by outsiders, citing an anonymous screenshot. How does an Archivist verify the truth?"',
@@ -5936,10 +6098,10 @@
                 ]
             });
         } else if (mapIndex === 7) {
-            // Map 8 (Highland Oasis): 3 Socratic Pedestals of Solidarity along the river!
+            // Map 8 (Highland Oasis): 3 Socratic Pedestals of Solidarity along the accessible Western Promenade!
             const trials = [
                 {
-                    col: 9, row: 12, label: 'Pillar of Nuance',
+                    col: 12, row: 10, label: 'Pillar of Nuance',
                     claim: '"When an algorithm rewards extreme outrage with 10x reach, what happens to a creator who only chases metrics?"',
                     options: [
                         { text: 'Audience Capture: they gradually morph into an extreme caricature of themselves to keep feeding the algorithm.', correct: true },
@@ -5948,7 +6110,7 @@
                     ]
                 },
                 {
-                    col: 17, row: 12, label: 'Pillar of Mutual Aid',
+                    col: 12, row: 18, label: 'Pillar of Mutual Aid',
                     claim: '"Why do Manosphere and reactionary Femosphere grifters both curate the worst 0.1% of clips from the opposite gender?"',
                     options: [
                         { text: 'To manufacture fatalistic cynicism and keep their audiences isolated and paying for grievance content.', correct: true },
@@ -5957,7 +6119,7 @@
                     ]
                 },
                 {
-                    col: 25, row: 12, label: 'Pillar of Solidarity',
+                    col: 12, row: 26, label: 'Pillar of Solidarity',
                     claim: '"When oligarchs consolidate wealth and cut local services, why do authoritarian feeds suddenly flood with scapegoating against minorities?"',
                     options: [
                         { text: 'Scapegoat Displacement: redirecting legitimate working-class economic frustration away from powerful elites onto vulnerable neighbors.', correct: true },
@@ -5987,7 +6149,7 @@
                 x: (mapMeta.ally.col + 0.5) * TILE_SIZE,
                 y: (mapMeta.ally.row + 0.5) * TILE_SIZE,
                 name: mapMeta.ally.name,
-                role: 'ally',
+                role: mapMeta.ally.role || 'ally',
                 tunicColor: mapMeta.ally.tunicColor,
                 isQuestGiver: true,
                 preDialogues: mapMeta.aviPreDialogues,
@@ -6048,11 +6210,20 @@
                 enemies.push(createEnemy(spot.x, spot.y, 'masked', 'Masked Citizen', false));
             });
         } else if (mapMeta.isBrightAlttpZone) {
-            // Spawn citizens on the northern shore across the river!
+            // Spawn citizens on the far shore across the river/brook!
             const count = mapMeta.curedGoal + 1;
             const roles = ['masked', 'iron', 'velvet', 'inquisitor', 'border'];
             for (let i = 0; i < count; i++) {
-                const spot = findOpenTileSpot(8 + i * 5, 5);
+                let spot;
+                if (mapIndex === 2) {
+                    spot = findOpenTileSpot(35 + i * 4, 16 + (i % 2) * 6); // East bank across river
+                } else if (mapIndex === 5) {
+                    spot = findOpenTileSpot(22 + i * 4, 4); // North terrace across brook
+                } else if (mapIndex === 7) {
+                    spot = findOpenTileSpot(36 + i * 4, 16 + (i % 2) * 6); // East shore across causeway
+                } else {
+                    spot = findOpenTileSpot(34 + i * 4, 16);
+                }
                 enemies.push(createEnemy(spot.x, spot.y, roles[(mapIndex + i) % roles.length], ' isolated Citizen', false));
             }
         } else {
@@ -6313,30 +6484,35 @@
         revealFogAround(player.x, player.y, 6);
         hazardCleanseProgress = {};
 
+        unlockRiverBridgeIfReady();
         updateAllHud();
     }
 
     function unlockRiverBridgeIfReady() {
         const mapMeta = MAPS[currentMapIndex];
-        if (!mapMeta.puzzleGoal) return;
+        if (!mapMeta || !mapMeta.puzzleGoal) return;
         const solvedCount = puzzleNodes.filter(n => n.solved).length;
         player.mapPuzzlesSolved = solvedCount;
+
+        const targetCols = Array.isArray(mapMeta.riverCols) ? mapMeta.riverCols : [26, 27, 28, 29, 30];
 
         if (solvedCount >= mapMeta.puzzleGoal && Array.isArray(mapMeta.riverRows)) {
             let newlyBuilt = false;
             mapMeta.riverRows.forEach(r => {
-                for (let c = 16; c <= 18; c++) {
+                targetCols.forEach(c => {
                     if (mapGrid[r] && mapGrid[r][c] === 4) {
                         mapGrid[r][c] = 8; // Extend Walkable ALTTP Bridge!
                         spawnBurst((c + 0.5) * TILE_SIZE, (r + 0.5) * TILE_SIZE, '#fde047', 14);
                         newlyBuilt = true;
                     }
-                }
+                });
             });
             if (newlyBuilt) {
                 audio.sfxPuzzleSolved();
                 triggerShake(0.25);
-                addFloatText(17.5 * TILE_SIZE, mapMeta.riverRows[0] * TILE_SIZE - 16, '🌉 ANCIENT BRIDGE EXTENDED!', '#34d399');
+                const midR = mapMeta.riverRows[Math.floor(mapMeta.riverRows.length / 2)];
+                const midC = targetCols[Math.floor(targetCols.length / 2)];
+                addFloatText((midC + 0.5) * TILE_SIZE, midR * TILE_SIZE - 16, '🌉 ANCIENT BRIDGE EXTENDED!', '#34d399');
             }
         }
         checkQuestProgressState();
@@ -8777,6 +8953,30 @@
         }
     }
 
+    // Helper: Determine authentic 32-bit bridge orientation across waterways
+    function isBridgeEastWest(mapGrid, r, c, curCols, curRows) {
+        if (!mapGrid[r]) return true;
+        // Direct water adjacency check
+        const isWaterN = (r > 0 && mapGrid[r - 1] && mapGrid[r - 1][c] === 4);
+        const isWaterS = (r < curRows - 1 && mapGrid[r + 1] && mapGrid[r + 1][c] === 4);
+        const isWaterW = (c > 0 && mapGrid[r][c - 1] === 4);
+        const isWaterE = (c < curCols - 1 && mapGrid[r][c + 1] === 4);
+
+        if ((isWaterN || isWaterS) && !isWaterW && !isWaterE) return true;
+        if ((isWaterW || isWaterE) && !isWaterN && !isWaterS) return false;
+
+        // Scan outward vertically vs horizontally to determine river flow
+        for (let d = 1; d <= 6; d++) {
+            const up = (r - d >= 0 && mapGrid[r - d]) ? mapGrid[r - d][c] : null;
+            const dn = (r + d < curRows && mapGrid[r + d]) ? mapGrid[r + d][c] : null;
+            if (up === 4 || dn === 4) return true;
+            const lt = (c - d >= 0) ? mapGrid[r][c - d] : null;
+            const rt = (c + d < curCols) ? mapGrid[r][c + d] : null;
+            if (lt === 4 || rt === 4) return false;
+        }
+        return true;
+    }
+
     function renderGameplay() {
         const w = canvas.width;
         const h = canvas.height;
@@ -9134,126 +9334,228 @@
                         ctx.fillRect(tx + TILE_SIZE - 4.5 - shoreLapping, ty + 2, 1, TILE_SIZE - 4);
                     }
                 } else if (t === 8) {
-                    // Authentic 32-Bit Hand-Carved Timber Bridge across waterways
+                    // Authentic 32-Bit Hand-Carved 3D Timber Bridge across waterways (NO GAPS!)
                     const isWaterAbove = (r > 0 && mapGrid[r - 1] && mapGrid[r - 1][c] === 4);
                     const isWaterBelow = (r < curRows - 1 && mapGrid[r + 1] && mapGrid[r + 1][c] === 4);
                     const isWaterLeft = (c > 0 && mapGrid[r][c - 1] === 4);
                     const isWaterRight = (c < curCols - 1 && mapGrid[r][c + 1] === 4);
 
-                    const isEastWest = (c > 0 && (mapGrid[r][c - 1] === 8 || mapGrid[r][c - 1] === 1)) ||
-                                       (c < curCols - 1 && (mapGrid[r][c + 1] === 8 || mapGrid[r][c + 1] === 1));
+                    const isBridgeAbove = (r > 0 && mapGrid[r - 1] && mapGrid[r - 1][c] === 8);
+                    const isBridgeBelow = (r < curRows - 1 && mapGrid[r + 1] && mapGrid[r + 1][c] === 8);
+                    const isBridgeLeft = (c > 0 && mapGrid[r][c - 1] === 8);
+                    const isBridgeRight = (c < curCols - 1 && mapGrid[r][c + 1] === 8);
 
-                    // 1. Soft River Under-Shadow
+                    const isEW = isBridgeEastWest(mapGrid, r, c, curCols, curRows);
+
+                    // 1. Soft River Under-Shadow cast onto water below/beside bridge
                     if (isWaterBelow) {
-                        ctx.fillStyle = 'rgba(2, 6, 23, 0.55)';
-                        ctx.fillRect(tx, ty + TILE_SIZE, TILE_SIZE, 5);
+                        ctx.fillStyle = 'rgba(2, 6, 23, 0.58)';
+                        ctx.fillRect(tx, ty + TILE_SIZE, TILE_SIZE, 6);
                     }
                     if (isWaterRight) {
-                        ctx.fillStyle = 'rgba(2, 6, 23, 0.55)';
-                        ctx.fillRect(tx + TILE_SIZE, ty, 5, TILE_SIZE);
+                        ctx.fillStyle = 'rgba(2, 6, 23, 0.52)';
+                        ctx.fillRect(tx + TILE_SIZE, ty, 6, TILE_SIZE);
                     }
 
                     // 2. Heavy Submerged Foundation Pilings (next to water)
-                    if (isWaterAbove || isWaterBelow || isWaterLeft || isWaterRight) {
-                        ctx.fillStyle = '#271004';
-                        if (isWaterLeft) ctx.fillRect(tx - 3, ty + 4, 4, TILE_SIZE - 8);
-                        if (isWaterRight) ctx.fillRect(tx + TILE_SIZE - 1, ty + 4, 4, TILE_SIZE - 8);
+                    if (isWaterLeft) {
+                        ctx.fillStyle = '#1c0a00';
+                        ctx.fillRect(tx - 4, ty + 2, 4, TILE_SIZE - 4);
+                        ctx.fillStyle = 'rgba(240, 249, 255, 0.45)';
+                        ctx.fillRect(tx - 5, ty + 6, 2, TILE_SIZE - 12);
                     }
-
-                    // 3. Wooden Planking
-                    if (isEastWest) {
-                        // Vertical wooden cross-planks (4 planks per tile)
-                        for (let p = 0; p < 4; p++) {
-                            const px = tx + p * 8;
-                            ctx.fillStyle = '#3b1807';
-                            ctx.fillRect(px, ty, 8, TILE_SIZE);
-                            ctx.fillStyle = (p % 2 === 0) ? '#854d0e' : '#78350f';
-                            ctx.fillRect(px + 1, ty, 6, TILE_SIZE);
-                            ctx.fillStyle = '#a16207';
-                            ctx.fillRect(px + 2, ty + 3, 2, TILE_SIZE - 6);
-                            ctx.fillStyle = '#0f172a';
-                            ctx.fillRect(px + 2, ty + 5, 2, 2);
-                            ctx.fillRect(px + 2, ty + TILE_SIZE - 7, 2, 2);
-                            ctx.fillStyle = '#94a3b8';
-                            ctx.fillRect(px + 2, ty + 5, 1, 1);
-                            ctx.fillRect(px + 2, ty + TILE_SIZE - 7, 1, 1);
-                        }
-                    } else {
-                        // Horizontal wooden cross-planks (4 planks per tile)
-                        for (let p = 0; p < 4; p++) {
-                            const py = ty + p * 8;
-                            ctx.fillStyle = '#3b1807';
-                            ctx.fillRect(tx, py, TILE_SIZE, 8);
-                            ctx.fillStyle = (p % 2 === 0) ? '#854d0e' : '#78350f';
-                            ctx.fillRect(tx, py + 1, TILE_SIZE, 6);
-                            ctx.fillStyle = '#a16207';
-                            ctx.fillRect(tx + 3, py + 2, TILE_SIZE - 6, 2);
-                            ctx.fillStyle = '#0f172a';
-                            ctx.fillRect(tx + 5, py + 2, 2, 2);
-                            ctx.fillRect(tx + TILE_SIZE - 7, py + 2, 2, 2);
-                            ctx.fillStyle = '#94a3b8';
-                            ctx.fillRect(tx + 5, py + 2, 1, 1);
-                            ctx.fillRect(tx + TILE_SIZE - 7, py + 2, 1, 1);
-                        }
+                    if (isWaterRight) {
+                        ctx.fillStyle = '#1c0a00';
+                        ctx.fillRect(tx + TILE_SIZE, ty + 2, 4, TILE_SIZE - 4);
+                        ctx.fillStyle = 'rgba(240, 249, 255, 0.45)';
+                        ctx.fillRect(tx + TILE_SIZE + 3, ty + 6, 2, TILE_SIZE - 12);
                     }
-
-                    // 4. Carved Safety Handrails & Baluster Posts along bridge sides
                     if (isWaterAbove) {
-                        ctx.fillStyle = '#271004';
-                        ctx.fillRect(tx, ty, TILE_SIZE, 5);
-                        ctx.fillStyle = '#92400e';
-                        ctx.fillRect(tx, ty, TILE_SIZE, 3);
-                        ctx.fillStyle = '#d97706';
-                        ctx.fillRect(tx, ty, TILE_SIZE, 1);
-                        for (let postX = tx + 3; postX < tx + TILE_SIZE; postX += 10) {
-                            ctx.fillStyle = '#451a03';
-                            ctx.fillRect(postX, ty, 3, 7);
-                            ctx.fillStyle = '#fbbf24';
-                            ctx.fillRect(postX + 1, ty + 2, 1, 1);
-                        }
+                        ctx.fillStyle = '#1c0a00';
+                        ctx.fillRect(tx + 2, ty - 3, TILE_SIZE - 4, 3);
                     }
                     if (isWaterBelow) {
-                        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-                        ctx.fillRect(tx, ty + TILE_SIZE - 6, TILE_SIZE, 2);
-                        ctx.fillStyle = '#271004';
-                        ctx.fillRect(tx, ty + TILE_SIZE - 5, TILE_SIZE, 5);
-                        ctx.fillStyle = '#92400e';
-                        ctx.fillRect(tx, ty + TILE_SIZE - 5, TILE_SIZE, 3);
-                        ctx.fillStyle = '#d97706';
-                        ctx.fillRect(tx, ty + TILE_SIZE - 5, TILE_SIZE, 1);
-                        for (let postX = tx + 3; postX < tx + TILE_SIZE; postX += 10) {
-                            ctx.fillStyle = '#451a03';
-                            ctx.fillRect(postX, ty + TILE_SIZE - 6, 3, 6);
-                            ctx.fillStyle = '#fbbf24';
-                            ctx.fillRect(postX + 1, ty + TILE_SIZE - 4, 1, 1);
+                        ctx.fillStyle = '#1c0a00';
+                        ctx.fillRect(tx + 2, ty + TILE_SIZE, TILE_SIZE - 4, 3);
+                    }
+
+                    // 3. Solid Continuous Timber Deck Base (Zero gaps between planks or tiles!)
+                    ctx.fillStyle = '#451a03';
+                    ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
+                    ctx.fillStyle = '#78350f';
+                    ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
+
+                    // 4. Wooden Deck Planking with Realistic Woodgrain, Bevels & Iron Bolt Studs
+                    if (isEW) {
+                        // East-West Bridge: Planks run vertically across the width (4 planks per 32px tile)
+                        for (let p = 0; p < 4; p++) {
+                            const px = tx + p * 8;
+                            // Alternating aged oak tones
+                            ctx.fillStyle = (p % 2 === 0) ? '#854d0e' : '#78350f';
+                            ctx.fillRect(px, ty, 8, TILE_SIZE);
+                            // Woodgrain center highlight
+                            ctx.fillStyle = '#92400e';
+                            ctx.fillRect(px + 1, ty, 6, TILE_SIZE);
+                            ctx.fillStyle = '#a16207';
+                            ctx.fillRect(px + 2, ty + 2, 3, TILE_SIZE - 4);
+                            ctx.fillStyle = '#b45309';
+                            ctx.fillRect(px + 3, ty + 4, 1, TILE_SIZE - 8);
+                            // 1px subtle plank seam shadow (NO gaps!)
+                            ctx.fillStyle = '#3b1807';
+                            ctx.fillRect(px, ty, 1, TILE_SIZE);
+                            // Countersunk iron bolt studs with glint
+                            ctx.fillStyle = '#0f172a';
+                            ctx.fillRect(px + 3, ty + 4, 2, 2);
+                            ctx.fillRect(px + 3, ty + TILE_SIZE - 6, 2, 2);
+                            ctx.fillStyle = '#94a3b8';
+                            ctx.fillRect(px + 3, ty + 4, 1, 1);
+                            ctx.fillRect(px + 3, ty + TILE_SIZE - 6, 1, 1);
+                        }
+                    } else {
+                        // North-South Bridge: Planks run horizontally across the width (4 planks per 32px tile)
+                        for (let p = 0; p < 4; p++) {
+                            const py = ty + p * 8;
+                            ctx.fillStyle = (p % 2 === 0) ? '#854d0e' : '#78350f';
+                            ctx.fillRect(tx, py, TILE_SIZE, 8);
+                            ctx.fillStyle = '#92400e';
+                            ctx.fillRect(tx, py + 1, TILE_SIZE, 6);
+                            ctx.fillStyle = '#a16207';
+                            ctx.fillRect(tx + 2, py + 2, TILE_SIZE - 4, 3);
+                            ctx.fillStyle = '#b45309';
+                            ctx.fillRect(tx + 4, py + 3, TILE_SIZE - 8, 1);
+                            // 1px subtle plank seam shadow
+                            ctx.fillStyle = '#3b1807';
+                            ctx.fillRect(tx, py, TILE_SIZE, 1);
+                            // Countersunk iron bolt studs with glint
+                            ctx.fillStyle = '#0f172a';
+                            ctx.fillRect(tx + 4, py + 3, 2, 2);
+                            ctx.fillRect(tx + TILE_SIZE - 6, py + 3, 2, 2);
+                            ctx.fillStyle = '#94a3b8';
+                            ctx.fillRect(tx + 4, py + 3, 1, 1);
+                            ctx.fillRect(tx + TILE_SIZE - 6, py + 3, 1, 1);
                         }
                     }
-                    if (isWaterLeft && !isEastWest) {
-                        ctx.fillStyle = '#271004';
-                        ctx.fillRect(tx, ty, 5, TILE_SIZE);
-                        ctx.fillStyle = '#92400e';
-                        ctx.fillRect(tx, ty, 3, TILE_SIZE);
-                        ctx.fillStyle = '#d97706';
-                        ctx.fillRect(tx, ty, 1, TILE_SIZE);
-                        for (let postY = ty + 3; postY < ty + TILE_SIZE; postY += 10) {
-                            ctx.fillStyle = '#451a03';
-                            ctx.fillRect(tx, postY, 7, 3);
-                            ctx.fillStyle = '#fbbf24';
-                            ctx.fillRect(tx + 2, postY + 1, 1, 1);
+
+                    // 5. Sturdy 3D Balustrades, Carved Wooden Posts & Safety Handrails
+                    if (isEW) {
+                        // East-West bridge: Handrails run along TOP and BOTTOM edges over water
+                        if (isWaterAbove || !isBridgeAbove) {
+                            // Top Handrail
+                            ctx.fillStyle = '#1c0a00';
+                            ctx.fillRect(tx, ty, TILE_SIZE, 6);
+                            ctx.fillStyle = '#78350f';
+                            ctx.fillRect(tx, ty, TILE_SIZE, 4);
+                            ctx.fillStyle = '#d97706';
+                            ctx.fillRect(tx, ty, TILE_SIZE, 1.5);
+                            ctx.fillStyle = '#fde047';
+                            ctx.fillRect(tx, ty, TILE_SIZE, 0.7);
+                            // 3D vertical baluster posts every 8-10px
+                            for (let postX = tx + 2; postX < tx + TILE_SIZE; postX += 9) {
+                                ctx.fillStyle = '#271004';
+                                ctx.fillRect(postX - 1, ty, 4, 7);
+                                ctx.fillStyle = '#92400e';
+                                ctx.fillRect(postX, ty, 2, 6);
+                                ctx.fillStyle = '#fbbf24';
+                                ctx.fillRect(postX, ty + 1, 2, 1);
+                            }
+                            // Shadow cast onto bridge deck below handrail
+                            ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+                            ctx.fillRect(tx, ty + 6, TILE_SIZE, 2.5);
                         }
-                    }
-                    if (isWaterRight && !isEastWest) {
-                        ctx.fillStyle = '#271004';
-                        ctx.fillRect(tx + TILE_SIZE - 5, ty, 5, TILE_SIZE);
-                        ctx.fillStyle = '#92400e';
-                        ctx.fillRect(tx + TILE_SIZE - 3, ty, 3, TILE_SIZE);
-                        ctx.fillStyle = '#d97706';
-                        ctx.fillRect(tx + TILE_SIZE - 1, ty, 1, TILE_SIZE);
-                        for (let postY = ty + 3; postY < ty + TILE_SIZE; postY += 10) {
-                            ctx.fillStyle = '#451a03';
-                            ctx.fillRect(tx + TILE_SIZE - 6, postY, 6, 3);
-                            ctx.fillStyle = '#fbbf24';
-                            ctx.fillRect(tx + TILE_SIZE - 4, postY + 1, 1, 1);
+
+                        if (isWaterBelow || !isBridgeBelow) {
+                            // Bottom Handrail
+                            ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+                            ctx.fillRect(tx, ty + TILE_SIZE - 7, TILE_SIZE, 2);
+                            ctx.fillStyle = '#1c0a00';
+                            ctx.fillRect(tx, ty + TILE_SIZE - 5, TILE_SIZE, 5);
+                            ctx.fillStyle = '#78350f';
+                            ctx.fillRect(tx, ty + TILE_SIZE - 5, TILE_SIZE, 3.5);
+                            ctx.fillStyle = '#d97706';
+                            ctx.fillRect(tx, ty + TILE_SIZE - 5, TILE_SIZE, 1.5);
+                            ctx.fillStyle = '#fde047';
+                            ctx.fillRect(tx, ty + TILE_SIZE - 5, TILE_SIZE, 0.7);
+                            for (let postX = tx + 2; postX < tx + TILE_SIZE; postX += 9) {
+                                ctx.fillStyle = '#271004';
+                                ctx.fillRect(postX - 1, ty + TILE_SIZE - 6, 4, 6);
+                                ctx.fillStyle = '#92400e';
+                                ctx.fillRect(postX, ty + TILE_SIZE - 5, 2, 5);
+                                ctx.fillStyle = '#fbbf24';
+                                ctx.fillRect(postX, ty + TILE_SIZE - 4, 2, 1);
+                            }
+                        }
+
+                        // Chiseled Stone / Sturdy Timber Shore Abutments on Bridge Entrances (West/East)
+                        if (!isBridgeLeft && !isWaterLeft) {
+                            ctx.fillStyle = '#1e293b';
+                            ctx.fillRect(tx, ty, 3, TILE_SIZE);
+                            ctx.fillStyle = '#475569';
+                            ctx.fillRect(tx + 1, ty + 2, 1, TILE_SIZE - 4);
+                        }
+                        if (!isBridgeRight && !isWaterRight) {
+                            ctx.fillStyle = '#1e293b';
+                            ctx.fillRect(tx + TILE_SIZE - 3, ty, 3, TILE_SIZE);
+                            ctx.fillStyle = '#475569';
+                            ctx.fillRect(tx + TILE_SIZE - 2, ty + 2, 1, TILE_SIZE - 4);
+                        }
+                    } else {
+                        // North-South bridge: Handrails run along LEFT and RIGHT edges over water
+                        if (isWaterLeft || !isBridgeLeft) {
+                            // Left Handrail
+                            ctx.fillStyle = '#1c0a00';
+                            ctx.fillRect(tx, ty, 6, TILE_SIZE);
+                            ctx.fillStyle = '#78350f';
+                            ctx.fillRect(tx, ty, 4, TILE_SIZE);
+                            ctx.fillStyle = '#d97706';
+                            ctx.fillRect(tx, ty, 1.5, TILE_SIZE);
+                            ctx.fillStyle = '#fde047';
+                            ctx.fillRect(tx, ty, 0.7, TILE_SIZE);
+                            for (let postY = ty + 2; postY < ty + TILE_SIZE; postY += 9) {
+                                ctx.fillStyle = '#271004';
+                                ctx.fillRect(tx, postY - 1, 7, 4);
+                                ctx.fillStyle = '#92400e';
+                                ctx.fillRect(tx, postY, 6, 2);
+                                ctx.fillStyle = '#fbbf24';
+                                ctx.fillRect(tx + 1, postY, 1, 2);
+                            }
+                            ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+                            ctx.fillRect(tx + 6, ty, 2.5, TILE_SIZE);
+                        }
+
+                        if (isWaterRight || !isBridgeRight) {
+                            // Right Handrail
+                            ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+                            ctx.fillRect(tx + TILE_SIZE - 7, ty, 2, TILE_SIZE);
+                            ctx.fillStyle = '#1c0a00';
+                            ctx.fillRect(tx + TILE_SIZE - 5, ty, 5, TILE_SIZE);
+                            ctx.fillStyle = '#78350f';
+                            ctx.fillRect(tx + TILE_SIZE - 5, ty, 3.5, TILE_SIZE);
+                            ctx.fillStyle = '#d97706';
+                            ctx.fillRect(tx + TILE_SIZE - 1.5, ty, 1.5, TILE_SIZE);
+                            ctx.fillStyle = '#fde047';
+                            ctx.fillRect(tx + TILE_SIZE - 0.7, ty, 0.7, TILE_SIZE);
+                            for (let postY = ty + 2; postY < ty + TILE_SIZE; postY += 9) {
+                                ctx.fillStyle = '#271004';
+                                ctx.fillRect(tx + TILE_SIZE - 6, postY - 1, 6, 4);
+                                ctx.fillStyle = '#92400e';
+                                ctx.fillRect(tx + TILE_SIZE - 5, postY, 5, 2);
+                                ctx.fillStyle = '#fbbf24';
+                                ctx.fillRect(tx + TILE_SIZE - 4, postY, 1, 2);
+                            }
+                        }
+
+                        // Shore Abutments on Bridge Entrances (North/South)
+                        if (!isBridgeAbove && !isWaterAbove) {
+                            ctx.fillStyle = '#1e293b';
+                            ctx.fillRect(tx, ty, TILE_SIZE, 3);
+                            ctx.fillStyle = '#475569';
+                            ctx.fillRect(tx + 2, ty + 1, TILE_SIZE - 4, 1);
+                        }
+                        if (!isBridgeBelow && !isWaterBelow) {
+                            ctx.fillStyle = '#1e293b';
+                            ctx.fillRect(tx, ty + TILE_SIZE - 3, TILE_SIZE, 3);
+                            ctx.fillStyle = '#475569';
+                            ctx.fillRect(tx + 2, ty + TILE_SIZE - 2, TILE_SIZE - 4, 1);
                         }
                     }
                 }
