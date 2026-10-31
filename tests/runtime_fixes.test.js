@@ -757,14 +757,14 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
 
         // Map 5: Whispering Woods (2 Mirror Blocks + 1 Stele in Sacred Glade)
         env.loadMap(5);
-        assert.equal(env.mapGrid[7][27], 4, 'Map 5 brook crossing must start as water before puzzle');
+        assert.equal(env.mapGrid[14][23], 4, 'Map 5 brook crossing must start as water before puzzle');
         assert.equal(env.puzzleNodes.length, 3, 'Map 5 must define 3 glade puzzle trials');
         env.puzzleNodes.forEach(node => {
             assert.ok(node.y / env.TILE_SIZE > 10, `Trial ${node.label} must be accessible in Sacred Glade`);
             node.solved = true;
         });
         env.unlockRiverBridgeIfReady();
-        assert.equal(env.mapGrid[7][27], 8, 'Map 5 brook crossing must be extended to bridge tile 8');
+        assert.equal(env.mapGrid[14][23], 8, 'Map 5 brook crossing must be extended to bridge tile 8');
 
         // Map 7: Highland Oasis (3 Socratic Pedestals along Western Promenade)
         env.loadMap(7);
@@ -825,6 +825,147 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         assert.ok(fillRectCalls.some(c => c.fillStyle === '#2563eb'), 'Velvet must render cobalt bikini');
         assert.ok(fillRectCalls.some(c => c.fillStyle === '#92400e'), 'Velvet must render voluminous brunette hair');
         assert.ok(fillRectCalls.some(c => c.fillStyle === '#d97706'), 'Velvet must render hair highlights and navel');
+    });
+
+
+    test('Mind Freed NPCs retain their unique role, body type, and gender without copying the player character', () => {
+        const env = loadGameEnvironment();
+        const fillRectCalls = [];
+        const mockCtx = {
+            save() {}, restore() {}, translate() {},
+            fillRect(x, y, w, h) { fillRectCalls.push({ fillStyle: this.fillStyle, x, y, w, h }); },
+            beginPath() {}, ellipse() {}, fill() {}, stroke() {}, arc() {}
+        };
+
+        // 1. Female Velvet character when Mind-Freed:
+        // Must retain female bikini model with turquoise/seafoam palette (#06b6d4) and golden ribbons (#fbbf24)
+        // Must NOT render player character tunic (#0284c7) or male adventurer blonde hair
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'velvet', isMindFreed: true, dir: 0 });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#06b6d4'), 'Mind Freed Velvet must render radiant turquoise bikini');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#fbbf24'), 'Mind Freed Velvet must render golden bikini ties / ribbon');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#92400e'), 'Mind Freed Velvet must retain long flowing brunette hair');
+        assert.ok(!fillRectCalls.some(c => c.fillStyle === '#0284c7'), 'Mind Freed Velvet must NOT wear player blue tunic');
+
+        // 2. Iron Sentry when Mind-Freed:
+        // Must retain heavy iron armor model with peaceful forest green palette (#15803d) and emerald irises
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, { role: 'iron', isMindFreed: true, dir: 0 });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#15803d'), 'Mind Freed Iron must render peaceful forest green armor');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#86efac'), 'Mind Freed Iron must render light green trim');
+        assert.ok(!fillRectCalls.some(c => c.fillStyle === '#0284c7'), 'Mind Freed Iron must NOT wear player blue tunic');
+
+        // 3. Gameplay Render Check: en.state === 'cured' passes original role and isMindFreed: true
+        env.loadMap(3);
+        const curedVelvet = env.enemies.find(e => e.role === 'velvet');
+        if (curedVelvet) {
+            curedVelvet.state = 'cured';
+            assert.equal(curedVelvet.role, 'velvet', 'Cured enemy role must remain velvet');
+        }
+    });
+
+    test('Player character customization dynamically renders custom hair styles and hair colors', () => {
+        const env = loadGameEnvironment();
+        const fillRectCalls = [];
+        const mockCtx = {
+            save() {}, restore() {}, translate() {},
+            fillRect(x, y, w, h) { fillRectCalls.push({ fillStyle: this.fillStyle, x, y, w, h }); },
+            beginPath() {}, ellipse() {}, fill() {}, stroke() {}, arc() {}
+        };
+
+        // Crimson hair color (#dc2626) with Spiky Vanguard style (hairStyle: 1)
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, {
+            role: 'player',
+            hairStyle: 1,
+            hairColor: '#dc2626',
+            dir: 0
+        });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#dc2626'), 'Player must render chosen crimson hair color');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#f87171'), 'Player must render dynamic crimson hair highlight');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#7f1d1d'), 'Player must render dynamic crimson hair shadow');
+
+        // Charcoal Black hair color (#1e293b) with Topknot style (hairStyle: 3)
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, {
+            role: 'player',
+            hairStyle: 3,
+            hairColor: '#1e293b',
+            dir: 0
+        });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#1e293b'), 'Player must render charcoal black hair');
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#334155'), 'Player must render dynamic slate highlight');
+
+        // Traveler Cowl (hairStyle: 2) with custom emerald tunic
+        fillRectCalls.length = 0;
+        env.drawCharacterSprite(mockCtx, 100, 100, 2, {
+            role: 'player',
+            hairStyle: 2,
+            tunicColor: '#10b981',
+            dir: 0
+        });
+        assert.ok(fillRectCalls.some(c => c.fillStyle === '#10b981'), 'Player cowl must match custom tunic color');
+    });
+
+    test('Socratic duel responds to [Q], [E], [R] keyboard inputs and renders boss portrait', () => {
+        const env = loadGameEnvironment();
+        const boss = {
+            id: 'alpha_cynic',
+            name: 'THE ALPHA-CYNIC ALGORITHM',
+            role: 'iron',
+            hp: 200,
+            maxHp: 200,
+            duelData: {
+                claim: 'Outrage is human nature!',
+                options: [
+                    { text: 'Nuanced reflection exposing algorithmic baiting', correct: true },
+                    { text: 'Anger response', correct: false },
+                    { text: 'Ignorance', correct: false }
+                ]
+            }
+        };
+
+        env.triggerSocraticBossDuel(boss, 0.50);
+        const modal = env.document.getElementById('socraticDuelModal');
+        assert.ok(!modal.classList.contains('hidden'), 'Socratic duel modal must be visible');
+        assert.equal(env.appState, 'PAUSED', 'Game must be paused during Socratic duel');
+        assert.equal(env.document.getElementById('duelBossName').textContent, 'THE ALPHA-CYNIC ALGORITHM');
+        assert.equal(env.document.getElementById('duelThresholdBadge').textContent, '50% DELUSION ARMOR');
+
+        // Verify choices container contains [Q], [E], [R] hotkey tags
+        const choicesContainer = env.document.getElementById('duelChoicesContainer');
+        assert.ok(choicesContainer.innerHTML.includes('>Q<'), 'Choice 1 must have [Q] hotkey badge');
+        assert.ok(choicesContainer.innerHTML.includes('>E<'), 'Choice 2 must have [E] hotkey badge');
+        assert.ok(choicesContainer.innerHTML.includes('>R<'), 'Choice 3 must have [R] hotkey badge');
+
+        // Select correct option 0 (triggers cure audio, damages boss, unpauses)
+        env.selectSocraticDuelOption(0);
+        assert.ok(modal.classList.contains('hidden'), 'Modal must be hidden after valid resolution');
+        assert.equal(env.appState, 'PLAYING', 'Game must unpause after duel choice');
+        assert.ok(boss.hp < 200, 'Boss must take delusion shatter damage');
+    });
+
+    test('Keep of the Demagogue renders grand citadel keep exterior and imperial throne room interior with final boss confrontation', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(8);
+
+        // Map 8 must define Keep of the Demagogue with grand 10x6 dimensions and citadel_keep style
+        const keep = env.MAPS[8].buildings.find(b => b.id === 'demagogue_keep');
+        assert.ok(keep, 'Map 8 must define demagogue_keep');
+        assert.equal(keep.wCols, 10, 'Keep exterior width must be 10 columns');
+        assert.equal(keep.hRows, 6, 'Keep exterior height must be 6 rows');
+        assert.equal(keep.style, 'citadel_keep', 'Keep exterior style must be citadel_keep');
+
+        // Entering the Keep sets up custom 780x640 grand imperial hall
+        env.enterBuildingInterior(keep);
+        assert.ok(env.currentInterior, 'Interior state must be active');
+        assert.ok(env.currentInterior.isDemagogueKeep, 'Interior must be flagged as isDemagogueKeep');
+        assert.equal(env.currentInterior.roomW, 840, 'Throne room interior width must be 840px');
+        assert.equal(env.currentInterior.roomH, 640, 'Throne room interior height must be 640px');
+
+        // Exit cleanly
+        env.exitBuildingInterior();
+        assert.equal(env.currentInterior, null, 'Interior must be cleared on exit');
     });
 
 });

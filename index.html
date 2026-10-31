@@ -574,33 +574,42 @@
 
     <!-- =================================================================== -->
     <!-- =================================================================== -->
-    <!-- SOCRATIC COGNITIVE INOCULATION BOSS DUEL: MINIMAL BOTTOM COMBAT BOX -->
+    <!-- SOCRATIC COGNITIVE INOCULATION BOSS DUEL: 32-BIT RETRO COMBAT BOX   -->
     <!-- =================================================================== -->
     <div id="socraticDuelModal" class="fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 hidden pointer-events-auto">
-        <div class="max-w-3xl w-full retro-box rounded-2xl p-4 sm:p-5 border-2 border-amber-400 bg-slate-950/95 shadow-[0_0_40px_rgba(251,191,36,0.3)] flex flex-col gap-2.5">
-            <!-- Header bar with Boss name, threshold badge and hotkey reminder -->
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <div class="flex items-center gap-2">
-                    <span class="text-xl">⚡</span>
-                    <div>
-                        <span class="pixel-font text-[9px] text-amber-400 tracking-wider">SOCRATIC INOCULATION DUEL</span>
-                        <h3 id="duelBossName" class="text-sm sm:text-base font-extrabold text-white">BOSS</h3>
-                    </div>
+        <div class="max-w-3xl w-full relative bg-[#181109] border-4 border-[#78350f] shadow-[0_0_45px_rgba(0,0,0,0.95)] p-4 sm:p-5 flex flex-col gap-3 rounded-lg" style="box-shadow: inset 0 0 0 2px #d97706, 0 16px 36px rgba(0,0,0,0.9);">
+            <!-- 32-Bit Ornate Corner Rivets -->
+            <div class="absolute top-1.5 left-1.5 w-2.5 h-2.5 bg-[#fbbf24] border border-[#78350f]"></div>
+            <div class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#fbbf24] border border-[#78350f]"></div>
+            <div class="absolute bottom-1.5 left-1.5 w-2.5 h-2.5 bg-[#fbbf24] border border-[#78350f]"></div>
+            <div class="absolute bottom-1.5 right-1.5 w-2.5 h-2.5 bg-[#fbbf24] border border-[#78350f]"></div>
+
+            <!-- Header with Boss Portrait, Name & Delusion Armor Badge -->
+            <div class="flex items-center gap-3 border-b-2 border-[#78350f] pb-2.5">
+                <!-- Boss Portrait Frame -->
+                <div class="relative w-14 h-14 bg-[#090d16] border-2 border-[#fbbf24] shadow-[0_0_12px_rgba(251,191,36,0.35)] flex items-center justify-center shrink-0 overflow-hidden rounded">
+                    <canvas id="duelBossPortrait" width="56" height="56"></canvas>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span id="duelThresholdBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">50% DELUSION ARMOR</span>
-                    <span class="hidden sm:inline text-[10px] mono-font text-cyan-300 font-bold bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">PRESS [Q], [E] OR [R]</span>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <span class="pixel-font text-[9px] text-[#fbbf24] tracking-widest uppercase">⚡ SOCRATIC INOCULATION DUEL</span>
+                        <div class="flex items-center gap-2">
+                            <span id="duelThresholdBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-500">50% DELUSION ARMOR</span>
+                            <span class="text-[10px] mono-font text-amber-300 font-bold bg-[#271004] px-2 py-0.5 rounded border border-[#b45309]">HOTKEYS: [Q] [E] [R]</span>
+                        </div>
+                    </div>
+                    <h3 id="duelBossName" class="text-sm sm:text-base font-extrabold text-[#fde047] truncate mt-0.5 tracking-wide">BOSS</h3>
                 </div>
             </div>
 
-            <!-- Boss Quote / Delusion Broadcast -->
-            <div class="bg-slate-900/90 border-l-4 border-rose-500 px-3.5 py-2 rounded-r-xl">
-                <div class="text-[9px] uppercase font-bold text-rose-400 mono-font mb-0.5">Propaganda Broadcast:</div>
+            <!-- Boss Propaganda Distortion Exposure -->
+            <div class="bg-[#24140b] border-l-4 border-rose-500 px-3.5 py-2 rounded-r shadow-inner">
+                <div class="text-[9px] uppercase font-bold text-rose-400 mono-font mb-0.5 tracking-wider">Propaganda Distortion Broadcast:</div>
                 <p id="duelClaimText" class="text-xs sm:text-sm text-slate-100 italic leading-relaxed"></p>
             </div>
 
             <!-- 3 Minimal Choices with [Q], [E], [R] Key Prompts -->
-            <div id="duelChoicesContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
+            <div id="duelChoicesContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5"></div>
         </div>
     </div>
 
@@ -1680,6 +1689,7 @@
             role = 'player', // 'player', 'avi', 'ally', 'maya', 'lyra', 'tariq', 'elena', 'rowan', 'kael', 'zephyr', 'masked', 'iron', 'velvet', 'inquisitor', 'border', 'blackshirt'
             isStunned = false,
             isHurt = false,
+            isMindFreed = false, // When true, model remains its unique role/gender, but with serene peaceful palette
             holdingItemOverhead = false,
             equipment = null,
             spriteSheetId = null
@@ -1751,7 +1761,7 @@
             bootCuff = '#c2410c';
         } else if (role === 'velvet') {
             bootCol = skinColor;
-            bootCuff = '#1d4ed8';
+            bootCuff = isMindFreed ? '#06b6d4' : '#1d4ed8';
         }
 
         px(4, leftFootY, 3, 3, bootCol);
@@ -1763,9 +1773,10 @@
             px(4, leftFootY + 2, 3, 1, '#0f172a');
             px(9, rightFootY + 2, 3, 1, '#0f172a');
         } else {
-            // Delicate cobalt ankle straps
-            px(4, leftFootY + 2, 3, 1, '#1d4ed8');
-            px(9, rightFootY + 2, 3, 1, '#1d4ed8');
+            // Delicate feminine ankle straps (Cobalt when delusional, radiant turquoise when freed)
+            const strapCol = isMindFreed ? '#06b6d4' : '#1d4ed8';
+            px(4, leftFootY + 2, 3, 1, strapCol);
+            px(9, rightFootY + 2, 3, 1, strapCol);
         }
 
         // 2. High-Detail Tunic, Armor & Body Garment
@@ -1774,12 +1785,25 @@
             : tunicColor;
         let trimCol = '#fbbf24';
 
-        if (role === 'iron') { bodyCol = '#dc2626'; trimCol = '#fbbf24'; }
-        else if (role === 'velvet') { bodyCol = '#2563eb'; trimCol = '#93c5fd'; }
-        else if (role === 'inquisitor') { bodyCol = '#581c87'; trimCol = '#fde047'; }
-        else if (role === 'border') { bodyCol = '#92400e'; trimCol = '#fcd34d'; }
-        else if (role === 'blackshirt') { bodyCol = '#111827'; trimCol = '#ef4444'; }
-        else if (role === 'avi') { bodyCol = '#1e1b4b'; trimCol = '#fbbf24'; }
+        if (role === 'iron') {
+            bodyCol = isMindFreed ? '#15803d' : '#dc2626'; // Peaceful forest green when freed
+            trimCol = isMindFreed ? '#86efac' : '#fbbf24';
+        } else if (role === 'velvet') {
+            bodyCol = isMindFreed ? '#06b6d4' : '#2563eb'; // Radiant turquoise when freed
+            trimCol = isMindFreed ? '#fbbf24' : '#93c5fd';
+        } else if (role === 'inquisitor') {
+            bodyCol = isMindFreed ? '#7c3aed' : '#581c87';
+            trimCol = isMindFreed ? '#f8fafc' : '#fde047';
+        } else if (role === 'border') {
+            bodyCol = isMindFreed ? '#0d9488' : '#92400e';
+            trimCol = isMindFreed ? '#5eead4' : '#fcd34d';
+        } else if (role === 'blackshirt') {
+            bodyCol = isMindFreed ? '#334155' : '#111827';
+            trimCol = isMindFreed ? '#34d399' : '#ef4444';
+        } else if (role === 'masked') {
+            bodyCol = isMindFreed ? '#10b981' : tunicColor;
+            trimCol = '#fbbf24';
+        } else if (role === 'avi') { bodyCol = '#1e1b4b'; trimCol = '#fbbf24'; }
         else if (role === 'maya') { bodyCol = '#059669'; trimCol = '#fbbf24'; }
         else if (role === 'lyra') { bodyCol = '#0284c7'; trimCol = '#38bdf8'; }
         else if (role === 'tariq') { bodyCol = '#292524'; trimCol = '#dc2626'; }
@@ -1790,27 +1814,30 @@
         else if (role === 'ally') { bodyCol = tunicColor || '#059669'; trimCol = '#34d399'; }
 
         if (role === 'velvet') {
-            // Slender bikini femsphere model (reference art style: bikini, slender waist, bare skin, voluptuous 32-bit pixel art)
-            const bikiniCol = '#2563eb';
-            const bikiniShade = '#1d4ed8';
+            // Slender bikini femsphere model (clearly female, slender waist, bare skin, curvaceous 32-bit pixel art)
+            // Delusional: cynical cobalt blue; Mind Freed: radiant seafoam turquoise with golden ties
+            const bikiniCol = isMindFreed ? '#06b6d4' : '#2563eb';
+            const bikiniShade = isMindFreed ? '#0891b2' : '#1d4ed8';
+            const tieCol = isMindFreed ? '#fbbf24' : '#93c5fd';
+
             // Slender bare shoulders and décolletage with soft highlights
             px(4, 9, 8, 2, skinColor);
-            px(5, 9, 6, 1, '#fef08a'); // soft clavicle highlight
-            // Cobalt blue bikini top with center clasp
+            px(5, 9, 6, 1, '#fef08a'); // clavicle highlight
+            // Bikini top with center metallic clasp
             px(4, 11, 3, 2, bikiniCol);
             px(9, 11, 3, 2, bikiniCol);
             px(5, 10, 1, 1, bikiniShade); // shoulder straps
             px(10, 10, 1, 1, bikiniShade);
-            px(7, 11, 2, 1, '#93c5fd'); // center metallic clasp
+            px(7, 11, 2, 1, tieCol); // center clasp
             // Slender bare waist & midriff with natural curves
             px(5, 13, 6, 2, skinColor);
-            px(7, 13, 2, 1, '#fef08a'); // soft abdomen highlight
+            px(7, 13, 2, 1, '#fef08a');
             px(8, 14, 1, 1, '#d97706'); // defined navel
-            // Cobalt blue bikini bottom / shorts with side ties
+            // Bikini bottom / shorts with side ties
             px(4, 15, 8, 2, bikiniCol);
             px(5, 15, 6, 1, bikiniShade);
-            px(3, 15, 1, 1, '#93c5fd'); // side ties
-            px(12, 15, 1, 1, '#93c5fd');
+            px(3, 15, 1, 1, tieCol); // side ties
+            px(12, 15, 1, 1, tieCol);
         } else {
             // Torso Base
             px(3, 10, 10, 7, bodyCol);
@@ -1822,11 +1849,11 @@
             if (role === 'player') {
                 // High-detail Adventurer Tunic highlights & folds
                 px(6, 10, 4, 3, '#38bdf8'); // chest highlight
-                px(5, 11, 6, 2, '#0284c7');
+                px(5, 11, 6, 2, bodyCol);
                 // V-neck collar showing undershirt/skin
                 px(7, 10, 2, 2, '#fed7aa');
-                px(6, 10, 1, 2, '#fbbf24');
-                px(9, 10, 1, 2, '#fbbf24');
+                px(6, 10, 1, 2, trimCol);
+                px(9, 10, 1, 2, trimCol);
             } else if (role === 'maya') {
                 // Gold Vanguard Breastplate & Gorget
                 px(5, 10, 6, 4, '#fbbf24');
@@ -1879,39 +1906,31 @@
 
         // Front emblems & medallions rendered ONLY when facing camera/sides (dir !== 1)
         if (dir !== 1) {
-            // Professor Avi's golden scholarly stole with azure rune inlay
             if (role === 'avi') {
                 px(6, 10, 4, 7, '#fbbf24');
                 px(7, 11, 2, 5, '#38bdf8');
             } else if (role === 'maya') {
-                // Commander Maya: Gold sash & articulated pauldrons
                 px(4, 9, 8, 2, '#fbbf24');
                 px(1, 9, 3, 3, '#f59e0b');
                 px(12, 9, 3, 3, '#f59e0b');
-                px(6, 11, 4, 1, '#dc2626'); // officer crimson ribbon
+                px(6, 11, 4, 1, '#dc2626');
             } else if (role === 'lyra') {
-                // Bridgekeeper Lyra: Water lily river medallion
                 px(6, 11, 4, 3, '#38bdf8');
                 px(7, 12, 2, 1, '#fde047');
             } else if (role === 'tariq') {
-                // Comrade Tariq: Cross-chest harness strap & steel buckle
                 px(4, 10, 2, 5, '#78350f');
                 px(7, 12, 2, 2, '#94a3b8');
-                px(11, 14, 2, 3, '#64748b'); // Hanging spanner wrench
+                px(11, 14, 2, 3, '#64748b');
             } else if (role === 'elena') {
-                // Sister Elena: Glowing golden Prism rosary
                 px(6, 11, 4, 2, '#fbbf24');
                 px(7, 13, 2, 3, '#fde047');
             } else if (role === 'rowan') {
-                // Ranger Rowan: Leather quiver shoulder strap
                 px(3, 10, 2, 5, '#78350f');
             } else if (role === 'kael') {
-                // Organizer Kael: Humanitarian rescue cross
                 px(7, 11, 2, 4, '#ffffff');
                 px(6, 12, 4, 2, '#ffffff');
                 px(7, 12, 2, 2, '#ef4444');
             } else if (role === 'zephyr') {
-                // Elder Zephyr: Solar gold medallion
                 px(6, 11, 4, 4, '#f59e0b');
                 px(7, 12, 2, 2, '#fbbf24');
             }
@@ -1924,7 +1943,7 @@
             px(11, 9, 3, 2, shCol);
         }
 
-        // Arms & Vambraces (animated swing or raised overhead for Zelda Item-Get pose!)
+        // Arms & Vambraces
         const armSwing = (frame === 1) ? -1 : (frame === 3 ? 1 : 0);
         const handCol = (role === 'player' && equipment && equipment.hands && equipment.hands.visualColor)
             ? equipment.hands.visualColor
@@ -1936,15 +1955,13 @@
             px(13, 5, 2, 6, bodyCol);
             px(13, 3, 2, 2, handCol);
         } else if (role === 'iron') {
-            // Muscular bare arms + gold chain
             px(1, 10 + armSwing, 2, 6, skinColor);
             px(13, 10 - armSwing, 2, 6, skinColor);
-            px(6, 11, 4, 1, '#fbbf24');
+            px(6, 11, 4, 1, isMindFreed ? '#86efac' : '#fbbf24');
         } else if (role === 'velvet') {
-            // Slender bare feminine arms + gold bangle
             px(2, 10 + armSwing, 2, 6, skinColor);
             px(12, 10 - armSwing, 2, 6, skinColor);
-            px(12, 14 - armSwing, 2, 1, '#fbbf24');
+            px(12, 14 - armSwing, 2, 1, isMindFreed ? '#34d399' : '#fbbf24');
         } else {
             const armCol = (role === 'avi') ? '#1e1b4b' : bodyCol;
             px(1, 10 + armSwing, 2, 5, armCol);
@@ -1953,71 +1970,127 @@
             px(13, 14 - armSwing, 2, 2, handCol);
 
             if (role === 'player') {
-                // Leather bracers & gold rivets on adventurer wrists
                 px(1, 12 + armSwing, 2, 2, '#92400e');
                 px(13, 12 - armSwing, 2, 2, '#92400e');
                 px(1, 12 + armSwing, 1, 1, '#fbbf24');
                 px(14, 12 - armSwing, 1, 1, '#fbbf24');
             } else if (role === 'avi') {
-                // Gold wizard robe cuffs
                 px(1, 13 + armSwing, 2, 1, '#fbbf24');
                 px(13, 13 - armSwing, 2, 1, '#fbbf24');
             } else if (role === 'blackshirt') {
-                // Red authoritarian armband
-                px(13, 11 - armSwing, 2, 1, '#ef4444');
+                // Red authoritarian armband when delusional; Emerald resistance armband when mind freed
+                px(13, 11 - armSwing, 2, 1, isMindFreed ? '#34d399' : '#ef4444');
             }
         }
 
-        // 3. Head & Sculpted Facial Contours
-        const headSkin = role === 'avi' ? '#b87747' : skinColor;
+        // 3. Head & Sculpted Facial Contours (Respecting skinColor customisation)
+        const headSkin = role === 'avi' ? '#b87747' : (skinColor || '#ffedd5');
         px(3, 3, 10, 7, headSkin);
 
         if (dir !== 1) {
-            // Jawline & Cheek contour shadow
-            px(4, 9, 8, 1, role === 'avi' ? '#92400e' : '#fed7aa');
-            // Ear contours
-            px(2, 6, 1, 2, '#fed7aa');
-            px(13, 6, 1, 2, '#fed7aa');
+            // Jawline & Cheek contour shadow dynamically keyed to skinColor
+            const chinCol = role === 'avi' ? '#92400e' : (skinColor === '#4a2c17' ? '#26150b' : '#fed7aa');
+            px(4, 9, 8, 1, chinCol);
+            px(2, 6, 1, 2, chinCol);
+            px(13, 6, 1, 2, chinCol);
         }
 
-        // Eyes, Masks & Helmets
+        // Eyes, Masks & Facial Expressions
         if (role === 'masked') {
-            // Venetian Gilded Performative Mask with filigree
-            px(4, 3, 8, 6, '#fbbf24');
-            px(5, 3, 6, 2, '#fef08a');
-            px(5, 5, 2, 2, '#090a0f');
-            px(9, 5, 2, 2, '#090a0f');
-            px(5, 5, 1, 1, '#38bdf8'); // theatrical gem eye
-            px(10, 5, 1, 1, '#38bdf8');
-            px(6, 8, 4, 1, '#d97706'); // stylized lips
+            if (isMindFreed) {
+                // Mask pushed up onto hair! Free smiling human face
+                px(4, 1, 8, 3, '#fbbf24');
+                px(5, 2, 2, 1, '#fef08a');
+                px(9, 2, 2, 1, '#fef08a');
+                if (dir !== 1) {
+                    px(5, 5, 2, 1, '#0f172a');
+                    px(9, 5, 2, 1, '#0f172a');
+                    px(5, 6, 2, 2, '#059669');
+                    px(9, 6, 2, 2, '#059669');
+                    px(5, 6, 1, 1, '#ffffff');
+                    px(9, 6, 1, 1, '#ffffff');
+                    px(6, 8, 4, 1, '#b45309'); // Warm smile
+                }
+            } else {
+                // Rigid Venetian Gilded Performative Mask
+                px(4, 3, 8, 6, '#fbbf24');
+                px(5, 3, 6, 2, '#fef08a');
+                px(5, 5, 2, 2, '#090a0f');
+                px(9, 5, 2, 2, '#090a0f');
+                px(5, 5, 1, 1, '#38bdf8');
+                px(10, 5, 1, 1, '#38bdf8');
+                px(6, 8, 4, 1, '#d97706');
+            }
         } else if (role === 'blackshirt') {
-            // Authoritarian Stahlhelm & Red Visor Slit
-            px(2, 1, 12, 5, '#1f2937');
-            px(1, 4, 14, 2, '#111827');
-            px(4, 6, 8, 2, '#ef4444');
-            px(5, 6, 6, 1, '#fca5a5'); // glowing eye slit
-            px(3, 8, 10, 2, '#111827');
+            if (isMindFreed) {
+                // Helmet visor open, smiling face
+                px(2, 1, 12, 4, '#1f2937');
+                if (dir !== 1) {
+                    px(5, 6, 2, 2, '#0284c7');
+                    px(9, 6, 2, 2, '#0284c7');
+                    px(5, 6, 1, 1, '#ffffff');
+                    px(9, 6, 1, 1, '#ffffff');
+                    px(7, 8, 2, 1, '#b45309');
+                }
+            } else {
+                // Authoritarian Stahlhelm & Red Visor Slit
+                px(2, 1, 12, 5, '#1f2937');
+                px(1, 4, 14, 2, '#111827');
+                px(4, 6, 8, 2, '#ef4444');
+                px(5, 6, 6, 1, '#fca5a5');
+                px(3, 8, 10, 2, '#111827');
+            }
         } else if (role === 'inquisitor') {
-            // Gothic Dogma Hood
-            px(3, 0, 10, 5, '#581c87');
-            px(5, -2, 6, 2, '#581c87');
-            px(5, 6, 2, 2, '#fde047');
-            px(9, 6, 2, 2, '#fde047');
+            if (isMindFreed) {
+                // Cowl relaxed onto shoulders, peaceful face
+                px(3, 1, 10, 3, '#7c3aed');
+                if (dir !== 1) {
+                    px(5, 6, 2, 2, '#7c3aed');
+                    px(9, 6, 2, 2, '#7c3aed');
+                    px(5, 6, 1, 1, '#ffffff');
+                    px(9, 6, 1, 1, '#ffffff');
+                    px(7, 8, 2, 1, '#b45309');
+                }
+            } else {
+                // Gothic Dogma Hood & fanatical glare
+                px(3, 0, 10, 5, '#581c87');
+                px(5, -2, 6, 2, '#581c87');
+                px(5, 6, 2, 2, '#fde047');
+                px(9, 6, 2, 2, '#fde047');
+            }
         } else if (dir !== 1) {
             if (role === 'iron') {
-                // Dark clout shades with red reflection
-                px(4, 5, 8, 2, '#090a0f');
-                px(5, 5, 2, 1, '#ef4444');
-                px(9, 5, 2, 1, '#ef4444');
+                if (isMindFreed) {
+                    // Friendly eyes, red shades removed!
+                    px(5, 5, 2, 1, '#0f172a');
+                    px(9, 5, 2, 1, '#0f172a');
+                    px(5, 6, 2, 2, '#15803d');
+                    px(9, 6, 2, 2, '#15803d');
+                    px(5, 6, 1, 1, '#ffffff');
+                    px(9, 6, 1, 1, '#ffffff');
+                    px(6, 8, 4, 1, '#b45309');
+                } else {
+                    // Dark clout shades with red reflection
+                    px(4, 5, 8, 2, '#090a0f');
+                    px(5, 5, 2, 1, '#ef4444');
+                    px(9, 5, 2, 1, '#ef4444');
+                }
             } else if (role === 'velvet') {
-                // Alluring feminine eyes with dark lashes & soft shadow
-                px(4, 5, 3, 1, '#701a75');
-                px(9, 5, 3, 1, '#701a75');
-                px(5, 6, 2, 2, '#1d4ed8');
-                px(9, 6, 2, 2, '#1d4ed8');
-                px(5, 6, 1, 1, '#ffffff');
-                px(9, 6, 1, 1, '#ffffff');
-                px(7, 8, 2, 1, '#f43f5e'); // rose lips
+                if (isMindFreed) {
+                    // Mind Freed Velvet: Gentle, alluring feminine eyes (dark lashes, bright seafoam irises, peaceful smile)
+                    px(4, 5, 3, 1, '#0f172a');
+                    px(9, 5, 3, 1, '#0f172a');
+                    px(5, 6, 2, 2, '#06b6d4'); // Radiant teal iris
+                    px(9, 6, 2, 2, '#06b6d4');
+                    px(5, 6, 1, 1, '#ffffff');
+                    px(9, 6, 1, 1, '#ffffff');
+                    px(7, 8, 2, 1, '#f43f5e'); // Soft rose smile
+                } else {
+                    // Cynical rose-tinted sunglasses
+                    px(4, 5, 8, 2, '#701a75');
+                    px(5, 6, 2, 1, '#f472b6');
+                    px(9, 6, 2, 1, '#f472b6');
+                }
             } else if (dir === 0) {
                 // Expressive 32-bit Eyes (Hero / Ally)
                 const irisCol = role === 'player' ? '#0284c7' : (role === 'maya' ? '#059669' : '#0f172a');
@@ -2046,12 +2119,13 @@
 
         // Hair & Bespoke Role Headdresses
         if (role === 'velvet') {
-            // Voluminous long flowing brunette hair cascading down to waist with top bun
+            // Voluminous long flowing brunette hair cascading down to waist with top bun (Clearly female model)
             const vHair = '#92400e';
             const vHi = '#d97706';
             px(3, 0, 10, 3, vHair);
             px(4, 0, 8, 1, vHi);
             px(6, -2, 4, 2, vHair); // Top hair bun
+            px(7, -2, 2, 1, isMindFreed ? '#fbbf24' : '#93c5fd'); // Ribbon
             // Flowing locks framing face & cascading down past shoulders
             px(2, 2, 2, 12, vHair);
             px(12, 2, 2, 12, vHair);
@@ -2074,12 +2148,10 @@
             px(7, 2, 1, 1, '#ffffff');
 
             if (dir === 1) {
-                // Back of wizard cowl
                 px(2, 0, 12, 10, '#1e1b4b');
                 px(4, 3, 8, 2, '#312e81');
                 px(4, 1, 8, 1, '#fbbf24');
             } else {
-                // Long Silver Sage Beard & Moustache
                 px(5, 7, 6, 2, '#e2e8f0');
                 px(4, 8, 8, 4, '#cbd5e1');
                 px(5, 9, 6, 4, '#f8fafc');
@@ -2090,11 +2162,11 @@
             // Commander Maya: High braided warrior hair with golden officer circlet & sapphire
             px(3, 0, 10, 3, '#92400e');
             px(4, 0, 8, 1, '#b45309');
-            px(6, -3, 4, 3, '#78350f'); // Braided crown knot
-            px(7, -3, 2, 1, '#fbbf24'); // Gold ribbon
-            px(3, 2, 10, 1, '#fbbf24'); // Officer circlet
-            px(7, 2, 2, 2, '#38bdf8'); // Sapphire
-            px(2, 3, 2, 5, '#92400e'); // Side braids
+            px(6, -3, 4, 3, '#78350f');
+            px(7, -3, 2, 1, '#fbbf24');
+            px(3, 2, 10, 1, '#fbbf24');
+            px(7, 2, 2, 2, '#38bdf8');
+            px(2, 3, 2, 5, '#92400e');
             px(12, 3, 2, 5, '#92400e');
             if (dir === 1) {
                 px(3, 2, 10, 8, '#78350f');
@@ -2106,8 +2178,8 @@
             px(4, 0, 8, 1, '#67e8f9');
             px(2, 3, 2, 10, '#0891b2');
             px(12, 3, 2, 10, '#0891b2');
-            px(4, 2, 8, 1, '#34d399'); // Lily garland
-            px(5, 1, 2, 2, '#ffffff'); // Water lily blossom
+            px(4, 2, 8, 1, '#34d399');
+            px(5, 1, 2, 2, '#ffffff');
             px(10, 1, 2, 2, '#ffffff');
             px(6, 2, 1, 1, '#fde047');
             if (dir === 1) {
@@ -2115,10 +2187,9 @@
                 px(4, 4, 8, 6, '#06b6d4');
             }
         } else if (role === 'tariq') {
-            // Comrade Tariq: Crimson resistance beret & neat beard
             px(3, 0, 10, 3, '#dc2626');
             px(2, 1, 4, 2, '#991b1b');
-            px(7, 1, 2, 2, '#fbbf24'); // Brass gear badge
+            px(7, 1, 2, 2, '#fbbf24');
             if (dir !== 1) {
                 px(5, 7, 6, 2, '#1c1917');
                 px(6, 9, 4, 1, '#292524');
@@ -2126,7 +2197,6 @@
                 px(3, 2, 10, 6, '#1c1917');
             }
         } else if (role === 'elena') {
-            // Sister Elena: Royal purple habit & ivory monastic wimple
             px(2, -1, 12, 4, '#581c87');
             px(3, 2, 10, 2, '#f8fafc');
             px(2, 3, 2, 8, '#f8fafc');
@@ -2136,10 +2206,9 @@
                 px(4, 2, 8, 8, '#6b21a8');
             }
         } else if (role === 'rowan') {
-            // Ranger Rowan: Forest hunter bycocket cap & pheasant feather
             px(3, 0, 10, 3, '#15803d');
             px(4, 0, 8, 1, '#22c55e');
-            px(12, -4, 2, 5, '#dc2626'); // Feather
+            px(12, -4, 2, 5, '#dc2626');
             px(13, -2, 1, 3, '#fbbf24');
             px(2, 3, 2, 4, '#78350f');
             px(12, 3, 2, 4, '#78350f');
@@ -2147,56 +2216,99 @@
                 px(3, 2, 10, 6, '#15803d');
             }
         } else if (role === 'kael') {
-            // Organizer Kael: Resistance bandana & field visor
             px(3, 0, 10, 3, '#c2410c');
-            px(2, 2, 12, 1, '#fed7aa'); // Bandana band
-            px(7, 2, 2, 1, '#ef4444'); // Resistance badge
+            px(2, 2, 12, 1, '#fed7aa');
+            px(7, 2, 2, 1, '#ef4444');
             px(2, 3, 2, 4, '#44403c');
             px(12, 3, 2, 4, '#44403c');
             if (dir === 1) {
                 px(3, 2, 10, 6, '#c2410c');
             }
         } else if (role === 'zephyr') {
-            // Elder Zephyr: Solar laurel wreath & braided white sage beard
             px(2, 0, 12, 3, '#f8fafc');
-            px(3, 2, 10, 1, '#fbbf24'); // Solar wreath
+            px(3, 2, 10, 1, '#fbbf24');
             px(6, 1, 4, 1, '#fde047');
             px(2, 3, 2, 8, '#f8fafc');
             px(12, 3, 2, 8, '#f8fafc');
             if (dir !== 1) {
                 px(5, 7, 6, 2, '#e2e8f0');
                 px(6, 9, 4, 4, '#f8fafc');
-                px(7, 13, 2, 2, '#fbbf24'); // Golden beard clasp
+                px(7, 13, 2, 2, '#fbbf24');
             } else {
                 px(2, 2, 12, 8, '#f8fafc');
             }
         } else if (role === 'player') {
-            // Auron: High-Detail 32-Bit Golden Adventurer Hair (3-tone shading + bangs + crown tufts)
-            const hDark = '#92400e';
-            const hMid = '#f59e0b';
-            const hLight = '#fde047';
-            const hGlint = '#fef08a';
+            // Auron / Player: DYNAMIC CUSTOMIZATION SUPPORT (Hair Style 0-3, Any Selected Hair Color)
+            const pal = getHairPalette(hairColor || '#f59e0b');
+            const hDark = pal.dark;
+            const hMid = pal.mid;
+            const hLight = pal.light;
+            const hGlint = pal.glint;
 
-            // Crown volume & highlights
-            px(3, 0, 10, 3, hMid);
-            px(4, 0, 8, 1, hLight);
-            px(5, -1, 6, 2, hLight);
-            px(4, 1, 2, 1, hGlint);
-
-            if (dir !== 1) {
-                // Layered front bangs sweeping across forehead
-                px(3, 3, 3, 2, hMid);
-                px(7, 3, 3, 2, hLight);
-                px(11, 3, 2, 2, hDark);
-                // Sideburn tufts
-                px(2, 2, 2, 4, hDark);
-                px(12, 2, 2, 4, hDark);
+            if (hairStyle === 1) {
+                // Style 1: Spiky Vanguard (Anime spiked tufts)
+                px(3, 0, 10, 3, hMid);
+                px(4, 0, 8, 1, hLight);
+                px(4, -2, 3, 2, hLight);
+                px(8, -3, 3, 3, hLight);
+                px(11, -1, 3, 2, hMid);
+                if (dir !== 1) {
+                    px(3, 3, 3, 3, hMid);
+                    px(6, 3, 4, 3, hLight);
+                    px(10, 3, 3, 3, hDark);
+                    px(1, 2, 2, 5, hDark);
+                    px(13, 2, 2, 5, hDark);
+                } else {
+                    px(3, 2, 10, 8, hDark);
+                    px(4, 1, 8, 4, hMid);
+                    px(5, -1, 6, 2, hLight);
+                }
+            } else if (hairStyle === 2) {
+                // Style 2: Traveler Cowl / Hood
+                const hoodCol = tunicColor || '#0284c7';
+                px(2, 0, 12, 4, hoodCol);
+                px(2, 3, 2, 6, hoodCol);
+                px(12, 3, 2, 6, hoodCol);
+                px(3, 2, 10, 1, '#fbbf24');
+                if (dir === 1) {
+                    px(2, 0, 12, 10, hoodCol);
+                    px(4, 3, 8, 2, '#0f172a');
+                } else {
+                    px(5, 3, 6, 2, hMid);
+                }
+            } else if (hairStyle === 3) {
+                // Style 3: Topknot / High Ponytail
+                px(3, 0, 10, 3, hMid);
+                px(4, 0, 8, 1, hLight);
+                px(6, -3, 4, 3, hDark);
+                px(7, -3, 2, 1, '#fbbf24');
+                if (dir !== 1) {
+                    px(4, 3, 8, 2, hMid);
+                    px(2, 2, 2, 4, hDark);
+                    px(12, 2, 2, 4, hDark);
+                } else {
+                    px(3, 2, 10, 7, hDark);
+                    px(6, 5, 4, 6, hMid);
+                }
             } else {
-                // Back of hero hair with layered nape locks
-                px(3, 2, 10, 7, hDark);
-                px(4, 1, 8, 3, hMid);
-                px(5, 0, 6, 2, hLight);
-                px(4, 7, 8, 2, '#78350f');
+                // Style 0: Adventurer Locks (Hero / Parted with bangs)
+                px(3, 0, 10, 3, hMid);
+                px(4, 0, 8, 1, hLight);
+                px(5, -1, 6, 2, hLight);
+                px(4, 1, 2, 1, hGlint);
+
+                if (dir !== 1) {
+                    px(3, 3, 3, 2, hMid);
+                    px(7, 3, 3, 2, hLight);
+                    px(11, 3, 2, 2, hDark);
+                    px(2, 2, 2, 4, hDark);
+                    px(12, 2, 2, 4, hDark);
+                } else {
+                    px(3, 2, 10, 7, hDark);
+                    px(4, 1, 8, 3, hMid);
+                    px(5, 0, 6, 2, hLight);
+                    px(4, 7, 8, 2, hDark);
+                }
             }
         } else if (hairStyle == 0) {
             px(3, 1, 10, 3, hairColor);
@@ -2236,26 +2348,36 @@
 
         // 4. Weapons & Shields
         if (role === 'avi') {
-            // Illuminated Archmage Staff of First Principles
             px(14, 0, 2, 18, '#78350f');
             px(13, -3, 4, 3, '#fbbf24');
             px(12, -4, 6, 1, '#f59e0b');
             px(13, -2, 4, 3, '#38bdf8');
             px(14, -1, 2, 1, '#ffffff');
         } else if (role === 'player' && !holdingItemOverhead && !opts.hideWeapons) {
-            // Off-Hand Shield (heraldic boss & trim)
             if (equipment && equipment.offHand) {
                 const shColor = equipment.offHand.visualColor || '#fbbf24';
                 px(13, 11, 3, 5, shColor);
                 px(14, 12, 1, 3, '#0284c7');
                 px(14, 11, 1, 1, '#ffffff');
             }
-            // Main-Hand Prism Crystal
             if (equipment && equipment.mainHand) {
                 const mhColor = equipment.mainHand.visualColor || '#38bdf8';
                 px(0, 11, 2, 4, mhColor);
                 px(0, 11, 1, 1, '#ffffff');
             }
+        }
+
+        // Mind Freed Clarity Aura (Gentle golden sparkle halo floating overhead)
+        if (isMindFreed) {
+            ctx.save();
+            ctx.strokeStyle = '#34d399';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.ellipse(0, -15 * p, 5 * p, 1.8 * p, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(-1 * p, -17 * p, 2 * p, 2 * p);
+            ctx.restore();
         }
 
         // Stun halo stars
@@ -3338,7 +3460,125 @@
         ctx.restore();
     }
 
+        function drawGrandDemagogueKeep(ctx, b, x, y, w, h) {
+        ctx.save();
+        // 1. Massive Menacing Fortress Drop Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.beginPath();
+        ctx.ellipse(x + w / 2, y + h - 2, w / 2 + 18, 22, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const wallH = Math.floor(h * 0.55);
+        const wallY = y + h - wallH;
+
+        // 2. Central Obsidian Keep Structure
+        ctx.fillStyle = '#06080e';
+        ctx.fillRect(x + 12, wallY, w - 24, wallH);
+
+        // Stone Courses with Crimson Mortar Veins
+        ctx.fillStyle = '#1e293b';
+        for (let by = wallY; by < wallY + wallH; by += 10) {
+            ctx.fillRect(x + 14, by, w - 28, 1);
+        }
+        ctx.fillStyle = '#7f1d1d';
+        for (let by = wallY + 5; by < wallY + wallH; by += 10) {
+            const shift = ((by - wallY) / 10) % 2 === 0 ? 0 : 16;
+            for (let bx = x + 16 + shift; bx < x + w - 16; bx += 32) {
+                ctx.fillRect(bx, by, 1, 10);
+            }
+        }
+
+        // 3. Massive Twin Battlement Flanking Towers
+        const towerW = 38;
+        // West Tower
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(x, wallY - 14, towerW, wallH + 14);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(x + 4, wallY - 12, towerW - 8, wallH + 10);
+        // West Tower Crenellations
+        for (let cX = x; cX < x + towerW; cX += 10) {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(cX, wallY - 22, 7, 9);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(cX + 2, wallY - 20, 3, 2); // Glowing crimson gem standard
+        }
+        // East Tower
+        const eTowerX = x + w - towerW;
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(eTowerX, wallY - 14, towerW, wallH + 14);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(eTowerX + 4, wallY - 12, towerW - 8, wallH + 10);
+        // East Tower Crenellations
+        for (let cX = eTowerX; cX < eTowerX + towerW; cX += 10) {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(cX, wallY - 22, 7, 9);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(cX + 2, wallY - 20, 3, 2);
+        }
+
+        // 4. Grand Gothic Imperial Bloodstone Roof & Spires
+        const roofBaseY = wallY + 4;
+        ctx.fillStyle = '#3f0707';
+        ctx.beginPath();
+        ctx.moveTo(x + 20, roofBaseY);
+        ctx.lineTo(x + w / 2, y - 8);
+        ctx.lineTo(x + w - 20, roofBaseY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shingle highlight bands
+        ctx.fillStyle = '#7f1d1d';
+        for (let sy = y + 4; sy < roofBaseY; sy += 9) {
+            const frac = (sy - y) / (roofBaseY - y);
+            const span = (w - 40) * frac;
+            ctx.fillRect(x + w / 2 - span / 2, sy, span, 3);
+        }
+
+        // Iron Crown Spires & Imperial Dragon Standard
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(x + w / 2 - 2, y - 26, 4, 22);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(x + w / 2 - 4, y - 28, 8, 4); // Golden Crown
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(x + w / 2 - 12, y - 24, 10, 6); // Imperial Crimson Banner
+
+        // 5. Massive Double Iron Portcullis Vault Door
+        const doorW = 44;
+        const doorH = 46;
+        const doorX = x + Math.floor((w - doorW) / 2);
+        const doorY = y + h - doorH - 2;
+
+        ctx.fillStyle = '#090a0f';
+        ctx.fillRect(doorX, doorY, doorW, doorH);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(doorX + 2, doorY + 2, doorW - 4, doorH - 4);
+
+        // Heavy Iron Portcullis Grate
+        ctx.fillStyle = '#334155';
+        for (let px = doorX + 6; px < doorX + doorW - 4; px += 8) {
+            ctx.fillRect(px, doorY + 3, 3, doorH - 5);
+        }
+        for (let py = doorY + 8; py < doorY + doorH - 4; py += 10) {
+            ctx.fillRect(doorX + 3, py, doorW - 6, 2.5);
+        }
+
+        // Glowing Crimson Algorithmic Eye Core over vault door
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(x + w / 2, doorY - 10, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(x + w / 2 - 1, doorY - 11, 2, 2);
+
+        ctx.restore();
+    }
+
     function drawCitadelFortressBuilding(ctx, b, x, y, w, h) {
+        if (b.id === 'demagogue_keep' || b.style === 'citadel_keep') {
+            drawGrandDemagogueKeep(ctx, b, x, y, w, h);
+            return;
+        }
         ctx.save();
         // 1. Heavy menacing drop shadow
         ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
@@ -3814,15 +4054,15 @@
             themeColor: '#065f46',
             groundColor: '#166534',
             isBrightAlttpZone: true,
-            riverRows: [7, 8],
-            riverCols: [26, 27, 28, 29],
+            riverRows: [13, 14, 15],
+            riverCols: [22, 23, 24, 25],
             codexKey: 'woods_inquiry',
             curedGoal: 3,
             puzzleGoal: 3,
             questTitle: 'Solve the Glade Block & Beacon Trial and Free 3 Seekers',
             mentorName: 'Ranger Rowan',
             portalTarget: 6,
-            chest: { col: 26, row: 4, itemId: 'raiment_solidarity' },
+            chest: { col: 24, row: 5, itemId: 'raiment_solidarity' },
             cols: 58,
             rows: 54,
             buildings: [
@@ -3982,7 +4222,7 @@
             buildings: [
                 { id: 'citadel_armory', col: 12, row: 10, wCols: 5, hRows: 3, spriteKey: 'long_tavern', roofColor: 'terracotta', name: "Citadel Armory" },
                 { id: 'propaganda_ministry', col: 34, row: 10, wCols: 5, hRows: 3, spriteKey: 'red_cottage_2', roofColor: 'terracotta', name: "Ministry of Algorithmic Truth" },
-                { id: 'demagogue_keep', col: 23, row: 32, wCols: 5, hRows: 3, spriteKey: 'cyan_house', roofColor: 'slate', name: "Keep of the Demagogue" }
+                { id: 'demagogue_keep', col: 21, row: 28, wCols: 10, hRows: 6, spriteKey: 'citadel', style: 'citadel_keep', name: "Keep of the Demagogue" }
             ],
             aviPreDialogues: [
                 'We have reached the heart of the machine: the Obsidian Reich-Citadel. Every echo chamber you dismantled—clout, gender grievance, dogma, and racial fear—was designed to funnel citizens here into totalitarian fascism.',
@@ -5621,36 +5861,41 @@
                 for (let c = midC - 5; c <= midC + 5; c++) grid[r][c] = 1;
             }
         } else if (mapIndex === 5) {
-            // MAP 6: Whispering Woods of Inquiry (Labyrinthine Forest with Rings & Creek)
+            // MAP 6: Whispering Woods of Inquiry (Sacred Glade with Dividing River & Ancient Bridge)
             // Exits: South (c 14..22) and East (r 10..18)
             for (let r = 1; r < rows - 1; r++) {
                 for (let c = 1; c < cols - 1; c++) {
-                    const gDist = Math.hypot(c - midC, r - midR);
-                    if (gDist <= 7) {
-                        grid[r][c] = (gDist <= 3) ? 1 : 9; // Central Socratic Sacred Glade
+                    // Sparkling Woodland River cutting across north of the Glade
+                    if (r >= 13 && r <= 15) {
+                        grid[r][c] = 4; // Sparkling Woodland River
+                    } else if (r > 15 && r <= 32 && c >= 12 && c <= 36) {
+                        // Central Socratic Sacred Glade on South Bank
+                        grid[r][c] = (r >= 17 && r <= 27 && c >= 14 && c <= 34) ? 1 : 9;
+                    } else if (r < 13 && c >= 18 && c <= 30) {
+                        // Secluded Northern Sanctuary Terrace on North Bank
+                        grid[r][c] = (r >= 4 && r <= 8 && c >= 20 && c <= 28) ? 1 : 9;
                     } else {
-                        const ringNoise = Math.sin(gDist * 0.58) + 0.4 * Math.sin(r * 0.3 + c * 0.3);
-                        if (ringNoise > 0.4) grid[r][c] = 3; // Dense circular tree rings
+                        const ringNoise = Math.sin(Math.hypot(c - midC, r - midR) * 0.58) + 0.4 * Math.sin(r * 0.3 + c * 0.3);
+                        if (ringNoise > 0.38) grid[r][c] = 3; // Dense circular tree rings
                         else if (ringNoise < -0.45) grid[r][c] = 9;
                     }
                 }
             }
-            // Northern woodland brook (crossing north grove)
-            for (let c = 1; c < cols - 1; c++) {
-                grid[7][c] = 4;
-                grid[8][c] = 4;
-            }
-            // South entrance path leading to central glade
-            for (let r = 16; r < rows - 1; r++) {
+            // South entrance highway leading into Sacred Glade
+            for (let r = 28; r < rows - 1; r++) {
                 for (let c = 15; c <= 21; c++) grid[r][c] = 1;
             }
-            // East path leading from central glade to East exit
-            for (let r = 12; r <= 16; r++) {
-                for (let c = 18; c < cols - 1; c++) grid[r][c] = 1;
+            // East road leading from Sacred Glade to East Exit
+            for (let r = 18; r <= 22; r++) {
+                for (let c = 34; c < cols - 1; c++) grid[r][c] = 1;
             }
-            // Path from central glade north to ancient bridge crossing
-            for (let r = 9; r <= 16; r++) {
-                for (let c = 26; c <= 29; c++) grid[r][c] = 1;
+            // Paved approach on North Bank leading to Ancient Chest
+            for (let r = 4; r <= 12; r++) {
+                for (let c = 22; c <= 25; c++) grid[r][c] = 1;
+            }
+            // Central Glade North approach leading to river crossing
+            for (let r = 16; r <= 18; r++) {
+                for (let c = 22; c <= 25; c++) grid[r][c] = 1;
             }
         } else if (mapIndex === 6) {
             // MAP 7: Borderland of Scapegoats (Scenic River Corridor, Checkpoint Courtyard & Ruined Ramparts)
@@ -6062,32 +6307,32 @@
                 });
             });
         } else if (mapIndex === 5) {
-            // Map 6 (Whispering Woods): 2 Pushable Mirror Blocks + 1 Socratic Forest Pedestal in accessible Sacred Glade!
+            // Map 6 (Whispering Woods): 2 Pushable Mirror Blocks + 1 Socratic Forest Pedestal right by the riverbank!
             puzzleNodes.push({
                 id: 'block_west',
                 type: 'push_block',
-                x: 14.5 * TILE_SIZE,
-                y: 22.5 * TILE_SIZE,
-                targetX: 14.5 * TILE_SIZE,
-                targetY: 18.5 * TILE_SIZE,
+                x: 17.5 * TILE_SIZE,
+                y: 21.5 * TILE_SIZE,
+                targetX: 17.5 * TILE_SIZE,
+                targetY: 17.5 * TILE_SIZE,
                 solved: false,
                 label: 'West Mirror Block'
             });
             puzzleNodes.push({
                 id: 'block_east',
                 type: 'push_block',
-                x: 24.5 * TILE_SIZE,
-                y: 22.5 * TILE_SIZE,
-                targetX: 24.5 * TILE_SIZE,
-                targetY: 18.5 * TILE_SIZE,
+                x: 29.5 * TILE_SIZE,
+                y: 21.5 * TILE_SIZE,
+                targetX: 29.5 * TILE_SIZE,
+                targetY: 17.5 * TILE_SIZE,
                 solved: false,
                 label: 'East Mirror Block'
             });
             puzzleNodes.push({
                 id: 'stele_woods',
                 type: 'socratic_pedestal',
-                x: 19.5 * TILE_SIZE,
-                y: 18.5 * TILE_SIZE,
+                x: 23.5 * TILE_SIZE,
+                y: 17.5 * TILE_SIZE,
                 solved: false,
                 label: 'Tablet of Lateral Inquiry',
                 claim: '"A viral post claims the river is poisoned by outsiders, citing an anonymous screenshot. How does an Archivist verify the truth?"',
@@ -6998,6 +7243,21 @@
         if (badgeEl) badgeEl.textContent = `${pct}% DELUSION ARMOR`;
 
         document.getElementById('duelClaimText').textContent = stageDuel.claim;
+
+        // Render 32-bit pixel art portrait of the adversary
+        const pCanvas = document.getElementById('duelBossPortrait');
+        if (pCanvas) {
+            const pctx = pCanvas.getContext('2d');
+            pctx.clearRect(0, 0, 56, 56);
+            pctx.fillStyle = '#090d16';
+            pctx.fillRect(0, 0, 56, 56);
+            drawCharacterSprite(pctx, 28, 38, 2.8, {
+                role: boss.role || 'blackshirt',
+                dir: 0,
+                frame: 0,
+                skinColor: '#e0ac69'
+            });
+        }
         const wrap = document.getElementById('duelChoicesContainer');
         wrap.innerHTML = '';
         activeDuelOptions = stageDuel.options;
@@ -7717,8 +7977,9 @@
     let activePotProjectiles = []; // maintained for backward compatibility
 
     function enterBuildingInterior(building) {
-        const roomW = 760;
-        const roomH = 580;
+        const isKeep = (building.id === 'demagogue_keep' || building.style === 'citadel_keep');
+        const roomW = isKeep ? 840 : 760;
+        const roomH = isKeep ? 640 : 580;
 
         const prop = getBuildingNarrativeProp(building);
         // Physical interactive chest using the user's lone chest asset
@@ -7738,6 +7999,7 @@
             building,
             buildingId: building.id,
             name: building.name,
+            isDemagogueKeep: isKeep,
             cols: 15,
             rows: 13,
             roomW,
@@ -7745,11 +8007,41 @@
             table,
             chest,
             prop,
-            pots: [], // pots completely eliminated
+            pots: [],
             returnX: player.x,
             returnY: player.y,
             mapIndex: currentMapIndex
         };
+
+        if (isKeep && !player.mapBossDefeated) {
+            // Instantiate The Sovereign Demagogue on the elevated obsidian throne!
+            demagogueBossEntity = {
+                x: Math.floor(roomW / 2),
+                y: 195,
+                radius: 28,
+                name: 'THE SOVEREIGN DEMAGOGUE (FINAL BOSS)',
+                role: 'blackshirt',
+                isBoss: true,
+                state: 'hostile',
+                hp: 600,
+                maxHp: 600,
+                clarity: 0,
+                stunTimer: 0,
+                dir: 0,
+                frame: 0,
+                confrontationTriggered: false,
+                quote: '"Surrender your freedom to the Mythic Past! One Voice! One Reich!"',
+                duelData: {
+                    threshold: 0.75,
+                    claim: '"Our enemies are simultaneously weak subhumans AND an omnipotent global cabal! Surrender your rights to me, and I will restore our mythic golden age!"',
+                    options: [
+                        { text: 'Fascist Doublethink & Palingenetic Ultranationalism (portraying scapegoats as both weak and omnipotent to justify tyranny).', correct: true },
+                        { text: 'Pledge obedience to the Sovereign Demagogue.', correct: false },
+                        { text: 'Replace the Demagogue with a new authoritarian algorithm.', correct: false }
+                    ]
+                }
+            };
+        }
 
         // Spawn player right inside south doorway facing UP
         player.x = Math.floor(roomW / 2);
@@ -8215,9 +8507,208 @@
         audio.sfxSlash();
     }
 
+    let demagogueBossEntity = null;
+
+        function renderDemagogueKeepInterior(ctx, w, h) {
+        ctx.fillStyle = '#040203';
+        ctx.fillRect(0, 0, w, h);
+
+        const roomW = currentInterior.roomW || 840;
+        const roomH = currentInterior.roomH || 640;
+        const offX = Math.floor((w - roomW) / 2);
+        const offY = Math.floor((h - roomH) / 2);
+
+        ctx.save();
+
+        // 1. Heavy Ambient Vault Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+        ctx.fillRect(offX - 12, offY - 12, roomW + 24, roomH + 24);
+
+        // 2. Imperial Obsidian Flagstone Flooring with Crimson Mortar
+        ctx.fillStyle = '#080a10';
+        ctx.fillRect(offX, offY + 110, roomW, roomH - 110);
+        ctx.fillStyle = '#1e293b';
+        for (let fy = offY + 110; fy < offY + roomH; fy += 32) {
+            ctx.fillRect(offX, fy, roomW, 1.5);
+        }
+        for (let fx = offX; fx < offX + roomW; fx += 44) {
+            ctx.fillRect(fx, offY + 110, 1.5, roomH - 110);
+        }
+
+        // 3. Grand Imperial Crimson Velvet Carpet leading to the Throne
+        const carpetW = 160;
+        const carpetX = offX + Math.floor((roomW - carpetW) / 2);
+        const carpetY = offY + 170;
+        const carpetH = roomH - 220;
+
+        ctx.fillStyle = '#450a0a';
+        ctx.fillRect(carpetX - 6, carpetY - 4, carpetW + 12, carpetH + 8);
+        ctx.fillStyle = '#7f1d1d';
+        ctx.fillRect(carpetX, carpetY, carpetW, carpetH);
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(carpetX + 6, carpetY + 4, carpetW - 12, carpetH - 8);
+
+        // 4. Colonnade of 6 Massive Basalt Pillars draped in Imperial Banners
+        const pillarPositions = [
+            { x: offX + 110, y: offY + 200 },
+            { x: offX + 110, y: offY + 360 },
+            { x: offX + 110, y: offY + 500 },
+            { x: offX + roomW - 110, y: offY + 200 },
+            { x: offX + roomW - 110, y: offY + 360 },
+            { x: offX + roomW - 110, y: offY + 500 }
+        ];
+        pillarPositions.forEach(pos => {
+            // Pillar Base
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(pos.x - 24, pos.y - 20, 48, 50);
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(pos.x - 20, pos.y - 16, 40, 42);
+            // Hanging Crimson Imperial Banner
+            ctx.fillStyle = '#991b1b';
+            ctx.fillRect(pos.x - 12, pos.y + 6, 24, 46);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(pos.x - 4, pos.y + 14, 8, 8); // Gold Eagle crest
+        });
+
+        // 5. Searing Iron Braziers with Animated Crimson Flames
+        const brazierTime = performance.now() / 150;
+        const brazierFlicker = Math.sin(brazierTime) * 4;
+        [
+            { x: offX + 220, y: offY + 210 },
+            { x: offX + roomW - 220, y: offY + 210 }
+        ].forEach(br => {
+            // Brazier Stand
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(br.x - 14, br.y, 28, 26);
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(br.x - 18, br.y - 4, 36, 6);
+            // Dancing Crimson Flame
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(br.x, br.y - 12 + brazierFlicker, 14, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.arc(br.x, br.y - 10 + brazierFlicker, 7, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // 6. Elevated Obsidian Throne Dais & The Grand Obsidian Skull Throne
+        const daisX = offX + Math.floor(roomW / 2) - 120;
+        const daisY = offY + 110;
+        const daisW = 240;
+        const daisH = 100;
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(daisX, daisY, daisW, daisH);
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(daisX + 2, daisY + 2, daisW - 4, daisH - 4);
+
+        // Massive Obsidian Throne
+        const thX = offX + Math.floor(roomW / 2);
+        const thY = daisY + 50;
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(thX - 32, thY - 42, 64, 52);
+        ctx.fillStyle = '#7f1d1d';
+        ctx.fillRect(thX - 22, thY - 32, 44, 40); // Velvet Throne Cushion
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(thX - 36, thY - 20, 8, 30); // Gold Armrests
+        ctx.fillRect(thX + 28, thY - 20, 8, 30);
+        // Golden Skull Crest atop Throne
+        ctx.fillRect(thX - 8, thY - 50, 16, 12);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(thX - 4, thY - 46, 3, 3);
+        ctx.fillRect(thX + 2, thY - 46, 3, 3);
+
+        // 7. Interactive Treasury Chest in northwest alcove
+        if (currentInterior.chest) {
+            const ch = currentInterior.chest;
+            const cx = offX + ch.x;
+            const cy = offY + ch.y;
+            drawPixelRelicChest(ctx, cx, cy, ch.opened);
+            if (!ch.opened && Math.hypot(player.x - ch.x, player.y - ch.y) < 58) {
+                ctx.font = 'bold 10px monospace';
+                ctx.fillStyle = '#fde047';
+                ctx.textAlign = 'center';
+                ctx.fillText('TREASURE CHEST [SPACE]', cx + ch.w / 2, cy - 12);
+            }
+        }
+
+        // 8. The Sovereign Demagogue (Final Boss) on the Dais!
+        if (demagogueBossEntity && demagogueBossEntity.hp > 0) {
+            const bx = offX + demagogueBossEntity.x;
+            const by = offY + demagogueBossEntity.y;
+            drawCharacterSprite(ctx, bx, by, 3.6, {
+                role: 'blackshirt',
+                dir: 0,
+                frame: 0,
+                skinColor: '#e0ac69'
+            });
+
+            // Boss Overhead Name & Delusion HP Bar
+            ctx.font = 'bold 12px "Space Grotesk", sans-serif';
+            ctx.fillStyle = '#ef4444';
+            ctx.textAlign = 'center';
+            ctx.fillText(demagogueBossEntity.name, bx, by - 44);
+
+            const hpW = 140;
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(bx - hpW / 2, by - 36, hpW, 8);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(bx - hpW / 2 + 1, by - 35, (hpW - 2) * (demagogueBossEntity.hp / demagogueBossEntity.maxHp), 6);
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(bx - hpW / 2, by - 36, hpW, 8);
+
+            // Proximity Pre-Combat Confrontation Trigger
+            if (!demagogueBossEntity.confrontationTriggered && Math.hypot(player.x - demagogueBossEntity.x, player.y - demagogueBossEntity.y) < 180) {
+                demagogueBossEntity.confrontationTriggered = true;
+                appState = 'DIALOGUE';
+                activeDialogueList = [
+                    { speaker: 'THE SOVEREIGN DEMAGOGUE', text: "So the lone Archivist finally breaches my sanctum. You spent your journey piecing together context, believing truth could defeat power." },
+                    { speaker: 'THE SOVEREIGN DEMAGOGUE', text: "Look at history! People do not crave nuanced truth; they crave righteous fury, easy scapegoats, and an authoritarian father to tell them who to hate!" },
+                    { speaker: 'THE SOVEREIGN DEMAGOGUE', text: "I didn't manufacture their darkness, Auron. I merely gave it an empire. Now, kneel before the Sovereign Algorithm—or drown in the echo!" },
+                    { speaker: 'Auron', text: "Truth isn't a weapon of domination, Demagogue. It's the ground where genuine human community begins. Your empire of outrage ends now!" }
+                ];
+                currentDialogueIndex = 0;
+                displayCurrentDialogue();
+            }
+        }
+
+        // 9. Draw Player inside the Keep
+        const px = offX + player.x;
+        const py = offY + player.y;
+        drawCharacterSprite(ctx, px, py, 2.3, {
+            role: 'player',
+            dir: player.dir,
+            frame: player.animFrame,
+            skinColor: DIFFICULTY_PROFILES[player.skinIndex].skinHex,
+            hairStyle: player.hairStyle,
+            hairColor: player.hairColor,
+            tunicColor: player.tunicColor,
+            equipment: player.equipment
+        });
+
+        // 10. South Doorway Exit Prompt
+        const exitDoorY = offY + roomH - 30;
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
+        ctx.fillRect(offX + Math.floor(roomW / 2) - 30, exitDoorY, 60, 20);
+        ctx.font = 'bold 11px monospace';
+        ctx.fillStyle = '#fca5a5';
+        ctx.textAlign = 'center';
+        ctx.fillText('▼ EXIT', offX + Math.floor(roomW / 2), exitDoorY + 14);
+
+        ctx.restore();
+    }
+
     function renderInterior(ctx, w, h) {
         if (currentInterior && currentInterior.building && (currentInterior.building.id === 'archive_sanctuary' || currentInterior.building.style === 'archive_tower')) {
             renderGrandArchiveTowerInterior(ctx, w, h);
+            return;
+        }
+        if (currentInterior && currentInterior.isDemagogueKeep) {
+            renderDemagogueKeepInterior(ctx, w, h);
             return;
         }
         ctx.fillStyle = '#060504';
@@ -8951,6 +9442,22 @@
         } else {
             context.rect(x, y, width, height);
         }
+    }
+
+    // Helper: Dynamic 4-Tone Hair Palette for Custom Player Character Models
+    function getHairPalette(baseHex) {
+        const palettes = {
+            '#f59e0b': { dark: '#92400e', mid: '#f59e0b', light: '#fde047', glint: '#fef08a' }, // Blonde / Gold
+            '#78350f': { dark: '#451a03', mid: '#78350f', light: '#b45309', glint: '#d97706' }, // Chestnut Brown
+            '#1e293b': { dark: '#090d16', mid: '#1e293b', light: '#334155', glint: '#64748b' }, // Charcoal Black
+            '#dc2626': { dark: '#7f1d1d', mid: '#dc2626', light: '#f87171', glint: '#fca5a5' }, // Crimson Red
+            '#cbd5e1': { dark: '#64748b', mid: '#94a3b8', light: '#e2e8f0', glint: '#ffffff' }, // Silver / White
+            '#15803d': { dark: '#052e16', mid: '#15803d', light: '#22c55e', glint: '#86efac' }, // Forest Green
+            '#0284c7': { dark: '#0369a1', mid: '#0284c7', light: '#38bdf8', glint: '#bae6fd' }, // Azure Blue
+            '#7c3aed': { dark: '#4c1d95', mid: '#7c3aed', light: '#a78bfa', glint: '#ddd6fe' }  // Royal Violet
+        };
+        if (palettes[baseHex]) return palettes[baseHex];
+        return { dark: '#451a03', mid: baseHex || '#f59e0b', light: '#fbbf24', glint: '#fef08a' };
     }
 
     // Helper: Determine authentic 32-bit bridge orientation across waterways
@@ -9935,7 +10442,8 @@
                 draw: () => {
                     const scale = en.isBoss ? 3.2 : 2.2;
                     drawCharacterSprite(ctx, en.x, en.y, scale, {
-                        role: en.state === 'cured' ? 'player' : en.role,
+                        role: en.role,
+                        isMindFreed: (en.state === 'cured'),
                         dir: en.dir,
                         frame: en.frame,
                         skinColor: '#e0ac69',
@@ -11526,6 +12034,14 @@
                 }
                 openMenu('pauseModal');
             }
+        // Socratic Inoculation Duel Keyboard Controls ([Q], [E], [R] or [1], [2], [3])
+        const duelModal = document.getElementById('socraticDuelModal');
+        if (duelModal && !duelModal.classList.contains('hidden')) {
+            if (e.code === 'KeyQ' || e.code === 'Digit1') { e.preventDefault(); selectSocraticDuelOption(0); return; }
+            if (e.code === 'KeyE' || e.code === 'Digit2') { e.preventDefault(); selectSocraticDuelOption(1); return; }
+            if (e.code === 'KeyR' || e.code === 'Digit3') { e.preventDefault(); selectSocraticDuelOption(2); return; }
+        }
+
         } else if (appState === 'PAUSED') {
             if (e.code === 'KeyM') {
                 const wm = document.getElementById('worldMapModal');
