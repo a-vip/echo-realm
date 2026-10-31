@@ -78,7 +78,8 @@ function loadGameEnvironment() {
         triggerSocraticBossDuel,
         selectSocraticDuelOption,
         get activeDuelBoss() { return activeDuelBoss; },
-        get activeDuelOptions() { return activeDuelOptions; }
+        get activeDuelOptions() { return activeDuelOptions; },
+        openTreasureChestZeldaStyle
     };`;
 
     function createMockElement(id = '') {

@@ -485,5 +485,116 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         assert.ok(dialogueText.toLowerCase().includes('martial lockdown'),
             'Guard warning dialogue must notify player of lockdown');
     });
+
+    test('Main story quests progress in a continuous chain, with turn-in granting follow-up quest', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(0);
+        env.appState = 'PLAYING';
+
+        // Clear Map 0 dummy training objectives
+        env.player.mapCitizensFreed = 2;
+        env.checkQuestProgressState();
+        assert.equal(env.player.questReadyToTurnIn, true);
+
+        // Turn in to Professor Avi
+        const avi = env.npcs.find(n => n.name === 'Professor Avi');
+        assert.ok(avi, 'Professor Avi must exist on Map 0');
+        env.player.x = avi.x;
+        env.player.y = avi.y + 20;
+        env.triggerInteraction(); // initiates dialogue
+        assert.equal(env.appState, 'DIALOGUE');
+
+        // Advance through dialogue to turn in
+        while (env.appState === 'DIALOGUE') {
+            env.advanceDialogue();
+        }
+
+        // Verify Map 0 is completed
+        assert.equal(env.player.zoneQuests[0].completed, true, 'Map 0 quest must be marked completed');
+
+        // Verify Map 1 quest is chained and accepted
+        assert.ok(env.player.zoneQuests[1], 'Map 1 quest must exist');
+        assert.equal(env.player.zoneQuests[1].accepted, true, 'Map 1 quest must be chained and accepted');
+        assert.equal(env.player.zoneQuests[1].inGuidanceStage, true, 'Map 1 quest should guide player to Commander Maya');
+
+        // Verify Active Quest HUD displays follow-up guidance
+        env.updateStackedQuestHud();
+        const activeQuests = Object.values(env.player.zoneQuests).filter(q => q.accepted && !q.completed);
+        assert.equal(activeQuests.length, 1);
+        assert.ok(activeQuests[0].guidanceTitle.includes('Performative Valley'));
+    });
+
+    test('Completing Sector 7 liberates all outer realms and immediately unlocks the Obsidian Citadel', () => {
+        const env = loadGameEnvironment();
+        // Satisfy sectors 0 through 6
+        for (let i = 0; i < 7; i++) {
+            env.player.zoneQuests[i] = {
+                mapIndex: i,
+                cured: 10,
+                curedGoal: 2,
+                puzzlesSolved: 5,
+                puzzleGoal: 0,
+                bossDefeated: true,
+                completed: true,
+                accepted: true
+            };
+        }
+
+        env.loadMap(7);
+        env.appState = 'PLAYING';
+        assert.equal(env.isCitadelUnlocked(), false, 'Citadel should still be locked before completing Sector 7');
+
+        // Clear Sector 7 boss and puzzle objectives
+        env.player.mapCitizensFreed = 5;
+        env.player.mapPuzzlesSolved = 3;
+        env.player.mapBossDefeated = true;
+        env.checkQuestProgressState();
+
+        // Turn in to Elder Zephyr
+        const zephyr = env.npcs.find(n => n.name.includes('Zephyr'));
+        assert.ok(zephyr);
+        env.player.x = zephyr.x;
+        env.player.y = zephyr.y + 20;
+        env.triggerInteraction();
+        while (env.appState === 'DIALOGUE') {
+            env.advanceDialogue();
+        }
+
+        // Verify Citadel is unlocked
+        assert.equal(env.player.citadelUnlocked, true, 'player.citadelUnlocked must be true');
+        assert.equal(env.isCitadelUnlocked(), true, 'isCitadelUnlocked() must return true');
+        assert.ok(env.player.zoneQuests[8], 'Sector 8 Finale quest must be initialized');
+        assert.equal(env.player.zoneQuests[8].accepted, true, 'Sector 8 Finale quest must be accepted in quest chain');
+    });
+
+    test('Looting treasure chests displays minimal dialogue without slot headers or flavor quotes', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(0);
+        env.appState = 'PLAYING';
+
+        const chestMeta = env.MAPS[0].chest;
+        assert.ok(chestMeta, 'Map 0 must have chest');
+        const chestObj = { ...chestMeta, relic: env.RELIC_DB[chestMeta.itemId] };
+
+        // Open chest
+        env.openTreasureChestZeldaStyle(chestObj);
+        assert.equal(env.appState, 'ITEM_FANFARE');
+
+        const speakerEl = env.document.getElementById('dialogueSpeaker');
+        const textEl = env.document.getElementById('dialogueText');
+
+        // Check speaker is hidden and has no "RELIC ACQUIRED" or slot text
+        assert.ok(speakerEl.classList.contains('hidden') || speakerEl.textContent.trim() === '',
+            'Speaker element must be hidden without slot banner');
+        assert.ok(!speakerEl.textContent.includes('RELIC ACQUIRED'),
+            'Must not contain RELIC ACQUIRED text');
+
+        // Check text says "Found [Relic Name]!" without verbose "You opened the Archive Chest..." or quotes
+        assert.ok(textEl.innerHTML.includes('Found '), 'Must say Found [Relic]');
+        assert.ok(!textEl.innerHTML.includes('You opened the Archive Chest and obtained'),
+            'Must not contain verbose opening text');
+        assert.ok(!textEl.innerHTML.includes('Woven in the Whispering Woods'),
+            'Must not contain italic description quote');
+    });
 });
 

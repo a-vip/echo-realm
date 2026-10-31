@@ -2299,13 +2299,30 @@
     function isCitadelUnlocked() {
         if (typeof devMode !== 'undefined' && devMode) return true;
         if (typeof player === 'undefined' || !player || !player.zoneQuests) return false;
-        // All 8 outer story sectors (0 to 7) must have completed their quests
+        // Check 1: Explicit unlock flag or Finale quest active/completed
+        if (player.citadelUnlocked) return true;
+        if (player.zoneQuests[8] && (player.zoneQuests[8].accepted || player.zoneQuests[8].completed)) return true;
+        if (player.zoneQuests[7] && player.zoneQuests[7].completed) return true;
+
+        // Check 2: Check if all 8 outer sectors (0 through 7) have fulfilled their objectives
+        let allFulfilled = true;
         for (let i = 0; i <= 7; i++) {
             const q = player.zoneQuests[i];
-            if (!q || !q.completed) return false;
-            if (MAPS[i].boss && !q.bossDefeated) return false;
+            const meta = MAPS[i];
+            if (!q) { allFulfilled = false; break; }
+            const curedDone = (q.cured || 0) >= meta.curedGoal;
+            const puzzleDone = !meta.puzzleGoal || (q.puzzlesSolved || 0) >= meta.puzzleGoal;
+            const bossDone = !meta.boss || q.bossDefeated;
+            if (!q.completed && !(curedDone && puzzleDone && bossDone)) {
+                allFulfilled = false;
+                break;
+            }
         }
-        return true;
+        if (allFulfilled) {
+            player.citadelUnlocked = true;
+            return true;
+        }
+        return false;
     }
 
     function drawCitadelLockedPortcullis(ctx, x1, y1, x2, y2, orientation) {
@@ -2598,185 +2615,275 @@
     function drawGrandArchiveWizardTower(ctx, b, x, y, w, h) {
         ctx.save();
 
-        // 1. Tower Ambient Ground Drop Shadow
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+        // 1. Tower Ambient Ground Drop Shadow (Heavy soft ellipse)
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
         ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h - 4, w / 2 + 10, 16, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + w / 2, y + h - 4, w / 2 + 12, 18, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        const towerW = Math.floor(w * 0.84);
+        const towerW = Math.floor(w * 0.86);
         const towerX = x + Math.floor((w - towerW) / 2);
-        const wallH = Math.floor(h * 0.60);
+        const wallH = Math.floor(h * 0.62);
         const wallY = y + h - wallH;
 
-        // 2. Tower Foundation Plinth (Heavy bevelled ashlar base)
+        // 2. Tower Foundation Plinth (Heavy bevelled stepped ashlar base)
         ctx.fillStyle = '#0f172a';
-        ctx.fillRect(towerX - 6, wallY + wallH - 12, towerW + 12, 12);
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(towerX - 4, wallY + wallH - 10, towerW + 8, 8);
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(towerX - 2, wallY + wallH - 9, towerW + 4, 3);
-
-        // 3. Ashlar Stone Masonry Tower Walls
+        ctx.fillRect(towerX - 8, wallY + wallH - 14, towerW + 16, 14);
         ctx.fillStyle = '#1e293b';
-        ctx.fillRect(towerX, wallY, towerW, wallH - 10);
+        ctx.fillRect(towerX - 6, wallY + wallH - 12, towerW + 12, 10);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(towerX - 4, wallY + wallH - 11, towerW + 8, 5);
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(towerX - 2, wallY + wallH - 10, towerW + 4, 2);
 
-        // Stone Brick Pattern & Shading
-        const brickH = 12;
-        for (let by = wallY; by < wallY + wallH - 10; by += brickH) {
+        // 3. Volumetric 3D Ashlar Masonry Tower Body (Cylindrical Lighting Gradient)
+        // Left flank lit (#475569), center midtone (#334155), right shadow (#1e293b)
+        const wallGrad = ctx.createLinearGradient(towerX, 0, towerX + towerW, 0);
+        wallGrad.addColorStop(0, '#475569');
+        wallGrad.addColorStop(0.35, '#334155');
+        wallGrad.addColorStop(0.70, '#1e293b');
+        wallGrad.addColorStop(1, '#0f172a');
+        ctx.fillStyle = wallGrad;
+        ctx.fillRect(towerX, wallY, towerW, wallH - 12);
+
+        // Individual Ashlar Stone Blocks & Mortar Joints with Curvature
+        const brickH = 11;
+        for (let by = wallY; by < wallY + wallH - 12; by += brickH) {
             const rowIdx = Math.floor((by - wallY) / brickH);
             const offset = (rowIdx % 2) * 16;
-            ctx.fillStyle = '#334155';
-            ctx.fillRect(towerX, by, towerW, 1.5);
-            for (let bx = towerX + offset; bx < towerX + towerW; bx += 32) {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(towerX, by, towerW, 1.5); // horizontal joint
+
+            for (let bx = towerX + offset; bx < towerX + towerW; bx += 28) {
                 ctx.fillStyle = '#0f172a';
-                ctx.fillRect(bx, by, 1.5, brickH);
-                ctx.fillStyle = '#475569';
-                ctx.fillRect(bx + 2, by + 2, 28, 2);
+                ctx.fillRect(bx, by, 1.5, brickH); // vertical joint
+                // Stone highlight on sunlit side
+                if (bx < towerX + towerW * 0.55) {
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillRect(bx + 1.5, by + 1.5, 24, 1.5);
+                }
             }
         }
 
-        // Story dividing stone cornices
-        const midStoryY = wallY + Math.floor((wallH - 10) * 0.48);
+        // Climbing ivy vines on foundation & lower wall
+        ctx.fillStyle = '#15803d';
+        ctx.fillRect(towerX + 6, wallY + wallH - 30, 4, 18);
+        ctx.fillRect(towerX + 4, wallY + wallH - 24, 8, 5);
+        ctx.fillRect(towerX + 8, wallY + wallH - 34, 5, 6);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(towerX + 5, wallY + wallH - 23, 3, 3);
+        ctx.fillRect(towerX + 9, wallY + wallH - 33, 3, 3);
+
+        // Story dividing stone cornice with bevel highlight
+        const midStoryY = wallY + Math.floor((wallH - 12) * 0.48);
         ctx.fillStyle = '#0f172a';
-        ctx.fillRect(towerX - 4, midStoryY - 2, towerW + 8, 6);
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(towerX - 2, midStoryY - 1, towerW + 4, 2.5);
+        ctx.fillRect(towerX - 6, midStoryY - 2, towerW + 12, 7);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(towerX - 4, midStoryY - 1, towerW + 8, 4);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(towerX - 2, midStoryY, towerW + 4, 1.5);
 
-        // 4. Arched Gothic Oak Portal (Entrance Doorway)
-        const doorW = 38;
-        const doorH = 50;
+        // 4. Grand Arched Gothic Oak Portal (Recessed with Double Stepped Archivolt)
+        const doorW = 40;
+        const doorH = 52;
         const doorX = towerX + Math.floor((towerW - doorW) / 2);
-        const doorY = wallY + wallH - doorH - 10;
+        const doorY = wallY + wallH - doorH - 12;
 
-        // Stone Archivolt / Moulding Arch
+        // Outer Stone Archivolt Arch
         ctx.fillStyle = '#0f172a';
         ctx.beginPath();
-        ctx.arc(doorX + doorW / 2, doorY + 12, doorW / 2 + 6, Math.PI, 0);
-        ctx.rect(doorX - 6, doorY + 12, doorW + 12, doorH - 12);
+        ctx.arc(doorX + doorW / 2, doorY + 14, doorW / 2 + 8, Math.PI, 0);
+        ctx.rect(doorX - 8, doorY + 14, doorW + 16, doorH - 14);
         ctx.fill();
 
+        // Inner Moulding Arch
         ctx.fillStyle = '#475569';
         ctx.beginPath();
-        ctx.arc(doorX + doorW / 2, doorY + 12, doorW / 2 + 4, Math.PI, 0);
-        ctx.rect(doorX - 4, doorY + 12, doorW + 8, doorH - 14);
+        ctx.arc(doorX + doorW / 2, doorY + 14, doorW / 2 + 5, Math.PI, 0);
+        ctx.rect(doorX - 5, doorY + 14, doorW + 10, doorH - 14);
         ctx.fill();
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(doorX - 5, doorY + 14, doorW + 10, 2);
 
-        // Heavy Studded Oak Doors
-        ctx.fillStyle = '#451a03';
+        // Heavy Studded Oak Double Doors
+        ctx.fillStyle = '#3e1a06';
         ctx.beginPath();
-        ctx.arc(doorX + doorW / 2, doorY + 12, doorW / 2, Math.PI, 0);
-        ctx.rect(doorX, doorY + 12, doorW, doorH - 12);
+        ctx.arc(doorX + doorW / 2, doorY + 14, doorW / 2, Math.PI, 0);
+        ctx.rect(doorX, doorY + 14, doorW, doorH - 14);
         ctx.fill();
 
-        // Center seam & iron studs
+        // Vertical Oak Planks & Iron Center Seam
+        ctx.fillStyle = '#5c2b09';
+        ctx.fillRect(doorX + 2, doorY + 14, 16, doorH - 14);
+        ctx.fillRect(doorX + 22, doorY + 14, 16, doorH - 14);
         ctx.fillStyle = '#1c0f08';
         ctx.fillRect(doorX + doorW / 2 - 1, doorY + 4, 2, doorH - 4);
+        // Iron Studs & Brass Rings
         ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(doorX + doorW / 2 - 4, doorY - 4, 8, 8);
+        ctx.fillRect(doorX + doorW / 2 - 5, doorY - 3, 10, 8);
         ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(doorX + doorW / 2 - 2, doorY - 2, 4, 4);
+        ctx.fillRect(doorX + doorW / 2 - 3, doorY - 1, 6, 4);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(doorX + 8, doorY + 22, 4, 2);
+        ctx.fillRect(doorX + 28, doorY + 22, 4, 2);
 
-        // Flanking Arcane Sapphire Lanterns on stone pedestals
-        [-18, towerW + 6].forEach(lx => {
+        // Flanking Arcane Sapphire Flame Pedestals
+        [-20, towerW + 8].forEach(lx => {
             const pX = towerX + lx;
-            const pY = wallY + wallH - 32;
+            const pY = wallY + wallH - 34;
+            // Stone pedestal
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(pX - 2, pY, 16, 22);
             ctx.fillStyle = '#334155';
-            ctx.fillRect(pX, pY, 12, 22);
-            ctx.fillStyle = '#0f172a';
-            ctx.strokeRect(pX + 1, pY - 14, 10, 14);
-            ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+            ctx.fillRect(pX, pY + 2, 12, 18);
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(pX - 3, pY - 2, 18, 4);
+            // Floating Arcane Sapphire Flame Orb
+            const floatBob = Math.sin(performance.now() / 320 + lx) * 3;
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
             ctx.beginPath();
-            ctx.arc(pX + 6, pY - 7, 12, 0, Math.PI * 2);
+            ctx.arc(pX + 6, pY - 14 + floatBob, 14, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = '#38bdf8';
-            ctx.fillRect(pX + 3, pY - 11, 6, 8);
+            ctx.beginPath();
+            ctx.arc(pX + 6, pY - 14 + floatBob, 6, 0, Math.PI * 2);
+            ctx.fill();
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(pX + 4.5, pY - 9, 3, 4);
+            ctx.beginPath();
+            ctx.arc(pX + 6, pY - 15 + floatBob, 2.5, 0, Math.PI * 2);
+            ctx.fill();
         });
 
-        // 5. Middle Story: Arched Stained Glass Lancet Windows (glowing amber/azure)
-        const winW = 16;
-        const winH = 28;
-        const winY = wallY + 18;
-        [towerX + 22, towerX + towerW - 38].forEach(wx => {
+        // 5. Gothic Pointed Lancet Stained Glass Windows
+        const winW = 18;
+        const winH = 32;
+        const winY = wallY + 20;
+        [towerX + 24, towerX + towerW - 42].forEach(wx => {
+            // Stone arch surround
             ctx.fillStyle = '#0f172a';
             ctx.beginPath();
-            ctx.arc(wx + winW / 2, winY + 6, winW / 2 + 2, Math.PI, 0);
-            ctx.rect(wx - 2, winY + 6, winW + 4, winH - 6);
+            ctx.arc(wx + winW / 2, winY + 8, winW / 2 + 3, Math.PI, 0);
+            ctx.rect(wx - 3, winY + 8, winW + 6, winH - 8);
             ctx.fill();
 
-            // Glowing stained glass
-            ctx.fillStyle = '#fde047';
-            ctx.fillRect(wx, winY + 6, winW, winH - 6);
-            ctx.fillStyle = '#38bdf8';
-            ctx.fillRect(wx + 2, winY + 8, winW - 4, Math.floor(winH * 0.45));
+            // 4-Pane Jewel Stained Glass (Amber, Azure, Ruby, Emerald)
+            ctx.fillStyle = '#fde047'; // Amber
+            ctx.fillRect(wx, winY + 8, winW / 2, Math.floor(winH * 0.45));
+            ctx.fillStyle = '#38bdf8'; // Azure
+            ctx.fillRect(wx + winW / 2, winY + 8, winW / 2, Math.floor(winH * 0.45));
+            ctx.fillStyle = '#ef4444'; // Ruby
+            ctx.fillRect(wx, winY + 8 + Math.floor(winH * 0.45), winW / 2, Math.floor(winH * 0.45));
+            ctx.fillStyle = '#34d399'; // Emerald
+            ctx.fillRect(wx + winW / 2, winY + 8 + Math.floor(winH * 0.45), winW / 2, Math.floor(winH * 0.45));
+
+            // Lead came traceries
             ctx.fillStyle = '#0f172a';
             ctx.fillRect(wx + winW / 2 - 1, winY, 2, winH);
-            ctx.fillRect(wx, winY + winH / 2, winW, 2);
+            ctx.fillRect(wx, winY + 8 + Math.floor(winH * 0.45), winW, 2);
         });
 
-        // 6. Upper Corbelled Parapet & Battlements (Crenels & Merlons)
+        // 6. Upper Corbelled Parapet & Crenellated Battlements
         const corbelY = wallY - 4;
         ctx.fillStyle = '#0f172a';
-        ctx.fillRect(towerX - 8, corbelY, towerW + 16, 8);
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(towerX - 6, corbelY + 2, towerW + 12, 5);
+        ctx.fillRect(towerX - 10, corbelY, towerW + 20, 9);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(towerX - 8, corbelY + 2, towerW + 16, 5);
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(towerX - 6, corbelY + 2, towerW + 12, 2);
 
-        for (let mx = towerX - 6; mx <= towerX + towerW + 2; mx += 14) {
+        // Crenels & Merlons with 3D Depth
+        for (let mx = towerX - 8; mx <= towerX + towerW + 2; mx += 16) {
             ctx.fillStyle = '#1e293b';
-            ctx.fillRect(mx, corbelY - 10, 8, 10);
+            ctx.fillRect(mx, corbelY - 12, 10, 12);
             ctx.fillStyle = '#475569';
-            ctx.fillRect(mx + 1, corbelY - 9, 6, 3);
+            ctx.fillRect(mx + 1, corbelY - 11, 8, 3);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(mx + 9, corbelY - 12, 1.5, 12);
         }
 
-        // 7. High Conical Wizard Spire Roof in Royal Indigo & Gold
-        const spireBaseY = corbelY - 8;
+        // 7. Volumetric Conical Spire with Curved Slate Shingles (Midnight Indigo & Gold)
+        const spireBaseY = corbelY - 10;
         const peakX = towerX + towerW / 2;
-        const peakY = y + 10;
+        const peakY = y + 8;
+        const spireH = spireBaseY - peakY;
 
-        ctx.fillStyle = '#1e1b4b'; // Midnight royal indigo
+        // Base conical polygon
+        ctx.fillStyle = '#1e1b4b'; // Deep royal indigo
         ctx.beginPath();
-        ctx.moveTo(towerX - 8, spireBaseY);
+        ctx.moveTo(towerX - 10, spireBaseY);
         ctx.lineTo(peakX, peakY);
-        ctx.lineTo(towerX + towerW + 8, spireBaseY);
+        ctx.lineTo(towerX + towerW + 10, spireBaseY);
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = '#312e81';
-        ctx.beginPath();
-        ctx.moveTo(peakX - 10, spireBaseY);
-        ctx.lineTo(peakX, peakY);
-        ctx.lineTo(peakX + 16, spireBaseY);
-        ctx.closePath();
-        ctx.fill();
+        // 3D Curved Scalloped Slate Shingles wrapping around the cone
+        const sRingH = 8;
+        let sRingIdx = 0;
+        for (let ry = peakY + 10; ry < spireBaseY; ry += sRingH) {
+            const frac = (ry - peakY) / spireH;
+            const rLeft = Math.round(peakX - frac * (towerW / 2 + 10));
+            const rRight = Math.round(peakX + frac * (towerW / 2 + 10));
+            const ringW = rRight - rLeft;
+            const shingleW = 10;
+            const offset = (sRingIdx % 2) * 5;
 
-        ctx.fillStyle = '#4338ca';
-        ctx.beginPath();
-        ctx.moveTo(peakX - 4, spireBaseY);
-        ctx.lineTo(peakX, peakY);
-        ctx.lineTo(peakX + 4, spireBaseY);
-        ctx.closePath();
-        ctx.fill();
+            // Curved tile course
+            for (let rx = rLeft + offset; rx < rRight - 2; rx += shingleW) {
+                const sw = Math.min(shingleW - 1, rRight - rx);
+                const tileFrac = (rx - rLeft) / ringW;
+                // Dimensional lighting across cone: bright left (#4f46e5), mid center (#312e81), dark right (#1e1b4b)
+                if (tileFrac < 0.45) {
+                    ctx.fillStyle = '#4338ca';
+                } else if (tileFrac < 0.70) {
+                    ctx.fillStyle = '#312e81';
+                } else {
+                    ctx.fillStyle = '#1e1b4b';
+                }
+                ctx.fillRect(rx, ry, sw, sRingH - 1.5);
+                // Top bevel highlight
+                if (tileFrac < 0.55) {
+                    ctx.fillStyle = '#818cf8';
+                    ctx.fillRect(rx + 0.5, ry, sw - 1, 1.5);
+                }
+            }
+            sRingIdx++;
+        }
 
+        // Spire Eaves Gold Filigree Band
         ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(towerX - 8, spireBaseY - 2, towerW + 16, 3);
+        ctx.fillRect(towerX - 10, spireBaseY - 3, towerW + 20, 3.5);
+        ctx.fillStyle = '#d97706';
+        ctx.fillRect(towerX - 10, spireBaseY - 1, towerW + 20, 1.5);
 
         // 8. Pinnacle: Rotating Arcane Brass Astrolabe Weather-Vane
         const rotTime = performance.now() / 600;
         const vaneSin = Math.sin(rotTime);
+        const vaneCos = Math.cos(rotTime);
+
         ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(peakX - 1.5, peakY - 22, 3, 24);
+        ctx.fillRect(peakX - 1.5, peakY - 24, 3, 26);
+
+        // Outer Astrolabe Ring
         ctx.beginPath();
-        ctx.ellipse(peakX, peakY - 16, 7 * Math.abs(vaneSin) + 2, 7, 0, 0, Math.PI * 2);
+        ctx.ellipse(peakX, peakY - 18, 8 * Math.abs(vaneSin) + 2, 8, 0, 0, Math.PI * 2);
         ctx.strokeStyle = '#fde047';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Inner Gimbal Ring
+        ctx.beginPath();
+        ctx.ellipse(peakX, peakY - 18, 5 * Math.abs(vaneCos) + 1.5, 5, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = '#38bdf8';
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
+        // Golden Starburst Finial
         ctx.fillStyle = '#fde047';
         ctx.beginPath();
-        ctx.arc(peakX, peakY - 25, 4, 0, Math.PI * 2);
+        ctx.arc(peakX, peakY - 27, 4.5, 0, Math.PI * 2);
         ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(peakX - 1, peakY - 28, 2, 2);
 
         ctx.restore();
     }
@@ -2785,55 +2892,76 @@
         ctx.save();
 
         // 1. Soft Ambient Drop Shadow underneath building
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.52)';
         ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h - 2, w / 2 + 6, 12, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + w / 2, y + h - 2, w / 2 + 8, 14, 0, 0, Math.PI * 2);
         ctx.fill();
 
         const wallH = Math.floor(h * 0.46);
         const wallY = y + h - wallH;
 
-        // 2. Stone Foundation Plinth
+        // 2. Heavy Ashlar Stone Foundation Plinth with Mortar Courses
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(x + 2, wallY + wallH - 10, w - 4, 10);
         ctx.fillStyle = '#334155';
-        ctx.fillRect(x + 4, wallY + wallH - 8, w - 8, 8);
+        ctx.fillRect(x + 4, wallY + wallH - 9, w - 8, 8);
         ctx.fillStyle = '#475569';
-        ctx.fillRect(x + 6, wallY + wallH - 7, w - 12, 4);
+        for (let fx = x + 12; fx < x + w - 16; fx += 20) {
+            ctx.fillRect(fx, wallY + wallH - 8, 1.5, 7);
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(fx + 2, wallY + wallH - 8, 16, 1.5);
+            ctx.fillStyle = '#475569';
+        }
 
-        // 3. Stucco / Plaster Facade Walls
+        // 3. Stucco / Plaster Facade Walls with Ambient Occlusion
         ctx.fillStyle = '#fef3c7';
-        ctx.fillRect(x + 6, wallY, w - 12, wallH - 8);
-
-        // Dark Timber Framing Corner Posts & Lintel
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(x + 6, wallY, 8, wallH - 8);
-        ctx.fillRect(x + w - 14, wallY, 8, wallH - 8);
+        ctx.fillRect(x + 6, wallY, w - 12, wallH - 9);
+        // Wall drop shadow under eave
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
         ctx.fillRect(x + 6, wallY, w - 12, 6);
-        ctx.fillStyle = '#451a03';
-        ctx.fillRect(x + 8, wallY + 2, 4, wallH - 10);
-        ctx.fillRect(x + w - 12, wallY + 2, 4, wallH - 10);
 
-        // Intermediate vertical timber posts for wider buildings
-        if (w >= 160) {
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(x + Math.floor(w * 0.32), wallY, 6, wallH - 8);
-            ctx.fillRect(x + Math.floor(w * 0.68), wallY, 6, wallH - 8);
+        // Timber Framing: Corner posts, girts, and diagonal St. Andrew's cross braces
+        ctx.fillStyle = '#5c2b09';
+        ctx.fillRect(x + 6, wallY, 8, wallH - 9);
+        ctx.fillRect(x + w - 14, wallY, 8, wallH - 9);
+        ctx.fillRect(x + 6, wallY, w - 12, 6); // upper lintel
+        ctx.fillRect(x + 6, wallY + wallH - 12, w - 12, 4); // lower girt
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(x + 7, wallY + 1, 6, wallH - 11);
+        ctx.fillRect(x + w - 13, wallY + 1, 6, wallH - 11);
+
+        // Intermediate vertical timber posts and diagonal braces
+        if (w >= 140) {
+            const p1 = x + Math.floor(w * 0.28);
+            const p2 = x + Math.floor(w * 0.72);
+            ctx.fillStyle = '#5c2b09';
+            ctx.fillRect(p1, wallY, 6, wallH - 9);
+            ctx.fillRect(p2, wallY, 6, wallH - 9);
+            // Diagonal brace accents
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#78350f';
+            ctx.beginPath();
+            ctx.moveTo(x + 14, wallY + 6);
+            ctx.lineTo(p1, wallY + wallH - 12);
+            ctx.moveTo(p2, wallY + wallH - 12);
+            ctx.lineTo(x + w - 14, wallY + 6);
+            ctx.stroke();
         }
 
-        // 4. Shingled 3D Hip Roof with Eaves Overhang
-        const roofH = h - wallH + 8;
-        const eX = x - 6;
-        const eW = w + 12;
+        // 4. Volumetric 3D Hip Roof with Individual Overlapping Shingles
+        const eX = x - 8;
+        const eW = w + 16;
 
-        let rBase = '#991b1b', rHi = '#dc2626', rSh = '#7f1d1d', rPeak = '#fca5a5';
+        let rBase = '#991b1b', rHi = '#dc2626', rSh = '#7f1d1d', rPeak = '#fca5a5', rTrim = '#b91c1c';
         if (b.roofColor === 'blue') {
-            rBase = '#1e3a8a'; rHi = '#2563eb'; rSh = '#172554'; rPeak = '#93c5fd';
+            rBase = '#1e3a8a'; rHi = '#2563eb'; rSh = '#172554'; rPeak = '#93c5fd'; rTrim = '#1d4ed8';
         } else if (b.roofColor === 'slate') {
-            rBase = '#0f766e'; rHi = '#0d9488'; rSh = '#134e4a'; rPeak = '#5eead4';
+            rBase = '#0f766e'; rHi = '#0d9488'; rSh = '#134e4a'; rPeak = '#5eead4'; rTrim = '#047857';
         } else if (b.roofColor === 'wood' || b.roofColor === 'amber') {
-            rBase = '#78350f'; rHi = '#b45309'; rSh = '#451a03'; rPeak = '#fde68a';
+            rBase = '#78350f'; rHi = '#b45309'; rSh = '#451a03'; rPeak = '#fde68a'; rTrim = '#92400e';
         }
 
-        // Main roof polygon
+        // Base roof slope polygon
         ctx.fillStyle = rBase;
         ctx.beginPath();
         ctx.moveTo(eX, wallY + 4);
@@ -2843,81 +2971,159 @@
         ctx.closePath();
         ctx.fill();
 
-        // Shingle highlight bands
-        ctx.fillStyle = rHi;
-        const shingleStep = 8;
-        for (let sy = y + 8; sy < wallY; sy += shingleStep) {
-            const frac = (sy - (y + 2)) / (wallY - (y + 2));
-            const leftX = (x + 18) - frac * 24;
-            const rightX = (x + w - 18) + frac * 24;
-            ctx.fillRect(leftX + 2, sy, rightX - leftX - 4, 3);
+        // 3D Overlapping Shingle Courses with alternating stagger
+        const shingleRowH = 7;
+        let rowNum = 0;
+        for (let sy = y + 6; sy < wallY + 2; sy += shingleRowH) {
+            const frac = (sy - (y + 2)) / (wallY + 2 - (y + 2));
+            const leftX = Math.round((x + 18) - frac * 26);
+            const rightX = Math.round((x + w - 18) + frac * 26);
+            const rowW = rightX - leftX;
+            const shingleW = 12;
+            const offset = (rowNum % 2) * (shingleW / 2);
+
+            // Row shadow under lip
+            ctx.fillStyle = rSh;
+            ctx.fillRect(leftX, sy + shingleRowH - 2, rowW, 2);
+
+            // Individual shingles in course
+            for (let sx = leftX + offset; sx < rightX - 2; sx += shingleW) {
+                const sw = Math.min(shingleW - 1.5, rightX - sx);
+                ctx.fillStyle = rTrim;
+                ctx.fillRect(sx, sy, sw, shingleRowH - 1.5);
+                ctx.fillStyle = rHi;
+                ctx.fillRect(sx + 1, sy, sw - 2, 1.5);
+                ctx.fillRect(sx, sy + 1, 1.5, shingleRowH - 3);
+            }
+            rowNum++;
         }
 
-        // Eaves shadow bevel
+        // Eaves overhanging fascia board with shadow
         ctx.fillStyle = rSh;
-        ctx.fillRect(eX, wallY + 2, eW, 4);
+        ctx.fillRect(eX, wallY + 3, eW, 4);
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(eX, wallY + 5, eW, 2.5);
 
-        // Ridge cap at peak
+        // Ornamental Ridge Cap with Finials
         ctx.fillStyle = rPeak;
-        ctx.fillRect(x + 16, y, w - 32, 4);
+        ctx.fillRect(x + 14, y, w - 28, 4);
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(x + 15, y + 2, 3.5, 0, Math.PI * 2);
+        ctx.arc(x + w - 15, y + 2, 3.5, 0, Math.PI * 2);
+        ctx.fill();
 
-        // 5. Arched Wooden Plank Door (Center-bottom)
+        // 5. Arched Studded Oak Door & Stone Steps
         const doorW = 28;
-        const doorH = 36;
+        const doorH = 38;
         const doorX = x + Math.floor((w - doorW) / 2);
         const doorY = y + h - doorH - 4;
 
-        // Door frame
-        ctx.fillStyle = '#451a03';
-        ctx.fillRect(doorX - 3, doorY - 3, doorW + 6, doorH + 3);
-        // Wood planks
-        ctx.fillStyle = '#b45309';
-        ctx.fillRect(doorX, doorY, doorW, doorH);
-        ctx.fillStyle = '#92400e';
-        ctx.fillRect(doorX + 8, doorY, 2, doorH);
-        ctx.fillRect(doorX + 18, doorY, 2, doorH);
-        // Brass knocker & handle
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(doorX + 19, doorY + 16, 4, 4);
-        // Stone doorstep
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(doorX - 4, y + h - 4, doorW + 8, 4);
+        // Stone archivolt door surround
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.arc(doorX + doorW / 2, doorY + 6, doorW / 2 + 3, Math.PI, 0);
+        ctx.rect(doorX - 3, doorY + 6, doorW + 6, doorH - 6);
+        ctx.fill();
 
-        // 6. Glowing Lattice Windows
-        const winY = wallY + 8;
+        // Heavy dark oak planks
+        ctx.fillStyle = '#451a03';
+        ctx.beginPath();
+        ctx.arc(doorX + doorW / 2, doorY + 6, doorW / 2, Math.PI, 0);
+        ctx.rect(doorX, doorY + 6, doorW, doorH - 6);
+        ctx.fill();
+
+        // Planks & Iron strap hinges
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(doorX + 2, doorY + 8, 7, doorH - 8);
+        ctx.fillRect(doorX + 11, doorY + 8, 7, doorH - 8);
+        ctx.fillRect(doorX + 20, doorY + 8, 6, doorH - 8);
+        ctx.fillStyle = '#0f172a'; // Iron strap
+        ctx.fillRect(doorX + 1, doorY + 14, doorW - 2, 2.5);
+        ctx.fillRect(doorX + 1, doorY + 28, doorW - 2, 2.5);
+        // Brass handle
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(doorX + 20, doorY + 20, 3, 4);
+
+        // Bevelled stone doorstep
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(doorX - 5, y + h - 5, doorW + 10, 5);
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(doorX - 3, y + h - 5, doorW + 6, 2);
+
+        // 6. Glowing Lattice Windows with Timber Shutters & Blooming Flowerboxes!
+        const winY = wallY + 9;
         const winSize = 18;
-        const leftWinX = x + 20;
-        const rightWinX = x + w - 38;
+        const leftWinX = x + 18;
+        const rightWinX = x + w - 36;
 
         [leftWinX, rightWinX].forEach(wx => {
-            // Window frame
+            // Timber shutters on left & right
             ctx.fillStyle = '#451a03';
-            ctx.fillRect(wx - 2, winY - 2, winSize + 4, winSize + 4);
-            // Amber warm glow
+            ctx.fillRect(wx - 7, winY, 5, winSize);
+            ctx.fillRect(wx + winSize + 2, winY, 5, winSize);
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(wx - 6, winY + 1, 3, winSize - 2);
+            ctx.fillRect(wx + winSize + 3, winY + 1, 3, winSize - 2);
+
+            // Window frame
+            ctx.fillStyle = '#1e1b4b';
+            ctx.fillRect(wx - 1, winY - 1, winSize + 2, winSize + 2);
+            // Warm interior amber glow
             ctx.fillStyle = '#fef08a';
             ctx.fillRect(wx, winY, winSize, winSize);
-            // Cyan glass reflection & dark mullions
-            ctx.fillStyle = '#78350f';
+            // Dark diamond cross mullions
+            ctx.fillStyle = '#451a03';
             ctx.fillRect(wx + winSize / 2 - 1, winY, 2, winSize);
             ctx.fillRect(wx, winY + winSize / 2 - 1, winSize, 2);
+
+            // Wooden Window Flowerbox
+            ctx.fillStyle = '#5c2b09';
+            ctx.fillRect(wx - 3, winY + winSize, winSize + 6, 6);
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(wx - 2, winY + winSize + 1, winSize + 4, 4);
+
+            // Blooming flowers (Red, Yellow, Cyan) with green foliage
+            ctx.fillStyle = '#15803d';
+            ctx.fillRect(wx - 2, winY + winSize - 2, winSize + 4, 3);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(wx, winY + winSize - 3, 3, 3);
+            ctx.fillRect(wx + winSize - 4, winY + winSize - 3, 3, 3);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(wx + 6, winY + winSize - 4, 3, 3);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(wx + 11, winY + winSize - 3, 3, 3);
         });
 
-        // 7. Stone Masonry Chimney with Animated Smoke
+        // 7. Stone Masonry Chimney with Animated Drifting Smoke Puffs
         const chimX = x + w - 24;
-        const chimY = y - 10;
+        const chimY = y - 12;
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(chimX - 1, chimY, 16, 22);
         ctx.fillStyle = '#475569';
-        ctx.fillRect(chimX, chimY, 14, 20);
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(chimX + 2, chimY + 2, 10, 16);
-        ctx.fillStyle = '#dc2626'; // brick lip
+        ctx.fillRect(chimX, chimY + 1, 14, 20);
+        // Brick courses
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(chimX, chimY + 6, 14, 1.5);
+        ctx.fillRect(chimX, chimY + 12, 14, 1.5);
+        ctx.fillRect(chimX, chimY + 18, 14, 1.5);
+        // Terracotta pot rim
+        ctx.fillStyle = '#b45309';
         ctx.fillRect(chimX - 2, chimY - 3, 18, 4);
 
-        // Smoke puff
-        const smokeShift = (performance.now() / 300) % 20;
-        ctx.fillStyle = 'rgba(241, 245, 249, 0.45)';
-        ctx.beginPath();
-        ctx.arc(chimX + 7 + Math.sin(performance.now() / 200) * 4, chimY - 8 - smokeShift, 5 + smokeShift * 0.25, 0, Math.PI * 2);
-        ctx.fill();
+        // Animated multi-stage drifting smoke puffs
+        const smokeTime = performance.now() / 400;
+        for (let p = 0; p < 3; p++) {
+            const pTime = (smokeTime + p * 0.7) % 2.5;
+            const py = chimY - 8 - pTime * 14;
+            const px = chimX + 7 + Math.sin(smokeTime + p * 1.5) * (4 + pTime * 3);
+            const pr = 4 + pTime * 3.5;
+            const alpha = Math.max(0, 0.45 - (pTime / 2.5) * 0.4);
+            ctx.fillStyle = `rgba(241, 245, 249, ${alpha})`;
+            ctx.beginPath();
+            ctx.arc(px, py, pr, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         ctx.restore();
     }
@@ -7289,10 +7495,10 @@
         ctx.save();
 
         // 1. Soft Ambient Outer Room Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-        ctx.fillRect(offX - 12, offY - 12, roomW + 24, roomH + 24);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
+        ctx.fillRect(offX - 14, offY - 14, roomW + 28, roomH + 28);
 
-        // 2. Arcane Flagstone Paving in Hexagonal / Ashlar Slate
+        // 2. Arcane Flagstone Paving in Hexagonal & Ashlar Slate
         const floorY = offY + 110;
         const floorH = roomH - 110;
         const slateTones = ['#0f172a', '#1e293b', '#1e2433', '#162032', '#0f172a'];
@@ -7306,6 +7512,11 @@
                 ctx.fillStyle = '#020617';
                 ctx.fillRect(fx, fy, tileSz, 1.5);
                 ctx.fillRect(fx, fy, 1.5, tileSz);
+                // Subtle floor stone texture highlight
+                if ((rowIdx + colIdx) % 3 === 0) {
+                    ctx.fillStyle = '#334155';
+                    ctx.fillRect(fx + 2, fy + 2, tileSz - 4, 1.5);
+                }
             }
         }
 
@@ -7377,41 +7588,212 @@
         ctx.fillStyle = '#d97706';
         ctx.fillRect(offX + 18, offY + 54, roomW - 36, 3);
 
-        // 5. Left Alcove: Scribe's Manuscript Desk & Candle
+        // 5. Flanking 2-Story Mahogany Library Stacks on West and East Walls
+        // Left (West) Wall Bookshelf Stack with Brass Sliding Ladder
+        const sideShelfW = 44;
+        const sideShelfH = 220;
+        const leftShelfX = offX + 16;
+        const leftShelfY = floorY + 12;
+
+        ctx.fillStyle = '#260e02';
+        ctx.fillRect(leftShelfX, leftShelfY, sideShelfW, sideShelfH);
+        ctx.fillStyle = '#3e1a06';
+        ctx.fillRect(leftShelfX + 2, leftShelfY + 2, sideShelfW - 4, sideShelfH - 4);
+        for (let lsy = leftShelfY + 20; lsy < leftShelfY + sideShelfH - 20; lsy += 45) {
+            ctx.fillStyle = '#1c0f08';
+            ctx.fillRect(leftShelfX + 2, lsy + 36, sideShelfW - 4, 4);
+            // Books
+            for (let bk = 0; bk < 4; bk++) {
+                ctx.fillStyle = bookColors[(bk * 3 + Math.floor(lsy / 45)) % bookColors.length];
+                ctx.fillRect(leftShelfX + 5 + bk * 9, lsy + 8, 7, 28);
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(leftShelfX + 5 + bk * 9, lsy + 14, 7, 2);
+            }
+        }
+        // Brass Sliding Ladder on Left Wall
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(leftShelfX + sideShelfW - 6, leftShelfY + 10, 4, sideShelfH);
+        for (let r = leftShelfY + 25; r < leftShelfY + sideShelfH; r += 20) {
+            ctx.fillRect(leftShelfX + sideShelfW - 14, r, 12, 2.5);
+        }
+
+        // Right (East) Wall Matching Bookshelf Stack with Apothecary Scrolls & Jars
+        const rightShelfX = offX + roomW - 60;
+        const rightShelfY = floorY + 12;
+        ctx.fillStyle = '#260e02';
+        ctx.fillRect(rightShelfX, rightShelfY, sideShelfW, sideShelfH);
+        ctx.fillStyle = '#3e1a06';
+        ctx.fillRect(rightShelfX + 2, rightShelfY + 2, sideShelfW - 4, sideShelfH - 4);
+        for (let rsy = rightShelfY + 20; rsy < rightShelfY + sideShelfH - 20; rsy += 45) {
+            ctx.fillStyle = '#1c0f08';
+            ctx.fillRect(rightShelfX + 2, rsy + 36, sideShelfW - 4, 4);
+            // Scrolls & Glass Jars
+            ctx.fillStyle = '#fef3c7';
+            ctx.fillRect(rightShelfX + 6, rsy + 14, 6, 22);
+            ctx.fillRect(rightShelfX + 14, rsy + 12, 6, 24);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(rightShelfX + 24, rsy + 18, 10, 18);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(rightShelfX + 26, rsy + 20, 3, 5);
+        }
+
+        // 6. Left Alcove: Scribe's Manuscript Desk & Button-Tufted Velvet Scholar Chair
+        const deskX = offX + 85;
+        const deskY = floorY + 90;
+        const deskW = 92;
+        const deskH = 50;
+
+        // Desk Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(deskX - 2, deskY + deskH - 6, deskW + 4, 10);
+        // Bevelled Mahogany Desk
+        ctx.fillStyle = '#3e1a06';
+        ctx.fillRect(deskX, deskY, deskW, deskH);
         ctx.fillStyle = '#5c2b09';
-        ctx.fillRect(offX + 80, floorY + 80, 88, 48);
+        ctx.fillRect(deskX + 3, deskY + 3, deskW - 6, deskH - 6);
         ctx.fillStyle = '#78350f';
-        ctx.fillRect(offX + 82, floorY + 82, 84, 44);
+        ctx.fillRect(deskX + 6, deskY + 6, deskW - 12, 8); // desk top bevel
+        // Carved Desk Legs
+        ctx.fillStyle = '#260e02';
+        ctx.fillRect(deskX + 4, deskY + deskH - 8, 8, 8);
+        ctx.fillRect(deskX + deskW - 12, deskY + deskH - 8, 8, 8);
+
+        // Open Illuminated Manuscript with red initial drop-cap
         ctx.fillStyle = '#fef3c7';
-        ctx.fillRect(offX + 96, floorY + 92, 34, 24);
+        ctx.fillRect(deskX + 16, deskY + 16, 40, 26);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(deskX + 35, deskY + 16, 2, 26); // center binding
+        ctx.fillStyle = '#dc2626'; // illuminated capital
+        ctx.fillRect(deskX + 20, deskY + 20, 6, 6);
+        ctx.fillStyle = '#78350f';
+        for (let ly = deskY + 22; ly < deskY + 38; ly += 4) {
+            ctx.fillRect(deskX + 28, ly, 6, 1.5);
+            ctx.fillRect(deskX + 39, ly, 12, 1.5);
+        }
+
+        // Inkwell with Feather Quill
         ctx.fillStyle = '#0f172a';
-        ctx.fillRect(offX + 100, floorY + 98, 26, 2);
-        ctx.fillRect(offX + 100, floorY + 104, 20, 2);
+        ctx.fillRect(deskX + 62, deskY + 22, 6, 8);
         ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(offX + 140, floorY + 88, 4, 10);
-        ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
-        ctx.arc(offX + 142, floorY + 84, 4, 0, Math.PI * 2);
+        ctx.moveTo(deskX + 65, deskY + 22);
+        ctx.lineTo(deskX + 72, deskY + 10);
+        ctx.lineTo(deskX + 74, deskY + 11);
+        ctx.lineTo(deskX + 66, deskY + 24);
         ctx.fill();
 
-        // 6. Right Alcove: Alchemical Distillation Bench & Logic Tonic Alembic
+        // 3-Branch Brass Candelabra with warm flickering flame
+        const candX = deskX + 78;
+        const candY = deskY + 16;
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(candX, candY, 3, 14);
+        ctx.fillRect(candX - 5, candY + 4, 13, 2.5);
+        ctx.fillStyle = '#fef08a';
+        [-4, 1, 6].forEach((cOff, cIdx) => {
+            const fBob = Math.sin(performance.now() / 200 + cIdx) * 1.5;
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.arc(candX + cOff + 1, candY - 2 + fBob, 3, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // High-Backed Scholar Armchair with Crimson Velvet Upholstery (Behind Desk)
+        const chairX = deskX + 26;
+        const chairY = deskY - 26;
+        ctx.fillStyle = '#260e02';
+        ctx.fillRect(chairX, chairY, 28, 30);
+        ctx.fillStyle = '#991b1b'; // Royal crimson velvet
+        ctx.fillRect(chairX + 3, chairY + 3, 22, 24);
+        ctx.fillStyle = '#fde047'; // Gold tufting buttons
+        ctx.fillRect(chairX + 8, chairY + 8, 2, 2);
+        ctx.fillRect(chairX + 18, chairY + 8, 2, 2);
+        ctx.fillRect(chairX + 13, chairY + 16, 2, 2);
+        // Chair armrests
         ctx.fillStyle = '#5c2b09';
-        ctx.fillRect(offX + roomW - 170, floorY + 80, 88, 48);
+        ctx.fillRect(chairX - 3, chairY + 12, 4, 14);
+        ctx.fillRect(chairX + 27, chairY + 12, 4, 14);
+
+        // 7. Right Alcove: Alchemical Distillation Bench & Scholar Chair
+        const benchX = offX + roomW - 175;
+        const benchY = floorY + 90;
+        const benchW = 92;
+        const benchH = 50;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(benchX - 2, benchY + benchH - 6, benchW + 4, 10);
+        ctx.fillStyle = '#3e1a06';
+        ctx.fillRect(benchX, benchY, benchW, benchH);
+        ctx.fillStyle = '#5c2b09';
+        ctx.fillRect(benchX + 3, benchY + 3, benchW - 6, benchH - 6);
         ctx.fillStyle = '#78350f';
-        ctx.fillRect(offX + roomW - 168, floorY + 82, 84, 44);
+        ctx.fillRect(benchX + 6, benchY + 6, benchW - 12, 8);
+
+        // Alchemical Glassware, Bubbling Azure Alembic & Rack
         ctx.fillStyle = '#38bdf8';
         ctx.beginPath();
-        ctx.arc(offX + roomW - 145, floorY + 102, 7, 0, Math.PI * 2);
+        ctx.arc(benchX + 24, benchY + 28, 9, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(offX + roomW - 147, floorY + 98, 2, 4);
+        ctx.fillRect(benchX + 21, benchY + 22, 3, 5);
 
         ctx.fillStyle = '#ef4444';
         ctx.beginPath();
-        ctx.arc(offX + roomW - 120, floorY + 102, 6, 0, Math.PI * 2);
+        ctx.arc(benchX + 50, benchY + 30, 7, 0, Math.PI * 2);
         ctx.fill();
 
-        // 7. Center Ornate Pedestal with Ancient Socratic Armillary Sphere
+        ctx.fillStyle = '#34d399';
+        ctx.fillRect(benchX + 68, benchY + 18, 5, 14);
+        ctx.fillRect(benchX + 76, benchY + 16, 5, 16);
+
+        // Matching Scholar Armchair for Right Alcove
+        const rChairX = benchX + 26;
+        const rChairY = benchY - 26;
+        ctx.fillStyle = '#260e02';
+        ctx.fillRect(rChairX, rChairY, 28, 30);
+        ctx.fillStyle = '#991b1b';
+        ctx.fillRect(rChairX + 3, rChairY + 3, 22, 24);
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(rChairX + 8, rChairY + 8, 2, 2);
+        ctx.fillRect(rChairX + 18, rChairY + 8, 2, 2);
+        ctx.fillRect(rChairX + 13, rChairY + 16, 2, 2);
+        ctx.fillStyle = '#5c2b09';
+        ctx.fillRect(rChairX - 3, rChairY + 12, 4, 14);
+        ctx.fillRect(rChairX + 27, rChairY + 12, 4, 14);
+
+        // 8. Central Octagonal Reading Table & Chairs near the Armillary Sphere
+        const octX = centerX - 50;
+        const octY = floorY + floorH - 120;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(centerX, octY + 20, 52, 24, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#3e1a06';
+        ctx.fillRect(octX, octY, 100, 36);
+        ctx.fillStyle = '#5c2b09';
+        ctx.fillRect(octX + 4, octY + 4, 92, 28);
+        // Tabletop Map Scroll & Magnifying Glass
+        ctx.fillStyle = '#fef3c7';
+        ctx.fillRect(octX + 20, octY + 8, 44, 20);
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(octX + 28, octY + 12, 14, 2);
+        ctx.fillRect(octX + 32, octY + 18, 16, 2);
+        // Brass Magnifying Glass
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(octX + 74, octY + 18, 6, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillRect(octX + 78, octY + 22, 6, 2.5);
+
+        // Two student reading chairs at the table
+        [octX - 18, octX + 96].forEach(scx => {
+            ctx.fillStyle = '#260e02';
+            ctx.fillRect(scx, octY + 4, 16, 24);
+            ctx.fillStyle = '#991b1b';
+            ctx.fillRect(scx + 2, octY + 6, 12, 18);
+        });
+
+        // 9. Center Ornate Pedestal with Ancient Socratic Armillary Sphere
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(centerX - 24, centerY - 14, 48, 28);
         ctx.fillStyle = '#334155';
@@ -7431,7 +7813,7 @@
         ctx.arc(centerX, centerY - 24, 4, 0, Math.PI * 2);
         ctx.fill();
 
-        // 8. Interactive Treasure Chest in Upper Alcove
+        // 10. Interactive Treasure Chest in Upper Alcove
         if (currentInterior.chest) {
             const ch = currentInterior.chest;
             const spr = ch.opened ? 'alttp_chest_lone_open' : 'alttp_chest_lone';
@@ -7443,7 +7825,7 @@
             }
         }
 
-        // 9. South Arched Exit Doorway
+        // 11. South Arched Exit Doorway
         const exitX = centerX - 30;
         const exitY = offY + roomH - 40;
         ctx.fillStyle = '#020617';
@@ -7457,7 +7839,7 @@
         ctx.textAlign = 'center';
         ctx.fillText('▼ EXIT', centerX, exitY + 24);
 
-        // 10. Draw Player inside Interior
+        // 12. Draw Player inside Interior
         drawCharacterSprite(ctx, offX + player.x, offY + player.y, 2.3, {
             role: 'player',
             dir: player.dir,
@@ -8160,14 +8542,15 @@
             };
 
             activeDialogueList = [
-                `You opened the Archive Chest and acquired <span style="color: #38bdf8; font-weight: 800;">[Archive Logic Cache]</span>!<br><br><span class="text-amber-300 font-bold">+75💠 Shards & Logic Tonic added to your inventory!</span><br><br><span class="text-slate-300 italic">"Knowledge shared is knowledge multiplied."</span>`
+                `Found <span style="color: #38bdf8; font-weight: 800;">[Archive Cache]</span>! <span class="text-amber-300 font-bold">(+75💠 Shards & Logic Tonic)</span>`
             ];
             activeDialogueIndex = 0;
             activeDialogueNpc = null;
             renderDialoguePortraitCanvas({ type: 'item', item: itemFanfare.item });
-            document.getElementById('dialogueSpeaker').textContent = 'CHEST LOOTED // ARCHIVE CACHE';
+            const spkCache = document.getElementById('dialogueSpeaker');
+            if (spkCache) { spkCache.textContent = ''; spkCache.classList.add('hidden'); }
             document.getElementById('dialogueText').innerHTML = activeDialogueList[0];
-            document.getElementById('dialogueStepCounter').textContent = '[SPACE / CLICK] Continue »';
+            document.getElementById('dialogueStepCounter').textContent = '[SPACE / CLICK] »';
             document.getElementById('dialogueModal').classList.remove('hidden');
 
             addFloatText(player.x, player.y - 30, '+75💠 Shards & Logic Tonic!', '#fde047');
@@ -8259,14 +8642,15 @@
         // Show bottom dialogue box with colored text and rendered pixel relic icon
         const rarity = getItemRarity(relic);
         activeDialogueList = [
-            `You opened the Archive Chest and obtained <span style="color: ${rarity.color}; font-weight: 800; text-shadow: ${rarity.textGlow};">[${relic.name}]</span>! <span class="text-cyan-300 font-bold">(${relic.bonus})</span><br><br><span class="text-slate-300 italic">"${relic.desc}"</span>`
+            `Found <span style="color: ${rarity.color}; font-weight: 800; text-shadow: ${rarity.textGlow};">[${relic.name}]</span>! <span class="text-cyan-300 font-bold">(${relic.bonus})</span>`
         ];
         activeDialogueIndex = 0;
         activeDialogueNpc = null;
         renderDialoguePortraitCanvas({ type: 'item', item: relic });
-        document.getElementById('dialogueSpeaker').textContent = `RELIC ACQUIRED // ${relic.slot.toUpperCase()} SLOT`;
+        const spkRelic = document.getElementById('dialogueSpeaker');
+        if (spkRelic) { spkRelic.textContent = ''; spkRelic.classList.add('hidden'); }
         document.getElementById('dialogueText').innerHTML = activeDialogueList[0];
-        document.getElementById('dialogueStepCounter').textContent = '[SPACE / CLICK] Equip & Continue »';
+        document.getElementById('dialogueStepCounter').textContent = '[SPACE / CLICK] »';
         document.getElementById('dialogueModal').classList.remove('hidden');
     }
 
@@ -8417,13 +8801,14 @@
                 }
 
                 if (t === 1) {
-                    // Contiguous 32-Bit Cobblestone Highway (Organic flagstones, soft mortar & gravel edges)
-                    const roadBed = isBright ? '#c29a5d' : '#334155';
-                    const stoneLight = isBright ? '#e8d29b' : '#64748b';
-                    const stoneMid = isBright ? '#d4b77f' : '#475569';
-                    const stoneDark = isBright ? '#8a652a' : '#1e293b';
+                    // Contiguous 32-Bit Cobblestone Highway (4 Richly Varied Flagstone Patterns & Organic Feathered Edges)
+                    const roadBed = isBright ? '#b48a4d' : '#2b3648';
+                    const stoneLight = isBright ? '#f3e5c0' : '#79889e';
+                    const stoneMid = isBright ? '#dbc28f' : '#52627a';
+                    const stoneDark = isBright ? '#825c23' : '#1b2433';
+                    const mortarDark = isBright ? '#6a4918' : '#111827';
 
-                    // Road foundation
+                    // Road foundation bed
                     ctx.fillStyle = roadBed;
                     ctx.fillRect(tx, ty, TILE_SIZE + 1, TILE_SIZE + 1);
 
@@ -8433,54 +8818,117 @@
                     const hasW = c > 0 && mapGrid[r][c - 1] === 1;
                     const hasE = c < curCols - 1 && mapGrid[r][c + 1] === 1;
 
-                    // Organic flagstone clusters
-                    const ox1 = (tileHash % 3) - 1;
-                    const oy1 = ((tileHash * 7) % 3) - 1;
-                    const stones = [
-                        { sx: tx + 3 + ox1, sy: ty + 3 + oy1, sw: 15, sh: 13 },
-                        { sx: tx + 21, sy: ty + 4 - oy1, sw: 17, sh: 12 },
-                        { sx: tx + 4 - ox1, sy: ty + 20, sw: 14, sh: 17 },
-                        { sx: tx + 22 + ox1, sy: ty + 20 + oy1, sw: 16, sh: 16 },
-                        { sx: tx + 13, sy: ty + 13, sw: 13, sh: 11 }
-                    ];
+                    // 4 Distinct Artisanal Paving Layouts (Breaking the repetitive 5-stone pattern)
+                    const pVariant = (tileHash ^ (c * 7 + r * 13)) % 4;
+                    let stones = [];
 
+                    if (pVariant === 0) {
+                        // Variant 0: Large Interlocking Polygonal Master Flagstones
+                        stones = [
+                            { sx: tx + 2, sy: ty + 2, sw: 20, sh: 16 },
+                            { sx: tx + 24, sy: ty + 2, sw: 15, sh: 18 },
+                            { sx: tx + 2, sy: ty + 20, sw: 17, sh: 18 },
+                            { sx: tx + 21, sy: ty + 22, sw: 18, sh: 16 }
+                        ];
+                    } else if (pVariant === 1) {
+                        // Variant 1: Staggered Ashlar Masonry Pavers (Running Bond)
+                        stones = [
+                            { sx: tx + 2, sy: ty + 2, sw: 24, sh: 10 },
+                            { sx: tx + 28, sy: ty + 2, sw: 11, sh: 10 },
+                            { sx: tx + 2, sy: ty + 14, sw: 13, sh: 11 },
+                            { sx: tx + 17, sy: ty + 14, sw: 22, sh: 11 },
+                            { sx: tx + 2, sy: ty + 27, sw: 22, sh: 11 },
+                            { sx: tx + 26, sy: ty + 27, sw: 13, sh: 11 }
+                        ];
+                    } else if (pVariant === 2) {
+                        // Variant 2: Natural River Cobble Mosaic (Varying Rounded Shapes & Gravel)
+                        stones = [
+                            { sx: tx + 3, sy: ty + 3, sw: 13, sh: 11 },
+                            { sx: tx + 18, sy: ty + 2, sw: 11, sh: 13 },
+                            { sx: tx + 31, sy: ty + 4, sw: 8, sh: 10 },
+                            { sx: tx + 2, sy: ty + 16, sw: 11, sh: 10 },
+                            { sx: tx + 15, sy: ty + 16, sw: 13, sh: 11 },
+                            { sx: tx + 30, sy: ty + 16, sw: 9, sh: 12 },
+                            { sx: tx + 4, sy: ty + 28, sw: 15, sh: 10 },
+                            { sx: tx + 21, sy: ty + 28, sw: 17, sh: 10 }
+                        ];
+                    } else {
+                        // Variant 3: Weathered Ancient Slabs with Moss Crevices
+                        stones = [
+                            { sx: tx + 3, sy: ty + 3, sw: 16, sh: 17 },
+                            { sx: tx + 21, sy: ty + 3, sw: 17, sh: 15 },
+                            { sx: tx + 3, sy: ty + 22, sw: 18, sh: 16 },
+                            { sx: tx + 23, sy: ty + 20, sw: 15, sh: 18 }
+                        ];
+                    }
+
+                    // Render individual stone slabs
                     stones.forEach(st => {
-                        ctx.fillStyle = stoneDark;
+                        // Mortar shadow
+                        ctx.fillStyle = mortarDark;
                         ctx.beginPath();
-                        drawRoundRect(ctx, st.sx, st.sy, st.sw, st.sh, 4);
+                        drawRoundRect(ctx, st.sx, st.sy, st.sw, st.sh, 3);
                         ctx.fill();
 
+                        // Main stone face
                         ctx.fillStyle = stoneMid;
                         ctx.beginPath();
-                        drawRoundRect(ctx, st.sx + 1, st.sy + 1, st.sw - 2, st.sh - 2, 3);
+                        drawRoundRect(ctx, st.sx + 1, st.sy + 1, st.sw - 2, st.sh - 2, 2.5);
                         ctx.fill();
 
-                        // Gentle specular highlight without harsh line
+                        // Bevel highlight
                         ctx.fillStyle = stoneLight;
-                        ctx.fillRect(st.sx + 2, st.sy + 1, Math.max(2, st.sw - 6), 1.5);
+                        ctx.fillRect(st.sx + 2, st.sy + 1, Math.max(2, st.sw - 5), 1.5);
+                        ctx.fillRect(st.sx + 1.5, st.sy + 2, 1.5, Math.max(2, st.sh - 5));
+
+                        // Stone texture speck
+                        if ((st.sx + st.sy) % 3 === 0) {
+                            ctx.fillStyle = stoneDark;
+                            ctx.fillRect(st.sx + Math.floor(st.sw * 0.5), st.sy + Math.floor(st.sh * 0.5), 1.5, 1.5);
+                        }
                     });
 
-                    // Organic feathered dither along grass borders (replaces blocky 2px borders)
+                    // Variant 3 Moss Crevices
+                    if (pVariant === 3 && isBright) {
+                        ctx.fillStyle = '#15803d';
+                        ctx.fillRect(tx + 18, ty + 18, 3, 2);
+                        ctx.fillRect(tx + 19, ty + 19, 2, 2);
+                    }
+
+                    // Organic feathered dither & protruding stones along grass borders (Seamless transition)
                     const turfColor = isBright ? '#16a34a' : mapMeta.groundColor;
                     if (!hasN) {
                         ctx.fillStyle = turfColor;
-                        ctx.fillRect(tx + (tileHash % 11), ty, 5, 2);
-                        ctx.fillRect(tx + 16 + (tileHash % 9), ty, 6, 2.5);
+                        ctx.fillRect(tx + 2, ty, 6, 2.5);
+                        ctx.fillRect(tx + 14, ty, 7, 2);
+                        ctx.fillRect(tx + 28, ty, 8, 3);
+                        // Natural pebble protrusion into grass
+                        ctx.fillStyle = stoneMid;
+                        ctx.fillRect(tx + 9, ty - 1.5, 4, 2);
                     }
                     if (!hasS) {
                         ctx.fillStyle = turfColor;
-                        ctx.fillRect(tx + 4 + (tileHash % 9), ty + TILE_SIZE - 2.5, 6, 2.5);
-                        ctx.fillRect(tx + 18 + (tileHash % 7), ty + TILE_SIZE - 2, 5, 2);
+                        ctx.fillRect(tx + 1, ty + TILE_SIZE - 2.5, 7, 2.5);
+                        ctx.fillRect(tx + 16, ty + TILE_SIZE - 2, 8, 2);
+                        ctx.fillRect(tx + 29, ty + TILE_SIZE - 3, 9, 3);
+                        ctx.fillStyle = stoneMid;
+                        ctx.fillRect(tx + 24, ty + TILE_SIZE - 0.5, 4, 2);
                     }
                     if (!hasW) {
                         ctx.fillStyle = turfColor;
-                        ctx.fillRect(tx, ty + (tileHash % 9), 2.5, 6);
-                        ctx.fillRect(tx, ty + 16 + (tileHash % 7), 2, 5);
+                        ctx.fillRect(tx, ty + 3, 2.5, 7);
+                        ctx.fillRect(tx, ty + 16, 2, 8);
+                        ctx.fillRect(tx, ty + 28, 3, 9);
+                        ctx.fillStyle = stoneMid;
+                        ctx.fillRect(tx - 1.5, ty + 11, 2, 4);
                     }
                     if (!hasE) {
                         ctx.fillStyle = turfColor;
-                        ctx.fillRect(tx + TILE_SIZE - 2.5, ty + 4 + (tileHash % 9), 2.5, 6);
-                        ctx.fillRect(tx + TILE_SIZE - 2, ty + 18 + (tileHash % 7), 2, 5);
+                        ctx.fillRect(tx + TILE_SIZE - 2.5, ty + 2, 2.5, 8);
+                        ctx.fillRect(tx + TILE_SIZE - 2, ty + 17, 2, 7);
+                        ctx.fillRect(tx + TILE_SIZE - 3, ty + 27, 3, 9);
+                        ctx.fillStyle = stoneMid;
+                        ctx.fillRect(tx + TILE_SIZE - 0.5, ty + 23, 2, 4);
                     }
                 } else if (t === 2) {
                     // Perimeter Stone Wall / Cliff Ledge
@@ -8489,65 +8937,96 @@
                     ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#14532d' : '#1e293b';
                     ctx.fillRect(tx + 4, ty + 4, TILE_SIZE - 8, TILE_SIZE - 12);
                 } else if (t === 4) {
-                    // River water with animated multi-layer caustics & shoreline foam blending
+                    // MASTERWORK 32-BIT FLOWING RIVER WATER & NATURAL SEDIMENT SHORELINES
+                    // 1. Deep Crystalline River Water (Depth Gradation & Overlap for zero seams)
                     ctx.fillStyle = '#0284c7';
                     ctx.fillRect(tx, ty, TILE_SIZE + 1, TILE_SIZE + 1);
 
-                    const waveSin = Math.sin(nowMs / 380 + c * 0.7 + r * 0.5);
-                    const waveCos = Math.cos(nowMs / 520 + c * 0.5 - r * 0.6);
+                    const waterPhase = (nowMs / 480) + (c * 0.45) + (r * 0.35);
+                    const waveSin = Math.sin(waterPhase);
+                    const waveCos = Math.cos(waterPhase * 0.75 + 1.2);
 
-                    // Translucent caustics
-                    ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+                    // 2. Translucent Flowing River Caustic Bands (Soft shimmering ribbons)
+                    ctx.fillStyle = 'rgba(14, 165, 233, 0.42)';
                     ctx.beginPath();
-                    ctx.ellipse(tx + 16 + waveSin * 4, ty + 11 + waveCos * 2.5, 10, 4, 0, 0, Math.PI * 2);
+                    ctx.ellipse(tx + 18 + waveSin * 4, ty + 12 + waveCos * 2, 12, 4.5, 0.1, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.beginPath();
-                    ctx.ellipse(tx + 18 - waveCos * 4, ty + 23 + waveSin * 2, 8, 3, 0, 0, Math.PI * 2);
+                    ctx.ellipse(tx + 20 - waveCos * 4, ty + 26 + waveSin * 2.5, 10, 4, -0.1, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Wave crest highlights
-                    ctx.fillStyle = 'rgba(224, 242, 254, 0.65)';
-                    ctx.fillRect(tx + 10 + Math.floor(waveSin * 3), ty + 10, 6, 1.5);
-                    ctx.fillRect(tx + 15 + Math.floor(waveCos * 3), ty + 22, 5, 1.5);
+                    // 3. Gentle Sparkling Specular Highlights
+                    ctx.fillStyle = 'rgba(224, 242, 254, 0.55)';
+                    ctx.fillRect(tx + 12 + Math.floor(waveSin * 3), ty + 11, 7, 1.5);
+                    ctx.fillRect(tx + 17 + Math.floor(waveCos * 3), ty + 24, 6, 1.5);
 
-                    // Shoreline autotiling (Check neighbors touching non-water)
+                    // Tiny drifting foam bubble / sparkle
+                    if (tileHash % 7 === 0) {
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                        ctx.fillRect(tx + 8 + ((tileHash * 5) % 22) + Math.round(waveSin * 2), ty + 6 + ((tileHash * 3) % 24), 1.5, 1.5);
+                    }
+
+                    // 4. Shoreline Neighbor Adjacency (Water touching land)
                     const landN = r > 0 && mapGrid[r - 1] && mapGrid[r - 1][c] !== 4 && mapGrid[r - 1][c] !== 8;
                     const landS = r < curRows - 1 && mapGrid[r + 1] && mapGrid[r + 1][c] !== 4 && mapGrid[r + 1][c] !== 8;
                     const landW = c > 0 && mapGrid[r][c - 1] !== 4 && mapGrid[r][c - 1] !== 8;
                     const landE = c < curCols - 1 && mapGrid[r][c + 1] !== 4 && mapGrid[r][c + 1] !== 8;
 
-                    const foamBob = Math.sin(nowMs / 280 + c * 1.2 + r) * 1.5;
+                    const shoreLapping = Math.sin(waterPhase * 1.3) * 1.2;
+
+                    // NATURAL ORGANIC RIVERBANK (Warm wet sand shelf + grass droop + delicate wave crest)
+                    // Zero stark white boxes or harsh yellow lines!
                     if (landN) {
-                        ctx.fillStyle = '#ca8a04';
-                        ctx.fillRect(tx, ty, TILE_SIZE, 3);
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-                        ctx.fillRect(tx, ty + 3 + foamBob, TILE_SIZE, 2);
-                        ctx.fillStyle = 'rgba(125, 211, 252, 0.7)';
-                        ctx.fillRect(tx, ty + 5 + foamBob, TILE_SIZE, 1.5);
+                        // Wet sand shelf & silt base
+                        ctx.fillStyle = '#78350f';
+                        ctx.fillRect(tx, ty, TILE_SIZE + 1, 3);
+                        ctx.fillStyle = '#92400e';
+                        ctx.fillRect(tx, ty + 2, TILE_SIZE + 1, 1.5);
+                        // Soft undercut shadow
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+                        ctx.fillRect(tx, ty, TILE_SIZE + 1, 1.5);
+                        // Gentle translucent sky-blue water lapping swell
+                        ctx.fillStyle = 'rgba(125, 211, 252, 0.38)';
+                        ctx.fillRect(tx, ty + 3 + shoreLapping, TILE_SIZE + 1, 2);
+                        // Delicate wave-crest foam highlight (soft, broken, not solid)
+                        ctx.fillStyle = 'rgba(240, 249, 255, 0.45)';
+                        ctx.fillRect(tx + 2, ty + 3.5 + shoreLapping, TILE_SIZE - 4, 1);
                     }
                     if (landS) {
-                        ctx.fillStyle = '#ca8a04';
-                        ctx.fillRect(tx, ty + TILE_SIZE - 3, TILE_SIZE, 3);
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-                        ctx.fillRect(tx, ty + TILE_SIZE - 5 - foamBob, TILE_SIZE, 2);
-                        ctx.fillStyle = 'rgba(125, 211, 252, 0.7)';
-                        ctx.fillRect(tx, ty + TILE_SIZE - 6 - foamBob, TILE_SIZE, 1.5);
+                        ctx.fillStyle = '#78350f';
+                        ctx.fillRect(tx, ty + TILE_SIZE - 3, TILE_SIZE + 1, 3);
+                        ctx.fillStyle = '#92400e';
+                        ctx.fillRect(tx, ty + TILE_SIZE - 4, TILE_SIZE + 1, 1.5);
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+                        ctx.fillRect(tx, ty + TILE_SIZE - 1.5, TILE_SIZE + 1, 1.5);
+                        ctx.fillStyle = 'rgba(125, 211, 252, 0.38)';
+                        ctx.fillRect(tx, ty + TILE_SIZE - 5 - shoreLapping, TILE_SIZE + 1, 2);
+                        ctx.fillStyle = 'rgba(240, 249, 255, 0.45)';
+                        ctx.fillRect(tx + 2, ty + TILE_SIZE - 4.5 - shoreLapping, TILE_SIZE - 4, 1);
                     }
                     if (landW) {
-                        ctx.fillStyle = '#ca8a04';
-                        ctx.fillRect(tx, ty, 3, TILE_SIZE);
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-                        ctx.fillRect(tx + 3 + foamBob, ty, 2, TILE_SIZE);
-                        ctx.fillStyle = 'rgba(125, 211, 252, 0.7)';
-                        ctx.fillRect(tx + 5 + foamBob, ty, 1.5, TILE_SIZE);
+                        ctx.fillStyle = '#78350f';
+                        ctx.fillRect(tx, ty, 3, TILE_SIZE + 1);
+                        ctx.fillStyle = '#92400e';
+                        ctx.fillRect(tx + 2, ty, 1.5, TILE_SIZE + 1);
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+                        ctx.fillRect(tx, ty, 1.5, TILE_SIZE + 1);
+                        ctx.fillStyle = 'rgba(125, 211, 252, 0.38)';
+                        ctx.fillRect(tx + 3 + shoreLapping, ty, 2, TILE_SIZE + 1);
+                        ctx.fillStyle = 'rgba(240, 249, 255, 0.45)';
+                        ctx.fillRect(tx + 3.5 + shoreLapping, ty + 2, 1, TILE_SIZE - 4);
                     }
                     if (landE) {
-                        ctx.fillStyle = '#ca8a04';
-                        ctx.fillRect(tx + TILE_SIZE - 3, ty, 3, TILE_SIZE);
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-                        ctx.fillRect(tx + TILE_SIZE - 5 - foamBob, ty, 2, TILE_SIZE);
-                        ctx.fillStyle = 'rgba(125, 211, 252, 0.7)';
-                        ctx.fillRect(tx + TILE_SIZE - 6 - foamBob, ty, 1.5, TILE_SIZE);
+                        ctx.fillStyle = '#78350f';
+                        ctx.fillRect(tx + TILE_SIZE - 3, ty, 3, TILE_SIZE + 1);
+                        ctx.fillStyle = '#92400e';
+                        ctx.fillRect(tx + TILE_SIZE - 4, ty, 1.5, TILE_SIZE + 1);
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+                        ctx.fillRect(tx + TILE_SIZE - 1.5, ty, 1.5, TILE_SIZE + 1);
+                        ctx.fillStyle = 'rgba(125, 211, 252, 0.38)';
+                        ctx.fillRect(tx + TILE_SIZE - 5 - shoreLapping, ty, 2, TILE_SIZE + 1);
+                        ctx.fillStyle = 'rgba(240, 249, 255, 0.45)';
+                        ctx.fillRect(tx + TILE_SIZE - 4.5 - shoreLapping, ty + 2, 1, TILE_SIZE - 4);
                     }
                 } else if (t === 8) {
                     // Extended Wooden Bridge with woodgrain planks
@@ -9704,6 +10183,9 @@
     function startNpcDialogue(npc) {
         appState = 'DIALOGUE';
         activeDialogueNpc = npc;
+        if (npc.isQuestGiver && player.zoneQuests && player.zoneQuests[currentMapIndex]) {
+            player.zoneQuests[currentMapIndex].inGuidanceStage = false;
+        }
 
         if (npc.isQuestGiver) {
             if (player.questReadyToTurnIn && !player.questTurnedIn) {
@@ -9748,10 +10230,64 @@
                     if (player.zoneQuests && player.zoneQuests[currentMapIndex]) {
                         player.zoneQuests[currentMapIndex].completed = true;
                     }
-                    player.shards += 35;
-                    gainExp(60);
-                    audio.sfxPortal();
-                    addFloatText(player.x, player.y - 36, 'QUEST COMPLETE! +35💠 NORTH PORTAL OPEN!', '#34d399');
+                    player.shards += 50;
+                    gainExp(80);
+                    audio.sfxPuzzleSolved();
+
+                    // Main Story Quest Chain: automatically transition to follow-up quest
+                    const nextMapIdx = currentMapIndex + 1;
+                    if (currentMapIndex === 7) {
+                        // Liberated all outer sectors! Unlock Citadel gates & activate Finale quest
+                        player.citadelUnlocked = true;
+                        if (!player.zoneQuests[8]) {
+                            player.zoneQuests[8] = {
+                                mapIndex: 8,
+                                title: 'Assault Obsidian Citadel & Overthrow THE SOVEREIGN DEMAGOGUE',
+                                mentor: 'Elder Zephyr',
+                                cured: 0,
+                                curedGoal: 5,
+                                puzzlesSolved: 0,
+                                puzzleGoal: 0,
+                                bossDefeated: false,
+                                hasBoss: true,
+                                accepted: true,
+                                readyToTurnIn: false,
+                                completed: false
+                            };
+                        } else {
+                            player.zoneQuests[8].accepted = true;
+                        }
+                        audio.sfxPortal();
+                        addFloatText(player.x, player.y - 45, '👑 ALL SECTORS LIBERATED! OBSIDIAN CITADEL UNLOCKED!', '#fbbf24');
+                    } else if (nextMapIdx <= 7 && MAPS[nextMapIdx]) {
+                        const nextMeta = MAPS[nextMapIdx];
+                        const nextMentor = nextMeta.mentorName || (nextMeta.ally ? nextMeta.ally.name : 'Regional Mentor');
+                        if (!player.zoneQuests[nextMapIdx]) {
+                            player.zoneQuests[nextMapIdx] = {
+                                mapIndex: nextMapIdx,
+                                title: nextMeta.questTitle,
+                                mentor: nextMentor,
+                                cured: 0,
+                                curedGoal: nextMeta.curedGoal,
+                                puzzlesSolved: 0,
+                                puzzleGoal: nextMeta.puzzleGoal || 0,
+                                bossDefeated: false,
+                                hasBoss: !!nextMeta.boss,
+                                accepted: true,
+                                readyToTurnIn: false,
+                                completed: false,
+                                inGuidanceStage: true,
+                                guidanceTitle: `Journey to ${nextMeta.name.replace(/^Map\s+\d+:\s*/i, '')} & Consult ${nextMentor}`
+                            };
+                        } else {
+                            player.zoneQuests[nextMapIdx].accepted = true;
+                            player.zoneQuests[nextMapIdx].inGuidanceStage = true;
+                            player.zoneQuests[nextMapIdx].guidanceTitle = `Journey to ${nextMeta.name.replace(/^Map\s+\d+:\s*/i, '')} & Consult ${nextMentor}`;
+                        }
+                        addFloatText(player.x, player.y - 36, `QUEST COMPLETE! Next: Seek ${nextMentor} in ${nextMeta.name.replace(/^Map\s+\d+:\s*/i, '')}!`, '#34d399');
+                    } else {
+                        addFloatText(player.x, player.y - 36, 'QUEST COMPLETE! +50💠', '#34d399');
+                    }
                 }
             }
             activeDialogueNpc = null;
@@ -10215,9 +10751,10 @@
             const currentMarker = isCurrent ? '<span class="text-amber-400 text-[10px]">▶</span> ' : '';
             const areaName = meta.name.replace(/^Map\s+\d+:\s*/i, '');
 
+            const displayTitle = q.inGuidanceStage && q.guidanceTitle ? q.guidanceTitle : areaName;
             qCard.innerHTML = `
                 <div class="flex justify-between items-center gap-1">
-                    <span class="pixel-font text-[9px] text-white font-bold truncate">${currentMarker}${areaName}</span>
+                    <span class="pixel-font text-[9px] text-white font-bold truncate">${currentMarker}${displayTitle}</span>
                     ${statusBadge}
                 </div>
                 <div class="text-[9px] text-slate-300 leading-tight">${q.title}</div>
