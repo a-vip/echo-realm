@@ -328,4 +328,68 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
         assert.equal(npc.dir, 1, 'NPC must turn North (dir: 1) to face player above them');
         assert.equal(env.activeDialogueNpc, npc, 'Active dialogue NPC must be set');
     });
+
+    test('Peacock creature assets exist and are registered with folded tail and walk animations', () => {
+        const baseDir = path.resolve(__dirname, '../assets/ingame/creatures/peacock');
+        const expectedFiles = ['peacock_folded.png', 'peacock_walk.png', 'sprite.png'];
+        for (const f of expectedFiles) {
+            const p = path.join(baseDir, f);
+            assert.ok(fs.existsSync(p), 'Peacock creature file missing: ' + f);
+            assert.ok(fs.statSync(p).size > 100, 'Peacock creature file too small: ' + f);
+        }
+
+        const env = loadGameEnvironment();
+        assert.ok(env.assets.images.has('peacock_folded'), 'peacock_folded must be registered in AssetManager');
+        assert.ok(env.assets.images.has('peacock_walk'), 'peacock_walk must be registered in AssetManager');
+        assert.ok(env.assets.images.has('peacock_sprite'), 'peacock_sprite must be registered in AssetManager');
+    });
+
+    test('Environment tilesets and props exist on disk in assets/ingame/environment/ and are registered in AssetManager', () => {
+        const baseDir = path.resolve(__dirname, '../assets/ingame/environment');
+        const expectedPaths = [
+            'tilesets/floors_tiles.png',
+            'tilesets/wall_tiles.png',
+            'tilesets/dungeon_tiles.png',
+            'props/furniture.png',
+            'props/interior_props.png',
+            'props/interior_walls.png',
+            'props/dungeon_props.png',
+            'props/esoteric.png',
+            'props/alchemy_station.png',
+            'props/bonfire.png',
+            'props/furnace.png',
+            'props/workbench.png',
+            'interiors/interiors_sheet.png',
+            'interiors/room_builder.png'
+        ];
+
+        for (const rel of expectedPaths) {
+            const p = path.join(baseDir, rel);
+            assert.ok(fs.existsSync(p), 'Missing environment asset on disk: ' + rel);
+            assert.ok(fs.statSync(p).size > 500, 'Environment asset too small: ' + rel);
+        }
+
+        const env = loadGameEnvironment();
+        const expectedKeys = [
+            'floors_tiles', 'wall_tiles', 'dungeon_tiles',
+            'furniture_sheet', 'interior_props_sheet', 'interior_walls_sheet',
+            'dungeon_props_sheet', 'esoteric_sheet', 'alchemy_station_sheet',
+            'bonfire_sheet', 'furnace_sheet', 'workbench_sheet',
+            'interiors_sheet', 'room_builder_sheet'
+        ];
+        for (const k of expectedKeys) {
+            assert.ok(env.assets.images.has(k), 'Environment asset must be registered in AssetManager: ' + k);
+        }
+    });
+
+    test('Peacock creatures spawn in Map 1 with natural idle/flee/walk behaviors', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(1);
+        const peacocks = env.critters.filter(c => c.type === 'peacock');
+        assert.ok(peacocks.length >= 2, 'Map 1 must spawn at least 2 peacocks in the village gardens');
+        for (const p of peacocks) {
+            assert.ok(['idle', 'walk', 'flee'].includes(p.state), 'Peacock must have valid state');
+            assert.ok(typeof p.x === 'number' && typeof p.y === 'number', 'Peacock must have valid coordinates');
+        }
+    });
 });

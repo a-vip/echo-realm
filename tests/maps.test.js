@@ -389,10 +389,11 @@ test('World & Map Validation Test Suite', async (t) => {
     });
 
     await t.test('Critters spawn appropriately across town, archive, and wilderness sectors', () => {
-        // Town (Map 1) spawns chickens
+        // Town (Map 1) spawns chickens and peacocks
         game.loadMap(1);
         assert.ok(game.critters.length > 0, 'Map 1 must spawn active critters');
-        assert.ok(game.critters.every(c => c.type === 'chicken'), 'Map 1 critters must be chickens');
+        assert.ok(game.critters.some(c => c.type === 'chicken'), 'Map 1 critters must include chickens');
+        assert.ok(game.critters.some(c => c.type === 'peacock'), 'Map 1 critters must include peacocks');
 
         // Forest (Map 5) spawns squirrels
         game.loadMap(5);

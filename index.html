@@ -277,21 +277,19 @@
                         </div>
                         <div class="grid grid-cols-2 gap-3" id="genderSelectButtons">
                             <button id="btnSelectMale" data-gender="male" class="gender-btn p-3 rounded-xl border-2 border-cyan-400 bg-slate-900/90 hover:bg-slate-800 flex items-center gap-3 transition-all cursor-pointer">
-                                <div class="w-10 h-10 rounded-lg bg-slate-950 border border-cyan-400/50 flex items-center justify-center shrink-0">
-                                    <span class="text-lg">🗡️</span>
+                                <div class="w-10 h-10 rounded-lg bg-slate-950 border border-cyan-400/50 flex items-center justify-center shrink-0 overflow-hidden">
+                                    <img src="assets/ingame/characters/player_male/trainer.png" alt="Male" class="w-9 h-9 object-contain" style="image-rendering: pixelated;" />
                                 </div>
                                 <div class="text-left">
                                     <div class="pixel-font text-xs text-cyan-300 font-bold tracking-wider">Male</div>
-
                                 </div>
                             </button>
                             <button id="btnSelectFemale" data-gender="female" class="gender-btn p-3 rounded-xl border-2 border-slate-700 bg-slate-900/90 hover:bg-slate-800 flex items-center gap-3 transition-all cursor-pointer">
-                                <div class="w-10 h-10 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center shrink-0">
-                                    <span class="text-lg">🏹</span>
+                                <div class="w-10 h-10 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
+                                    <img src="assets/ingame/characters/player_female/trainer.png" alt="Female" class="w-9 h-9 object-contain" style="image-rendering: pixelated;" />
                                 </div>
                                 <div class="text-left">
                                     <div class="pixel-font text-xs text-slate-300 font-bold tracking-wider">Female</div>
-
                                 </div>
                             </button>
                         </div>
@@ -1852,6 +1850,31 @@
     assets.registerImage('long_tavern', 'assets/ingame/buildings/village_inn_long.png');
     assets.registerImage('shed', 'assets/ingame/buildings/cottage_stone_small.png');
     assets.registerImage('citadel', 'assets/ingame/buildings/armory_bastion.png');
+
+    // =========================================================================
+    // CREATURE SPRITE SHEETS & ANIMATIONS (Peacock folded & fanned tail)
+    // =========================================================================
+    assets.registerImage('peacock_folded', 'assets/ingame/creatures/peacock/peacock_folded.png');
+    assets.registerImage('peacock_walk', 'assets/ingame/creatures/peacock/peacock_walk.png');
+    assets.registerImage('peacock_sprite', 'assets/ingame/creatures/peacock/sprite.png');
+
+    // =========================================================================
+    // ENVIRONMENT TILESETS & PROPS (Modular Interior & Overworld Architecture)
+    // =========================================================================
+    assets.registerImage('floors_tiles', 'assets/ingame/environment/tilesets/floors_tiles.png');
+    assets.registerImage('wall_tiles', 'assets/ingame/environment/tilesets/wall_tiles.png');
+    assets.registerImage('dungeon_tiles', 'assets/ingame/environment/tilesets/dungeon_tiles.png');
+    assets.registerImage('furniture_sheet', 'assets/ingame/environment/props/furniture.png');
+    assets.registerImage('interior_props_sheet', 'assets/ingame/environment/props/interior_props.png');
+    assets.registerImage('interior_walls_sheet', 'assets/ingame/environment/props/interior_walls.png');
+    assets.registerImage('dungeon_props_sheet', 'assets/ingame/environment/props/dungeon_props.png');
+    assets.registerImage('esoteric_sheet', 'assets/ingame/environment/props/esoteric.png');
+    assets.registerImage('alchemy_station_sheet', 'assets/ingame/environment/props/alchemy_station.png');
+    assets.registerImage('bonfire_sheet', 'assets/ingame/environment/props/bonfire.png');
+    assets.registerImage('furnace_sheet', 'assets/ingame/environment/props/furnace.png');
+    assets.registerImage('workbench_sheet', 'assets/ingame/environment/props/workbench.png');
+    assets.registerImage('interiors_sheet', 'assets/ingame/environment/interiors/interiors_sheet.png');
+    assets.registerImage('room_builder_sheet', 'assets/ingame/environment/interiors/room_builder.png');
 
     // =========================================================================
     // MODULAR NPC & PLAYER SPRITE REGISTRY
@@ -7612,6 +7635,24 @@ const MAPS = [
                     animTimer: Math.random() * 10
                 });
             }
+            // Regal Peacocks in Performative Valley Gardens (Only in 1 zone for now)
+            if (mapIndex === 1) {
+                const peacockSpots = [findOpenTileSpot(21, 24), findOpenTileSpot(31, 22)];
+                peacockSpots.forEach((spot, pIdx) => {
+                    critters.push({
+                        type: 'peacock',
+                        x: spot.x,
+                        y: spot.y,
+                        vx: 0,
+                        vy: 0,
+                        dir: pIdx === 0 ? 'left' : 'right',
+                        state: 'idle',
+                        timer: 2.0 + Math.random() * 2.0,
+                        peckTimer: 0,
+                        animTimer: Math.random() * 5
+                    });
+                });
+            }
         }
         if ([2, 3, 5, 7].includes(mapIndex)) {
             for (let i = 0; i < 5; i++) {
@@ -9052,7 +9093,7 @@ const MAPS = [
                 c.state = 'flee';
                 c.timer = 1.2;
                 const angle = Math.atan2(c.y - player.y, c.x - player.x) + (Math.random() - 0.5) * 0.4;
-                const speed = c.type === 'chicken' ? 42 : 48; // Natural scurrying speed
+                const speed = c.type === 'chicken' ? 42 : (c.type === 'peacock' ? 40 : 48); // Natural scurrying speed
                 c.vx = Math.cos(angle) * speed;
                 c.vy = Math.sin(angle) * speed;
                 c.dir = c.vx < 0 ? 'left' : 'right';
@@ -9094,7 +9135,7 @@ const MAPS = [
                         c.state = 'walk';
                         c.timer = 0.8 + Math.random() * 1.6;
                         const angle = Math.random() * Math.PI * 2;
-                        const speed = c.type === 'chicken' ? 22 : 28;
+                        const speed = c.type === 'chicken' ? 22 : (c.type === 'peacock' ? 18 : 28);
                         c.vx = Math.cos(angle) * speed;
                         c.vy = Math.sin(angle) * speed;
                         c.dir = c.vx < 0 ? 'left' : 'right';
@@ -9751,6 +9792,18 @@ const MAPS = [
         ctx.fillStyle = '#fbbf24';
         ctx.fillRect(offX, offY + 136, roomW, 2);
 
+        // Authentic Dungeon & Esoteric Props in Keep of the Demagogue
+        if (assets.hasImage('dungeon_props_sheet')) {
+            // Gilded treasure troves and ornate iron braziers flanking the imperial throne
+            assets.drawImage(ctx, 'dungeon_props_sheet', offX + 60, offY + 160, 64, 64, 0, 0, 64, 64);
+            assets.drawImage(ctx, 'dungeon_props_sheet', offX + roomW - 124, offY + 160, 64, 64, 0, 0, 64, 64);
+        }
+        if (assets.hasImage('esoteric_sheet')) {
+            // Arcane monitoring pedestals and surveillance crystals
+            assets.drawImage(ctx, 'esoteric_sheet', offX + 70, offY + 280, 64, 64, 0, 0, 64, 64);
+            assets.drawImage(ctx, 'esoteric_sheet', offX + roomW - 134, offY + 280, 64, 64, 0, 0, 64, 64);
+        }
+
         // Massive Gilded Authoritarian Crest (Sunburst & Eagle on back wall)
         const crestX = offX + Math.floor(roomW / 2);
         const crestY = offY + 70;
@@ -10126,23 +10179,32 @@ const MAPS = [
         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
         ctx.fillRect(offX - 10, offY - 10, roomW + 20, roomH + 20);
 
-        // 2. Polished Hardwood Plank Flooring (100% procedural)
+        // 2. Tiled Flooring using authentic Environment floors_tiles or wood planks
         const plankH = 26;
         const floorY = offY + 120;
         const floorH = roomH - 120;
-        const woodTones = ['#4a2c17', '#54321b', '#5c381f', '#462814', '#58351d'];
-        for (let py = floorY; py < offY + roomH; py += plankH) {
-            const rowIdx = Math.floor((py - floorY) / plankH);
-            ctx.fillStyle = woodTones[rowIdx % woodTones.length];
-            ctx.fillRect(offX, py, roomW, plankH);
-            // Dark plank groove
-            ctx.fillStyle = '#26150b';
-            ctx.fillRect(offX, py + plankH - 2, roomW, 2);
-            // Subtle nail heads
-            ctx.fillStyle = '#1c0f08';
-            for (let nx = offX + 40 + (rowIdx % 3) * 35; nx < offX + roomW; nx += 90) {
-                ctx.fillRect(nx, py + 4, 2, 2);
-                ctx.fillRect(nx, py + plankH - 6, 2, 2);
+        if (assets.hasImage('floors_tiles')) {
+            const ftSz = 32;
+            for (let fy = floorY; fy < offY + roomH; fy += ftSz) {
+                for (let fx = offX; fx < offX + roomW; fx += ftSz) {
+                    const dw = Math.min(ftSz, offX + roomW - fx);
+                    const dh = Math.min(ftSz, offY + roomH - fy);
+                    assets.drawImage(ctx, 'floors_tiles', fx, fy, dw, dh, 96, 0, dw, dh);
+                }
+            }
+        } else {
+            const woodTones = ['#4a2c17', '#54321b', '#5c381f', '#462814', '#58351d'];
+            for (let py = floorY; py < offY + roomH; py += plankH) {
+                const rowIdx = Math.floor((py - floorY) / plankH);
+                ctx.fillStyle = woodTones[rowIdx % woodTones.length];
+                ctx.fillRect(offX, py, roomW, plankH);
+                ctx.fillStyle = '#26150b';
+                ctx.fillRect(offX, py + plankH - 2, roomW, 2);
+                ctx.fillStyle = '#1c0f08';
+                for (let nx = offX + 40 + (rowIdx % 3) * 35; nx < offX + roomW; nx += 90) {
+                    ctx.fillRect(nx, py + 4, 2, 2);
+                    ctx.fillRect(nx, py + plankH - 6, 2, 2);
+                }
             }
         }
 
@@ -10475,6 +10537,19 @@ const MAPS = [
         ctx.fillRect(deskX + 12, deskY + 18, 12, 2);
         ctx.fillRect(deskX + 31, deskY + 12, 12, 2);
         ctx.fillRect(deskX + 31, deskY + 18, 12, 2);
+
+        // Draw Authentic Environment Furniture & Artisan Workbench Props
+        if (assets.hasImage('furniture_sheet')) {
+            // Carved Wooden Armoire / Wardrobe along back wall
+            assets.drawImage(ctx, 'furniture_sheet', offX + 40, offY + 44, 48, 88, 0, 0, 48, 96);
+            // Upholstered Armchairs flanking the rug
+            assets.drawImage(ctx, 'furniture_sheet', offX + 115, floorY + 70, 44, 44, 48, 48, 48, 48);
+            assets.drawImage(ctx, 'furniture_sheet', offX + roomW - 160, floorY + 70, 44, 44, 48, 48, 48, 48);
+        }
+        if (assets.hasImage('workbench_sheet')) {
+            // Artisan Workbench on the right wall
+            assets.drawImage(ctx, 'workbench_sheet', offX + roomW - 120, offY + 45, 64, 64, 0, 0, 64, 64);
+        }
 
         // 9. Physical Wooden Table & Chairs in Room Center (Using standalone asset & fine props)
         const tblX = rugX + Math.floor(rugW / 2) - 60;
@@ -11895,6 +11970,39 @@ const MAPS = [
                         if (c.type === 'squirrel' && isMoving) {
                             const sqScale = 1 + Math.sin(c.animTimer * scamperSpeed) * 0.08;
                             ctx.scale(sqScale, 2 - sqScale);
+                        }
+
+                        if (c.type === 'peacock') {
+                            const isMoving = (c.state === 'walk' || c.state === 'flee');
+                            if (!isMoving) {
+                                // Tail folded gracefully: 3 cols x 4 rows, 48x38 px per frame
+                                if (assets.hasImage('peacock_folded')) {
+                                    const col = Math.floor(c.animTimer * 2.5) % 3;
+                                    const row = 0;
+                                    const fw = 48, fh = 38;
+                                    const dw = Math.round(fw * 0.95);
+                                    const dh = Math.round(fh * 0.95);
+                                    assets.drawImage(ctx, 'peacock_folded', -dw / 2, -dh + 10, dw, dh, col * fw, row * fh, fw, fh);
+                                } else {
+                                    ctx.fillStyle = '#0284c7';
+                                    ctx.fillRect(-10, -18, 20, 18);
+                                }
+                            } else {
+                                // Fanned tail strutting walk: 4 cols x 4 rows, 32x24 px per frame
+                                if (assets.hasImage('peacock_walk')) {
+                                    const col = Math.floor(c.animTimer * (c.state === 'flee' ? 9 : 5)) % 4;
+                                    const row = 0;
+                                    const fw = 32, fh = 24;
+                                    const dw = Math.round(fw * 1.35);
+                                    const dh = Math.round(fh * 1.35);
+                                    assets.drawImage(ctx, 'peacock_walk', -dw / 2, -dh + 9, dw, dh, col * fw, row * fh, fw, fh);
+                                } else {
+                                    ctx.fillStyle = '#059669';
+                                    ctx.fillRect(-10, -18, 20, 18);
+                                }
+                            }
+                            ctx.restore();
+                            return;
                         }
 
                         const spriteKey = c.type === 'chicken' ? 'critter_chicken' : 'critter_squirrel';
