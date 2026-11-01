@@ -27,6 +27,8 @@ assets/
     │   ├── mentor_avi/, mentor_maya/, mentor_lyra/, mentor_tariq/, mentor_elena/, mentor_rowan/, mentor_kaelen/, mentor_zephyr/
     │   ├── boss_valkor/, boss_demagogue/
     │   ├── citizen_villager_m/, citizen_villager_f/, citizen_scholar/, citizen_miner/, citizen_noble/, citizen_waterfolk/
+    │   ├── hmg/                        # 11 Modern & Styled Character Animation Sheets (256x1536)
+    │   │   └── bllm.png, dyj.png, fldl.png, hml.png, lmly.png, lmy.png, mls.png, pql.png, qln.png, xem.png, xy.png
     │   └── player/, mentors/, mobs/, bosses/, citizens/, portraits/  # Backward-compatible mirrors
     │
     ├── creatures/                      # Interactive fauna & companions
@@ -40,7 +42,17 @@ assets/
     │   │   ├── floors_tiles.png        # Authentic wood, parquet, flagstone & moss flooring
     │   │   ├── wall_tiles.png          # Brick, stone masonry & timber wall tiles
     │   │   └── dungeon_tiles.png       # Obsidian & dark slate stone tiles for Keep and Catacombs
+    │   ├── city/                       # Urban & Metropolitan Environment Assets
+    │   │   ├── simple_city_tiles.png   # 992x416 32x32 city sidewalks, roads, crosswalks & street props
+    │   │   ├── metro_tiles.png         # 400x288 urban pavement & asphalt transitions
+    │   │   ├── metro_roads.png         # 320x320 high-resolution road intersections & markings
+    │   │   ├── metro_trees.png         # 192x64 multi-stage urban greenery & street trees
+    │   │   └── buildings/              # Metropolitan Municipal & Civic Architecture
+    │   │       ├── fire_station.png    # 419x321 authentic brick municipal fire station
+    │   │       ├── police_station.png  # 368x223 modern civic police precinct building
+    │   │       └── metro_building.png  # 176x320 multi-story urban commercial building
     │   ├── props/
+    │   │   ├── wood_interior_set.png   # 544x416 Pixel Plains master wooden beds, desks, bookshelves, cupboards
     │   │   ├── furniture.png           # Carved wardrobes, armoires, upholstered armchairs & beds
     │   │   ├── interior_props.png      # Tapestries, wall mirrors, reading desks, tableware & rugs
     │   │   ├── interior_walls.png      # Wainscoting panels, arched crown moldings & wall trim

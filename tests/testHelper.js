@@ -88,6 +88,7 @@ function loadGameEnvironment() {
         get activeDuelOptions() { return activeDuelOptions; },
         openTreasureChestZeldaStyle,
         drawCharacterSprite,
+        resetGameState,
         get INTERACTIVE_STATIONS() { return (typeof INTERACTIVE_STATIONS !== 'undefined') ? INTERACTIVE_STATIONS : {}; },
         get drawPixelQuestSymbol() { return drawPixelQuestSymbol; },
         set drawPixelQuestSymbol(fn) { drawPixelQuestSymbol = fn; },

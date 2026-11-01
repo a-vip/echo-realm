@@ -742,6 +742,9 @@
                 <button onclick="openMenu('settingsModal')" class="retro-btn py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700">
                     ⚙️ Audio & Display Settings
                 </button>
+                <button id="btnRestartSector" class="retro-btn py-2.5 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 font-bold text-xs border border-amber-800">
+                    🔄 Restart Current Sector
+                </button>
                 <button id="btnQuitToTitle" class="retro-btn py-2.5 rounded-xl bg-rose-950/80 hover:bg-rose-900 text-rose-300 font-bold text-xs border border-rose-800">
                     🚪 Quit to Title Screen
                 </button>
@@ -1877,6 +1880,18 @@
     assets.registerImage('room_builder_sheet', 'assets/ingame/environment/interiors/room_builder.png');
 
     // =========================================================================
+    // CITY & URBAN TILESETS, PROPS & CIVIC BUILDINGS
+    // =========================================================================
+    assets.registerImage('wood_interior_set', 'assets/ingame/environment/props/wood_interior_set.png');
+    assets.registerImage('simple_city_tiles', 'assets/ingame/environment/city/simple_city_tiles.png');
+    assets.registerImage('metro_tiles', 'assets/ingame/environment/city/metro_tiles.png');
+    assets.registerImage('metro_roads', 'assets/ingame/environment/city/metro_roads.png');
+    assets.registerImage('metro_trees', 'assets/ingame/environment/city/metro_trees.png');
+    assets.registerImage('fire_station', 'assets/ingame/environment/city/buildings/fire_station.png');
+    assets.registerImage('police_station', 'assets/ingame/environment/city/buildings/police_station.png');
+    assets.registerImage('metro_building', 'assets/ingame/environment/city/buildings/metro_building.png');
+
+    // =========================================================================
     // MODULAR NPC & PLAYER SPRITE REGISTRY
     // =========================================================================
     const NPC_SPRITE_REGISTRY = {
@@ -2180,6 +2195,8 @@
             spriteSheetId = null
         } = opts;
 
+        const nowTick = performance.now();
+
         // =========================================================================
         // In-Game Pokemon-Style NPC & Character Sprite Integration
         // =========================================================================
@@ -2272,7 +2289,6 @@
         // =========================================================================
         // Pixel Crawler High-Detail Animated Sprite Sheet Integration
         // =========================================================================
-        const nowTick = performance.now();
         let pcSheet = null;
         let pcFlip = false;
         let pcScaleFactor = 1.0;
@@ -9024,9 +9040,12 @@ const MAPS = [
                     addFloatText(player.x, player.y - 20, `-${actualDmg} HP`, '#fb7185');
                     if (player.hp <= 0) {
                         player.hp = getTotalMaxHp();
-                        player.x = 17.5 * TILE_SIZE;
-                        player.y = 20 * TILE_SIZE;
-                        addFloatText(player.x, player.y - 30, 'REGROUPED AT ENTRANCE!', '#fbbf24');
+                        const safeRespawnX = (currentMapIndex === 1 ? 25.5 : Math.floor(curCols / 2) + 0.5) * TILE_SIZE;
+                        const safeRespawnY = (currentMapIndex === 1 ? 44 : Math.max(4, curRows - 4)) * TILE_SIZE;
+                        player.x = safeRespawnX;
+                        player.y = safeRespawnY;
+                        projectiles = [];
+                        addFloatText(player.x, player.y - 30, 'REGROUPED AT SAFE ZONE!', '#fbbf24');
                     }
                 }
                 projectiles.splice(i, 1);
@@ -10549,6 +10568,14 @@ const MAPS = [
         if (assets.hasImage('workbench_sheet')) {
             // Artisan Workbench on the right wall
             assets.drawImage(ctx, 'workbench_sheet', offX + roomW - 120, offY + 45, 64, 64, 0, 0, 64, 64);
+        }
+        if (assets.hasImage('wood_interior_set')) {
+            // Master Four-Poster Bed in the upper right alcove
+            assets.drawImage(ctx, 'wood_interior_set', offX + roomW - 130, offY + 40, 64, 88, 0, 32, 64, 88);
+            // Elegant Nightstand / End Table beside bed
+            assets.drawImage(ctx, 'wood_interior_set', offX + roomW - 165, offY + 68, 32, 48, 64, 64, 32, 48);
+            // Grand Carved Bookshelf unit along upper left
+            assets.drawImage(ctx, 'wood_interior_set', offX + 36, offY + 36, 96, 88, 192, 0, 96, 96);
         }
 
         // 9. Physical Wooden Table & Chairs in Room Center (Using standalone asset & fine props)
@@ -13658,17 +13685,100 @@ const MAPS = [
         } catch (e) {}
     }
 
+    function resetGameState(clearPlayerProfile = true) {
+        if (clearPlayerProfile) {
+            player.hp = 120;
+            player.maxHp = 120;
+            player.level = 1;
+            player.exp = 0;
+            player.expNext = 100;
+            player.statPoints = 0;
+            player.contextPower = 85;
+            player.axiomAttack = 38;
+            player.defense = 5;
+            player.speed = 210;
+            player.shards = 25;
+            player.freedTotal = 0;
+            player.temperLevel = 0;
+            player.inventory = [
+                { id: 'tonic', name: 'Logic Tonic (Red)', icon: 'potion_red', sprite: 'potion_red', type: 'consumable', count: 3, heal: 60, desc: 'Restores 60 Epistemic Clarity (HP) instantly.' },
+                { id: 'tonic_blue', name: 'Axiom Elixir (Blue)', icon: 'potion_blue', sprite: 'potion_blue', type: 'consumable', count: 2, resetCd: true, desc: 'Calms algorithmic agitation, restores 100 Epistemic Clarity and resets cooldowns.' },
+                { id: 'tea', name: 'Grounded Chamomile', icon: '🍵', type: 'consumable', count: 2, resetCd: true, desc: 'Calms algorithmic agitation and resets all ability cooldowns.' }
+            ];
+            player.equipment = {
+                head: null,
+                shoulders: null,
+                back: null,
+                chest: { id: 'init_tunic', name: 'Archivist Initiate Tunic', slot: 'chest', icon: '👕', visualColor: '#0284c7', stat: 'maxHp', val: 25, bonus: '+25 Max HP', desc: 'Standard tunic of the Quiet Archive.' },
+                mainHand: { id: 'init_prism', name: 'Prism of Context Mk.I', slot: 'mainHand', icon: '🔦', visualColor: '#38bdf8', stat: 'contextPower', val: 15, bonus: '+15 Context Power', desc: 'Projects a cone of objective context.' },
+                offHand: { id: 'init_crest', name: 'Oak Axiom Crest', slot: 'offHand', icon: '🛡️', visualColor: '#fbbf24', stat: 'axiomAttack', val: 10, bonus: '+10 Axiom Attack', desc: 'Dispels stunned cognitive distortions.' },
+                hands: null,
+                feet: { id: 'init_boots', name: 'Wayfarer Boots', slot: 'feet', icon: '🥾', visualColor: '#1e293b', stat: 'speed', val: 20, bonus: '+20 Speed', desc: 'Sturdy boots for field archivists.' }
+            };
+        }
+
+        player.isChannelingQ = false;
+        player.slashAnimTimer = 0;
+        player.cdE = 0;
+        player.cdR = 0;
+        player.cdF = 0;
+        player.aegisTimer = 0;
+        player.hazardSlowTimer = 0;
+        player.hazardDamageTimer = 0;
+        player.questAccepted = false;
+        player.questReadyToTurnIn = false;
+        player.questTurnedIn = false;
+        player.mapCitizensFreed = 0;
+        player.mapPuzzlesSolved = 0;
+        player.mapBossDefeated = false;
+        player.holdingPot = null;
+        player.zoneQuests = {};
+
+        highestMapReached = 0;
+        currentMapIndex = 0;
+        activeBoss = null;
+        activeDuelBoss = null;
+        activeDuelOptions = [];
+        activeDialogueNpc = null;
+        activeDialogueList = [];
+        activeDialogueIndex = 0;
+        enemies = [];
+        projectiles = [];
+        activePotProjectiles = [];
+        particles = [];
+        floatingTexts = [];
+        currentInterior = null;
+        screenShakeTime = 0;
+        hazardCleanseProgress = {};
+        for (const k in keys) keys[k] = false;
+
+        // Force dismiss and hide all potential stuck modals
+        ['inventoryModal', 'characterModal', 'codexModal', 'pauseModal', 'settingsModal', 'victoryModal', 'worldMapModal', 'socraticDuelModal', 'dialogueModal', 'epistemicRevelationModal', 'titleScreenModal', 'charCreateModal'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+
+        const bossHud = document.getElementById('hudBossContainer');
+        if (bossHud) bossHud.classList.add('hidden');
+        const promptEl = document.getElementById('interactPrompt');
+        if (promptEl) promptEl.classList.add('hidden');
+
+        const inGameHud = document.getElementById('inGameHud');
+        if (inGameHud) inGameHud.classList.remove('hidden');
+
+        appState = 'PLAYING';
+    }
+
     function loadGameFromStorage() {
         const raw = localStorage.getItem(SAVE_KEY);
         if (!raw) return;
         try {
             const data = JSON.parse(raw);
+            resetGameState(false);
             Object.assign(player, data.player);
             highestMapReached = data.highestMapReached || data.currentMapIndex || 0;
-            document.getElementById('titleScreenModal').classList.add('hidden');
-            document.getElementById('inGameHud').classList.remove('hidden');
-            appState = 'PLAYING';
             loadMap(data.currentMapIndex || 0);
+            updateAllHud();
         } catch (e) {}
     }
 
@@ -13788,6 +13898,11 @@ const MAPS = [
 
     window.addEventListener('keyup', (e) => {
         keys[e.code] = false;
+    });
+
+    window.addEventListener('blur', () => {
+        for (const k in keys) keys[k] = false;
+        if (typeof player !== 'undefined' && player) player.isChannelingQ = false;
     });
 
     function useQuickTonic() {
@@ -13920,11 +14035,11 @@ const MAPS = [
     }
 
     document.getElementById('btnConfirmChar').onclick = () => {
-        player.name = document.getElementById('inputPlayerName').value.trim() || 'Auron';
-        document.getElementById('charCreateModal').classList.add('hidden');
-        document.getElementById('inGameHud').classList.remove('hidden');
-        appState = 'PLAYING';
+        const chosenName = document.getElementById('inputPlayerName').value.trim() || 'Auron';
+        resetGameState(true);
+        player.name = chosenName;
         loadMap(0);
+        updateAllHud();
     };
 
     // HUD & Modal Button Wiring
@@ -13965,6 +14080,17 @@ const MAPS = [
     };
 
     document.getElementById('btnSaveGame').onclick = saveGameToStorage;
+    const btnRestartSec = document.getElementById('btnRestartSector');
+    if (btnRestartSec) {
+        btnRestartSec.onclick = () => {
+            closeAllMenus();
+            player.hp = getTotalMaxHp();
+            projectiles = [];
+            activePotProjectiles = [];
+            loadMap(currentMapIndex);
+            updateAllHud();
+        };
+    }
     document.getElementById('btnQuitToTitle').onclick = () => {
         closeAllMenus();
         document.getElementById('inGameHud').classList.add('hidden');

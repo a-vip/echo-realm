@@ -375,11 +375,65 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
             'furniture_sheet', 'interior_props_sheet', 'interior_walls_sheet',
             'dungeon_props_sheet', 'esoteric_sheet', 'alchemy_station_sheet',
             'bonfire_sheet', 'furnace_sheet', 'workbench_sheet',
-            'interiors_sheet', 'room_builder_sheet'
+            'interiors_sheet', 'room_builder_sheet',
+            'wood_interior_set', 'simple_city_tiles', 'metro_tiles',
+            'metro_roads', 'metro_trees', 'fire_station', 'police_station', 'metro_building'
         ];
         for (const k of expectedKeys) {
-            assert.ok(env.assets.images.has(k), 'Environment asset must be registered in AssetManager: ' + k);
+            assert.ok(env.assets.images.has(k), 'Environment/City asset must be registered in AssetManager: ' + k);
         }
+    });
+
+    test('New City, Interior and HMG character assets exist on disk in assets/ingame/', () => {
+        const baseDir = path.resolve(__dirname, '../assets/ingame');
+        const expectedFiles = [
+            'environment/props/wood_interior_set.png',
+            'environment/city/simple_city_tiles.png',
+            'environment/city/metro_tiles.png',
+            'environment/city/metro_roads.png',
+            'environment/city/metro_trees.png',
+            'environment/city/buildings/fire_station.png',
+            'environment/city/buildings/police_station.png',
+            'environment/city/buildings/metro_building.png'
+        ];
+        for (const f of expectedFiles) {
+            const p = path.join(baseDir, f);
+            assert.ok(fs.existsSync(p), 'File must exist on disk: ' + f);
+            assert.ok(fs.statSync(p).size > 100, 'File must not be empty: ' + f);
+        }
+
+        const hmgDir = path.join(baseDir, 'characters/hmg');
+        assert.ok(fs.existsSync(hmgDir), 'HMG characters directory must exist');
+        const hmgFiles = fs.readdirSync(hmgDir).filter(f => f.endsWith('.png'));
+        assert.ok(hmgFiles.length >= 11, 'Must have at least 11 HMG character sheets, got: ' + hmgFiles.length);
+    });
+
+    test('Combat stability: drawCharacterSprite with isMindFreed=true and resetGameState execute without errors', () => {
+        const env = loadGameEnvironment();
+        // Test drawCharacterSprite with isMindFreed: true
+        const mockCtx = {
+            save: () => {}, restore: () => {}, beginPath: () => {}, closePath: () => {},
+            moveTo: () => {}, lineTo: () => {}, stroke: () => {}, fill: () => {},
+            arc: () => {}, ellipse: () => {}, fillRect: () => {}, strokeRect: () => {},
+            clearRect: () => {}, quadraticCurveTo: () => {}, fillText: () => {},
+            measureText: () => ({ width: 10 }), createLinearGradient: () => ({ addColorStop: () => {} }),
+            drawImage: () => {}, translate: () => {}, rotate: () => {}, scale: () => {}
+        };
+        assert.doesNotThrow(() => {
+            env.drawCharacterSprite(mockCtx, 100, 100, 2.3, { role: 'citizen', isMindFreed: true });
+            env.drawCharacterSprite(mockCtx, 100, 100, 2.3, { role: 'masked', isMindFreed: true });
+            env.drawCharacterSprite(mockCtx, 100, 100, 2.3, { role: 'player', isMindFreed: false });
+        }, 'drawCharacterSprite with isMindFreed: true must never throw ReferenceError');
+
+        // Test resetGameState
+        assert.doesNotThrow(() => {
+            env.player.hp = 10;
+            env.player.cdE = 5;
+            env.resetGameState(true);
+            assert.equal(env.player.hp, 120, 'Player HP must be reset to 120');
+            assert.equal(env.player.cdE, 0, 'Player cdE must be reset to 0');
+            assert.equal(env.appState, 'PLAYING', 'appState must be PLAYING');
+        }, 'resetGameState must execute cleanly and restore default state');
     });
 
     test('Peacock creatures spawn in Map 1 with natural idle/flee/walk behaviors', () => {
