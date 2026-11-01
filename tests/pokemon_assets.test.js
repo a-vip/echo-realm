@@ -34,6 +34,10 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
             assert.equal(reg[c].frameW, 18);
             assert.equal(reg[c].frameH, 26);
         }
+
+        // Bosses
+        assert.ok(reg.boss_valkor, 'boss_valkor must be defined in registry');
+        assert.ok(reg.boss_demagogue, 'boss_demagogue must be defined in registry');
     });
 
     test('All active in-game character sprite sheets exist on disk in assets/ingame/characters/', () => {
@@ -55,7 +59,9 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
             'citizens/citizen_scholar.png',
             'citizens/citizen_miner.png',
             'citizens/citizen_noble.png',
-            'citizens/citizen_waterfolk.png'
+            'citizens/citizen_waterfolk.png',
+            'bosses/boss_valkor.png',
+            'bosses/boss_demagogue.png'
         ];
 
         for (const rel of expectedSheets) {
@@ -172,6 +178,8 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
         assert.equal(getKey('iron'), 'miner');
         assert.equal(getKey('velvet'), 'noble');
         assert.equal(getKey('inquisitor'), 'scholar');
+        assert.equal(getKey('valkor'), 'boss_valkor');
+        assert.equal(getKey('demagogue'), 'boss_demagogue');
     });
 
     test('AssetManager provides registerPokemonSheet, hasPokemonSheet, and drawPokemonSprite methods', () => {
@@ -189,5 +197,7 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
         assert.ok(assets.images.has('cottage_red_medium'), 'cottage_red_medium must be registered');
         assert.ok(assets.images.has('keep_citadel_fortress'), 'keep_citadel_fortress must be registered');
         assert.ok(assets.images.has('portrait_boss_demagogue'), 'portrait_boss_demagogue must be registered');
+        assert.ok(assets.images.has('char_boss_valkor'), 'char_boss_valkor must be registered');
+        assert.ok(assets.images.has('char_boss_demagogue'), 'char_boss_demagogue must be registered');
     });
 });

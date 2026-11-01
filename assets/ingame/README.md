@@ -89,3 +89,4 @@ assets/
    assets.registerImage('my_building_key', 'assets/ingame/buildings/my_building.png');
    ```
 3. Set `spriteKey: 'my_building_key'` on any building in `MAPS`!
+

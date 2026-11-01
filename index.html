@@ -157,12 +157,18 @@
     <!-- 7-SCENE OPENING CUTSCENE OVERLAY                                    -->
     <!-- =================================================================== -->
     <div id="cutsceneOverlay" class="fixed inset-0 z-20 pointer-events-auto flex flex-col justify-end cursor-pointer">
-        <div class="bg-black/90 backdrop-blur-sm border-t-2 border-cyan-500/40 flex flex-col items-center justify-center px-8 py-5 pointer-events-auto">
+        <div class="bg-black/90 backdrop-blur-sm border-t-2 border-cyan-500/40 flex flex-col items-center justify-center px-8 py-5 pointer-events-auto relative">
+            <div id="cutsceneTagBadge" class="pixel-font text-[10px] text-cyan-300 bg-cyan-950/80 border border-cyan-500/50 px-3 py-0.5 rounded-full mb-2 tracking-wider"></div>
             <p id="cutsceneSubtitle" class="pixel-font text-xs md:text-sm text-center text-slate-100 leading-relaxed max-w-4xl mb-4 select-none"></p>
             <div class="flex items-center justify-between w-full max-w-4xl px-2">
                 <div id="cutsceneProgressDots" class="flex items-center gap-2"></div>
-                <div class="pixel-font text-[10px] text-cyan-400 animate-pulse tracking-wider select-none">
-                    [ CLICK OR SPACE TO CONTINUE &raquo; ]
+                <div class="flex items-center gap-4">
+                    <button id="btnSkipIntroCutscene" class="pixel-font text-[10px] text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700 hover:border-cyan-400 transition-colors pointer-events-auto">
+                        [ESC] SKIP INTRO
+                    </button>
+                    <div class="pixel-font text-[10px] text-cyan-400 animate-pulse tracking-wider select-none">
+                        [ CLICK OR SPACE TO CONTINUE &raquo; ]
+                    </div>
                 </div>
             </div>
         </div>
@@ -1801,6 +1807,8 @@
     assets.registerPokemonSheet('char_citizen_miner', 'assets/ingame/characters/citizens/citizen_miner.png');
     assets.registerPokemonSheet('char_citizen_noble', 'assets/ingame/characters/citizens/citizen_noble.png');
     assets.registerPokemonSheet('char_citizen_waterfolk', 'assets/ingame/characters/citizens/citizen_waterfolk.png');
+    assets.registerPokemonSheet('char_boss_valkor', 'assets/ingame/characters/bosses/boss_valkor.png');
+    assets.registerPokemonSheet('char_boss_demagogue', 'assets/ingame/characters/bosses/boss_demagogue.png');
 
     // High-Detail 64x64 Close-up Trainer Dialogue Portraits
     assets.registerImage('portrait_player_m', 'assets/ingame/characters/portraits/portrait_player_m.png');
@@ -1982,7 +1990,23 @@
             sheet: 'char_citizen_waterfolk',
             src: 'assets/ingame/characters/citizens/citizen_waterfolk.png',
             portrait: 'portrait_citizen_waterfolk',
-            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+            frameW: 18, frameH: 26, scale: 2.3, footOffsetY: 26
+        },
+        boss_valkor: {
+            id: 'boss_valkor',
+            name: 'Chancellor Valkor',
+            sheet: 'char_boss_valkor',
+            src: 'assets/ingame/characters/bosses/boss_valkor.png',
+            portrait: 'portrait_boss_valkor',
+            frameW: 18, frameH: 26, scale: 2.5, footOffsetY: 26
+        },
+        boss_demagogue: {
+            id: 'boss_demagogue',
+            name: 'The Sovereign Demagogue',
+            sheet: 'char_boss_demagogue',
+            src: 'assets/ingame/characters/bosses/boss_demagogue.png',
+            portrait: 'portrait_boss_demagogue',
+            frameW: 18, frameH: 26, scale: 2.5, footOffsetY: 26
         }
     };
 
@@ -2024,6 +2048,8 @@
         if (role === 'masked') return 'villager_m';
         if (role === 'citizen') return 'villager_f';
         if (role === 'ally') return 'villager_m';
+        if (role === 'valkor' || role === 'boss_valkor') return 'boss_valkor';
+        if (role === 'demagogue' || role === 'boss_demagogue') return 'boss_demagogue';
         return null;
     }
 
@@ -2069,14 +2095,16 @@
         const regEntry = regKey ? NPC_SPRITE_REGISTRY[regKey] : null;
 
         if (regEntry && assets.hasPokemonSheet(regEntry.sheet)) {
-            const isAttacking = (typeof player !== 'undefined' && player && player.attackAnimTime > 0) || opts.isAttacking;
-            const isMoving = (typeof player !== 'undefined' && player && player.isMoving) || frame !== 0;
+            const isAttacking = (role === 'player' || role === 'hero') ? ((typeof player !== 'undefined' && player && player.attackAnimTime > 0) || opts.isAttacking) : opts.isAttacking;
+            const isMoving = (role === 'player' || role === 'hero') ? ((typeof player !== 'undefined' && player && player.isMoving) || frame !== 0) : (opts.isMoving || frame !== 0);
             const nowTick = performance.now();
             const walkStep = Math.floor(nowTick / 130) % 4;
             const frameCol = getPokemonSpriteFrameCol(dir, isMoving, walkStep);
 
-            const dw = Math.round(regEntry.frameW * (regEntry.scale || 2.2));
-            const dh = Math.round(regEntry.frameH * (regEntry.scale || 2.2));
+            // Clean linear scaling respecting caller scale parameter
+            const currentScale = scale || 2.3;
+            const dw = Math.round(regEntry.frameW * currentScale);
+            const dh = Math.round(regEntry.frameH * currentScale);
             const dx = Math.round(x - dw / 2);
             const dy = Math.round(y - dh + 6);
 
@@ -2106,12 +2134,30 @@
                 }
             }
 
-            // Dynamic Hair Color Overlay for Player Character
-            if ((role === 'player' || role === 'hero') && hairColor && hairColor !== '#f59e0b') {
-                ctx.fillStyle = hairColor;
-                ctx.globalAlpha = 0.55;
-                ctx.fillRect(dx + 5, dy + 2, dw - 10, 6);
-                ctx.globalAlpha = 1.0;
+            // Dynamic Hair & Tunic Customization Tint Overlay for Player Character
+            if (role === 'player' || role === 'hero') {
+                if (hairColor && hairColor !== '#f59e0b') {
+                    ctx.save();
+                    ctx.fillStyle = hairColor;
+                    ctx.globalAlpha = 0.55;
+                    const hairY = dy + Math.round(dh * 0.38);
+                    const hairH = Math.round(dh * 0.18);
+                    const hairW = Math.round(dw * 0.55);
+                    const hairX = Math.round(x - hairW / 2);
+                    ctx.fillRect(hairX, hairY, hairW, hairH);
+                    ctx.restore();
+                }
+                if (tunicColor && tunicColor !== '#0284c7') {
+                    ctx.save();
+                    ctx.fillStyle = tunicColor;
+                    ctx.globalAlpha = 0.42;
+                    const tunicY = dy + Math.round(dh * 0.58);
+                    const tunicH = Math.round(dh * 0.22);
+                    const tunicW = Math.round(dw * 0.6);
+                    const tunicX = Math.round(x - tunicW / 2);
+                    ctx.fillRect(tunicX, tunicY, tunicW, tunicH);
+                    ctx.restore();
+                }
             }
 
             ctx.restore();
@@ -5099,7 +5145,7 @@ const MAPS = [
                 name: 'CHANCELLOR VALKOR (CITADEL WARDEN)',
                 hp: 520,
                 maxHp: 520,
-                role: 'blackshirt',
+                role: 'valkor',
                 quote: '"The masses crave order, not freedom! You will bow to the Citadel!"',
                 duel: {
                     threshold: 0.50,
@@ -5411,6 +5457,8 @@ const MAPS = [
         const sc = CUTSCENE_SCENES[introSceneIndex];
         const sub = document.getElementById('cutsceneSubtitle');
         if (sub) sub.textContent = sc.text;
+        const tagEl = document.getElementById('cutsceneTagBadge');
+        if (tagEl && sc && sc.tag) tagEl.textContent = sc.tag;
 
         // Dynamic Sky / Atmosphere Gradient matching scene narrative
         const grad = ctx.createLinearGradient(0, 0, 0, h);
@@ -5574,11 +5622,11 @@ const MAPS = [
                 ctx.fill();
             });
 
-            // Diverse citizens gathered in dialogue
-            drawCharacterSprite(ctx, -170, 48, 3.2, { role: 'ally', dir: 3, frame: walkFrame, skinColor: '#e0ac69', tunicColor: '#0284c7' });
-            drawCharacterSprite(ctx, -75, 48, 3.2, { role: 'player', dir: 3, frame: 0, skinColor: '#fde6d8', tunicColor: '#059669' });
-            drawCharacterSprite(ctx, 80, 48, 3.4, { role: 'avi', dir: 2, frame: walkFrame, skinColor: '#b87747' });
-            drawCharacterSprite(ctx, 175, 48, 3.2, { role: 'ally', dir: 2, frame: walkFrame, skinColor: '#9c6137', tunicColor: '#7c3aed' });
+            // Diverse citizens gathered in dialogue on agora dais
+            drawCharacterSprite(ctx, -170, 26, 3.0, { role: 'villager_f', dir: 3, frame: walkFrame, skinColor: '#e0ac69', tunicColor: '#0284c7' });
+            drawCharacterSprite(ctx, -75, 26, 3.0, { role: 'player', dir: 3, frame: 0, skinColor: '#fde6d8', tunicColor: '#059669' });
+            drawCharacterSprite(ctx, 80, 26, 3.0, { role: 'avi', dir: 2, frame: walkFrame, skinColor: '#b87747' });
+            drawCharacterSprite(ctx, 175, 26, 3.0, { role: 'scholar', dir: 2, frame: walkFrame, skinColor: '#9c6137', tunicColor: '#7c3aed' });
 
             // Floating Dialogue Bubbles: Shared Context, Empathy (above book), and Reason
             const bubbleY = 0 + Math.sin(t * 2.5) * 4;
@@ -5740,10 +5788,11 @@ const MAPS = [
             });
 
             // Hypnotized / Captive Citizens staring at glowing mini-screens
+            const captiveRoles = ['villager_m', 'scholar', 'miner', 'villager_f'];
             [-180, -100, 100, 180].forEach((cxPos, idx) => {
                 const facing = cxPos < 0 ? 3 : 2;
                 const sColor = idx % 2 === 0 ? '#e0ac69' : '#fde6d8';
-                drawCharacterSprite(ctx, cxPos, 48, 3.2, { role: 'player', dir: facing, frame: 0, skinColor: sColor, tunicColor: '#334155' });
+                drawCharacterSprite(ctx, cxPos, 34, 3.0, { role: captiveRoles[idx % captiveRoles.length], dir: facing, frame: 0, skinColor: sColor, tunicColor: '#334155' });
 
                 const phoneHandX = cxPos + (cxPos < 0 ? 12 : -12);
                 ctx.fillStyle = '#020617';
@@ -5792,15 +5841,15 @@ const MAPS = [
             ctx.stroke();
 
             // 1. Right Side: Privileged Gilded Performative Elite
-            drawCharacterSprite(ctx, 130, 30, 3.4, { role: 'masked', dir: 0, frame: walkFrame, skinColor: '#fde6d8' });
-            drawCharacterSprite(ctx, 220, 25, 3.2, { role: 'masked', dir: 2, frame: walkFrame, skinColor: '#fed7aa' });
+            drawCharacterSprite(ctx, 130, 14, 3.0, { role: 'noble', dir: 0, frame: walkFrame, skinColor: '#fde6d8' });
+            drawCharacterSprite(ctx, 220, 10, 3.0, { role: 'noble', dir: 2, frame: walkFrame, skinColor: '#fed7aa' });
 
             // Gatekeeper Golden Mask Sprite at edge Pushing Away Outsiders
-            drawCharacterSprite(ctx, 45, 28, 3.4, { role: 'masked', dir: 2, frame: 0, skinColor: '#fde6d8' });
+            drawCharacterSprite(ctx, 45, 12, 3.0, { role: 'masked', dir: 2, frame: 0, skinColor: '#fde6d8' });
             ctx.fillStyle = '#fde6d8';
-            ctx.fillRect(10, 28, 14, 5);
+            ctx.fillRect(10, 24, 14, 5);
             ctx.fillStyle = '#fbbf24';
-            ctx.fillRect(20, 27, 4, 7);
+            ctx.fillRect(20, 23, 4, 7);
 
             // Floating Clout Metrics above the Performative Elite
             const cloutY = -45 + Math.sin(t * 3) * 4;
@@ -5821,9 +5870,9 @@ const MAPS = [
 
             // 2. Left Side: Authentic, Diverse Citizens Being Pushed Away / Shunned
             const stumbleBack = Math.sin(t * 2) * 5;
-            drawCharacterSprite(ctx, -55 + stumbleBack, 48, 3.2, { role: 'ally', dir: 3, frame: 0, skinColor: '#9c6137', tunicColor: '#059669' });
-            drawCharacterSprite(ctx, -145 + stumbleBack, 52, 3.2, { role: 'player', dir: 3, frame: 1, skinColor: '#af6f43', tunicColor: '#0284c7' });
-            drawCharacterSprite(ctx, -230, 48, 3.2, { role: 'ally', dir: 2, frame: 0, skinColor: '#e0ac69', tunicColor: '#64748b' });
+            drawCharacterSprite(ctx, -55 + stumbleBack, 34, 3.0, { role: 'villager_m', dir: 3, frame: 0, skinColor: '#9c6137', tunicColor: '#059669' });
+            drawCharacterSprite(ctx, -145 + stumbleBack, 34, 3.0, { role: 'villager_f', dir: 3, frame: 1, skinColor: '#af6f43', tunicColor: '#0284c7' });
+            drawCharacterSprite(ctx, -230, 34, 3.0, { role: 'miner', dir: 2, frame: 0, skinColor: '#e0ac69', tunicColor: '#64748b' });
 
             // Dropped scroll of genuine truth on cracked stone
             ctx.fillStyle = '#fef08a';
@@ -5889,12 +5938,12 @@ const MAPS = [
 
             // Left: Manosphere "Iron" Sprites
             const pushBob = Math.sin(t * 5) * 4;
-            drawCharacterSprite(ctx, -150 + pushBob, 46, 3.4, { role: 'iron', dir: 3, frame: walkFrame, skinColor: '#fde6d8' });
-            drawCharacterSprite(ctx, -75 + pushBob, 46, 3.4, { role: 'iron', dir: 3, frame: 0, skinColor: '#e0ac69' });
+            drawCharacterSprite(ctx, -150 + pushBob, 29, 3.0, { role: 'iron', dir: 3, frame: walkFrame, skinColor: '#fde6d8' });
+            drawCharacterSprite(ctx, -75 + pushBob, 29, 3.0, { role: 'iron', dir: 3, frame: 0, skinColor: '#e0ac69' });
             ctx.fillStyle = '#dc2626';
-            ctx.fillRect(-52 + pushBob, 40, 18, 5);
+            ctx.fillRect(-52 + pushBob, 34, 18, 5);
             ctx.fillStyle = '#e0ac69';
-            ctx.fillRect(-34 + pushBob, 39, 6, 7);
+            ctx.fillRect(-34 + pushBob, 33, 6, 7);
 
             // Manosphere Banner
             ctx.fillStyle = '#dc2626';
@@ -5910,8 +5959,8 @@ const MAPS = [
             ctx.fillText('💢', -65 + pushBob, 12);
 
             // Right: Femosphere "Velvet" Sprites
-            drawCharacterSprite(ctx, 75 - pushBob, 46, 3.4, { role: 'velvet', dir: 2, frame: 0, skinColor: '#9c6137' });
-            drawCharacterSprite(ctx, 150 - pushBob, 46, 3.4, { role: 'velvet', dir: 2, frame: walkFrame, skinColor: '#fde6d8' });
+            drawCharacterSprite(ctx, 75 - pushBob, 29, 3.0, { role: 'velvet', dir: 2, frame: 0, skinColor: '#9c6137' });
+            drawCharacterSprite(ctx, 150 - pushBob, 29, 3.0, { role: 'velvet', dir: 2, frame: walkFrame, skinColor: '#fde6d8' });
             ctx.fillStyle = '#86198f';
             ctx.fillRect(34 - pushBob, 40, 18, 5);
             ctx.fillStyle = '#9c6137';
@@ -6011,17 +6060,17 @@ const MAPS = [
             ctx.fillText('• NO QUESTIONS', -332, -40);
 
             // Zealot Inquisitors Brandishing Torches
-            drawCharacterSprite(ctx, -135, 48, 3.4, { role: 'inquisitor', dir: 3, frame: walkFrame });
-            drawCharacterSprite(ctx, 135, 48, 3.4, { role: 'inquisitor', dir: 2, frame: walkFrame });
+            drawCharacterSprite(ctx, -135, 36, 3.0, { role: 'inquisitor', dir: 3, frame: walkFrame });
+            drawCharacterSprite(ctx, 135, 36, 3.0, { role: 'inquisitor', dir: 2, frame: walkFrame });
 
             // Innocent Questioning Seeker on knees, holding scroll with '?'
-            drawCharacterSprite(ctx, -60, 54, 2.8, { role: 'player', dir: 3, frame: 0, skinColor: '#e0ac69', tunicColor: '#0284c7' });
+            drawCharacterSprite(ctx, -60, 36, 2.8, { role: 'villager_m', dir: 3, frame: 0, skinColor: '#e0ac69', tunicColor: '#0284c7' });
 
             // Exile Gate on far right
             ctx.strokeStyle = '#451a03';
             ctx.lineWidth = 3;
             ctx.strokeRect(250, -80, 50, 122);
-            drawCharacterSprite(ctx, 275, 52, 2.8, { role: 'border', dir: 3, frame: walkFrame, skinColor: '#9c6137' });
+            drawCharacterSprite(ctx, 275, 36, 2.8, { role: 'border', dir: 3, frame: walkFrame, skinColor: '#9c6137' });
 
             ctx.restore();
         } else if (introSceneIndex === 5) {
@@ -6071,7 +6120,7 @@ const MAPS = [
             ctx.fillStyle = '#050507';
             ctx.fillRect(-360, 50, 720, 90);
             for (let i = -3; i <= 3; i++) {
-                drawCharacterSprite(ctx, i * 85, 62, 3.2, { role: 'blackshirt', dir: 0, frame: walkFrame });
+                drawCharacterSprite(ctx, i * 85, 44, 3.0, { role: 'blackshirt', dir: 0, frame: walkFrame });
                 ctx.fillStyle = '#475569';
                 ctx.fillRect(i * 85 + 18, 12, 3, 50);
                 ctx.fillStyle = '#ef4444';
@@ -6130,11 +6179,11 @@ const MAPS = [
             }
             ctx.restore();
 
-            // Professor Avi: Distinguished Sage Wizard (warm lighter brown skin, silver beard, archmage robe & staff)
-            drawCharacterSprite(ctx, -130, 44, 3.8, { role: 'avi', dir: 3, frame: walkFrame, skinColor: '#b87747' });
+            // Professor Avi: Distinguished Scholar in lab coat & spectacles
+            drawCharacterSprite(ctx, -130, 36, 3.2, { role: 'avi', dir: 3, frame: walkFrame, skinColor: '#b87747' });
 
-            // The Initiating Archivist (Player - not holding anything yet, warm brown skin matching theme)
-            drawCharacterSprite(ctx, 130, 44, 3.8, {
+            // The Initiating Archivist (Player)
+            drawCharacterSprite(ctx, 130, 36, 3.2, {
                 role: 'player',
                 dir: 2,
                 frame: 0,
@@ -8983,7 +9032,7 @@ wrap.appendChild(btn);
                 y: 190,
                 radius: 30,
                 name: 'THE SOVEREIGN DEMAGOGUE (FINAL BOSS)',
-                role: 'blackshirt',
+                role: 'demagogue',
                 isBoss: true,
                 state: 'hostile',
                 hp: 800,
@@ -9823,8 +9872,8 @@ wrap.appendChild(btn);
         if (demagogueBossEntity && demagogueBossEntity.hp > 0) {
             const bx = offX + demagogueBossEntity.x;
             const by = offY + demagogueBossEntity.y;
-            drawCharacterSprite(ctx, bx, by, 3.8, {
-                role: 'blackshirt',
+            drawCharacterSprite(ctx, bx, by, 2.5, {
+                role: 'demagogue',
                 dir: 0,
                 frame: demagogueBossEntity.frame || 0,
                 skinColor: '#e0ac69'
@@ -11759,7 +11808,7 @@ wrap.appendChild(btn);
                 type: 'enemy',
                 baseY: en.y + 14,
                 draw: () => {
-                    const scale = en.isBoss ? 3.2 : 2.2;
+                    const scale = en.isBoss ? 2.5 : 2.2;
                     drawCharacterSprite(ctx, en.x, en.y, scale, {
                         role: en.role,
                         isMindFreed: (en.state === 'cured'),
@@ -13477,6 +13526,14 @@ wrap.appendChild(btn);
             if (appState === 'INTRO') advanceCutsceneScene();
         };
     }
+    const btnSkipIntroEl = document.getElementById('btnSkipIntroCutscene');
+    if (btnSkipIntroEl) {
+        btnSkipIntroEl.onclick = (e) => {
+            if (e && e.stopPropagation) e.stopPropagation();
+            finishIntroCutscene();
+        };
+    }
+
     document.getElementById('btnReplayIntro').onclick = () => {
         document.getElementById('titleScreenModal').classList.add('hidden');
         document.getElementById('cutsceneOverlay').classList.remove('hidden');
@@ -13645,10 +13702,11 @@ wrap.appendChild(btn);
     const pCtx = previewCanvas.getContext('2d');
 
     function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth || 800;
+        canvas.height = window.innerHeight || 600;
     }
     window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
     let lastTime = performance.now();
     function mainLoop(now) {
