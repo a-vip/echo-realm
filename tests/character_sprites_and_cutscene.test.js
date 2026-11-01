@@ -5,7 +5,7 @@ const path = require('path');
 const { loadGameEnvironment } = require('./testHelper');
 
 describe('Character Sprite Sheets & Cutscene Robustness Test Suite', () => {
-    test('All 18 character sprite sheets exist, have exact 216x26 dimensions, and contain 12 valid frames', () => {
+    test('All 20 character sprite sheets exist, have exact 216x26 dimensions, and contain 12 valid frames', () => {
         const baseDir = path.resolve(__dirname, '../assets/ingame/characters');
         const sheets = [
             'player/player_male.png',
@@ -25,7 +25,9 @@ describe('Character Sprite Sheets & Cutscene Robustness Test Suite', () => {
             'citizens/citizen_noble.png',
             'citizens/citizen_waterfolk.png',
             'bosses/boss_valkor.png',
-            'bosses/boss_demagogue.png'
+            'bosses/boss_demagogue.png',
+            'mobs/mob_manosphere.png',
+            'mobs/mob_velvet.png'
         ];
 
         for (const rel of sheets) {
@@ -83,8 +85,8 @@ describe('Character Sprite Sheets & Cutscene Robustness Test Suite', () => {
         const getKey = env.getSpriteRegistryKey;
 
         // Verify that freed roles resolve to their own dedicated identities
-        assert.equal(getKey('iron'), 'miner');
-        assert.equal(getKey('velvet'), 'noble');
+        assert.equal(getKey('iron'), 'mob_manosphere');
+        assert.equal(getKey('velvet'), 'mob_velvet');
         assert.equal(getKey('inquisitor'), 'scholar');
         assert.equal(getKey('blackshirt'), 'villager_m');
         assert.equal(getKey('valkor'), 'boss_valkor');

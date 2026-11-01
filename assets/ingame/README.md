@@ -31,9 +31,17 @@ assets/
 │   │   │   ├── citizen_miner.png
 │   │   │   ├── citizen_noble.png
 │   │   │   └── citizen_waterfolk.png
+│   │   ├── mobs/               # Hostile faction mobs & zealots (216x26, 12 frames, 4 directions)
+│   │   │   ├── mob_manosphere.png   # Manosphere bodybuilder zealot
+│   │   │   └── mob_velvet.png       # Velvet swimmer zealot
+│   │   ├── bosses/             # Boss character sheets (216x26, 12 frames, 4 directions)
+│   │   │   ├── boss_valkor.png
+│   │   │   └── boss_demagogue.png
 │   │   └── portraits/          # 64x64 high-detail close-up trainer dialogue portraits
 │   │       ├── portrait_player_m.png
 │   │       ├── portrait_player_f.png
+│   │       ├── portrait_mob_manosphere.png
+│   │       ├── portrait_mob_velvet.png
 │   │       ├── portrait_avi.png
 │   │       ├── portrait_maya.png
 │   │       ├── portrait_lyra.png

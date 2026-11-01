@@ -38,6 +38,8 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
         // Bosses
         assert.ok(reg.boss_valkor, 'boss_valkor must be defined in registry');
         assert.ok(reg.boss_demagogue, 'boss_demagogue must be defined in registry');
+        assert.ok(reg.mob_manosphere, 'mob_manosphere must be defined in registry');
+        assert.ok(reg.mob_velvet, 'mob_velvet must be defined in registry');
     });
 
     test('All active in-game character sprite sheets exist on disk in assets/ingame/characters/', () => {
@@ -61,7 +63,9 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
             'citizens/citizen_noble.png',
             'citizens/citizen_waterfolk.png',
             'bosses/boss_valkor.png',
-            'bosses/boss_demagogue.png'
+            'bosses/boss_demagogue.png',
+            'mobs/mob_manosphere.png',
+            'mobs/mob_velvet.png'
         ];
 
         for (const rel of expectedSheets) {
@@ -93,7 +97,9 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
             'portrait_citizen_scholar.png',
             'portrait_citizen_miner.png',
             'portrait_citizen_noble.png',
-            'portrait_citizen_waterfolk.png'
+            'portrait_citizen_waterfolk.png',
+            'portrait_mob_manosphere.png',
+            'portrait_mob_velvet.png'
         ];
 
         for (const f of expectedPortraits) {
@@ -170,8 +176,8 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
         assert.equal(getKey('rowan'), 'rowan');
         assert.equal(getKey('kael'), 'kael');
         assert.equal(getKey('zephyr'), 'zephyr');
-        assert.equal(getKey('iron'), 'miner');
-        assert.equal(getKey('velvet'), 'noble');
+        assert.equal(getKey('iron'), 'mob_manosphere');
+        assert.equal(getKey('velvet'), 'mob_velvet');
         assert.equal(getKey('inquisitor'), 'scholar');
         assert.equal(getKey('valkor'), 'boss_valkor');
         assert.equal(getKey('demagogue'), 'boss_demagogue');
