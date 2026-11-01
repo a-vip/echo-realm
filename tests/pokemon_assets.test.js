@@ -256,4 +256,72 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
         env.teleportPlayerTo(8, 20, 20);
         assert.notEqual(env.currentMapIndex, 8, 'Teleportation to Map 8 must be blocked when citadel is locked');
     });
+
+    test('All 24 dedicated character folders exist and contain sprite.png, animations.png, and trainer.png', () => {
+        const baseDir = path.resolve(__dirname, '../assets/ingame/characters');
+        const expectedChars = [
+            'player_male', 'player_female', 'mentor_avi', 'mentor_maya', 'mentor_lyra',
+            'mentor_tariq', 'mentor_elena', 'mentor_rowan', 'mentor_kaelen', 'mentor_zephyr',
+            'boss_valkor', 'boss_demagogue', 'mob_manosphere', 'mob_velvet', 'mob_inquisitor',
+            'mob_border', 'mob_blackshirt', 'mob_masked', 'citizen_villager_m', 'citizen_villager_f',
+            'citizen_scholar', 'citizen_miner', 'citizen_noble', 'citizen_waterfolk'
+        ];
+
+        for (const cid of expectedChars) {
+            const cDir = path.join(baseDir, cid);
+            assert.ok(fs.existsSync(cDir), 'Character folder missing: ' + cid);
+
+            const spriteP = path.join(cDir, 'sprite.png');
+            assert.ok(fs.existsSync(spriteP), 'Missing sprite.png in ' + cid);
+            assert.ok(fs.statSync(spriteP).size > 100, 'sprite.png too small in ' + cid);
+
+            const animP = path.join(cDir, 'animations.png');
+            assert.ok(fs.existsSync(animP), 'Missing animations.png in ' + cid);
+            assert.ok(fs.statSync(animP).size > 500, 'animations.png too small in ' + cid);
+
+            const trainerP = path.join(cDir, 'trainer.png');
+            assert.ok(fs.existsSync(trainerP), 'Missing trainer.png in ' + cid);
+            assert.ok(fs.statSync(trainerP).size > 200, 'trainer.png too small in ' + cid);
+        }
+    });
+
+    test('Hostile mob roles are registered in NPC_SPRITE_REGISTRY with dedicated sheets and portraits', () => {
+        const env = loadGameEnvironment();
+        const reg = env.NPC_SPRITE_REGISTRY;
+
+        const mobs = ['mob_inquisitor', 'mob_border', 'mob_blackshirt', 'mob_masked'];
+        for (const m of mobs) {
+            assert.ok(reg[m], 'Mob ' + m + ' must be defined in NPC_SPRITE_REGISTRY');
+            assert.ok(reg[m].sheet, 'Mob ' + m + ' must specify sheet');
+            assert.ok(reg[m].portrait, 'Mob ' + m + ' must specify portrait');
+            assert.equal(reg[m].frameW, 18);
+            assert.equal(reg[m].frameH, 26);
+        }
+    });
+
+    test('getFacingDirTowards accurately computes cardinal direction towards target', () => {
+        const env = loadGameEnvironment();
+        const faceFn = env.getFacingDirTowards;
+        assert.ok(typeof faceFn === 'function', 'getFacingDirTowards must be a function');
+
+        // Target directly above -> North (1)
+        assert.equal(faceFn({ x: 100, y: 100 }, { x: 100, y: 40 }), 1, 'Target above must be North (1)');
+        // Target directly below -> South (0)
+        assert.equal(faceFn({ x: 100, y: 100 }, { x: 100, y: 160 }), 0, 'Target below must be South (0)');
+        // Target to left -> West (2)
+        assert.equal(faceFn({ x: 100, y: 100 }, { x: 40, y: 100 }), 2, 'Target left must be West (2)');
+        // Target to right -> East (3)
+        assert.equal(faceFn({ x: 100, y: 100 }, { x: 160, y: 100 }), 3, 'Target right must be East (3)');
+    });
+
+    test('NPC turns to face player upon dialogue interaction', () => {
+        const env = loadGameEnvironment();
+        const npc = { name: 'Village Guide', x: 100, y: 100, dir: 0, dialogues: ['Hello traveler!'], isQuestGiver: false };
+        env.player.x = 100;
+        env.player.y = 50; // Player is above NPC
+
+        env.startNpcDialogue(npc);
+        assert.equal(npc.dir, 1, 'NPC must turn North (dir: 1) to face player above them');
+        assert.equal(env.activeDialogueNpc, npc, 'Active dialogue NPC must be set');
+    });
 });
