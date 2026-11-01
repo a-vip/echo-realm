@@ -913,7 +913,7 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         const env = loadGameEnvironment();
         const boss = {
             id: 'alpha_cynic',
-            name: 'THE ALPHA-CYNIC ALGORITHM',
+            name: 'MANOSPHERE',
             role: 'iron',
             hp: 200,
             maxHp: 200,
@@ -931,7 +931,8 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         const modal = env.document.getElementById('socraticDuelModal');
         assert.ok(!modal.classList.contains('hidden'), 'Socratic duel modal must be visible');
         assert.equal(env.appState, 'PAUSED', 'Game must be paused during Socratic duel');
-        assert.equal(env.document.getElementById('duelBossName').textContent, 'THE ALPHA-CYNIC ALGORITHM');
+        assert.equal(env.document.getElementById('duelBossName').textContent, 'MANOSPHERE');
+        assert.equal(env.document.getElementById('duelHeaderTagText').textContent, '⚔️ MANOSPHERE DUEL');
         assert.equal(env.document.getElementById('duelThresholdBadge').textContent, '50% DELUSION ARMOR');
 
         // Verify choices container contains [Q], [E], [R] hotkey tags
@@ -1163,6 +1164,71 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         const rawHtml = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
         assert.equal(rawHtml.includes('id="epistemicRevelationModal"'), false, 'epistemicRevelationModal must be completely removed');
         assert.equal(rawHtml.includes('EPISTEMIC DECONSTRUCTION // INSIGHT UNLOCKED'), false, 'Old revelation modal header must be removed');
+    });
+
+    test('Mob display names map correctly and show in deconstruction dialogue box', () => {
+        const env = loadGameEnvironment();
+        assert.equal(env.getMobDisplayName({ role: 'iron' }), 'MANOSPHERE');
+        assert.equal(env.getMobDisplayName({ role: 'velvet' }), 'FEMOSPHERE');
+        assert.equal(env.getMobDisplayName({ role: 'inquisitor' }), 'PURITY INQUISITOR');
+        assert.equal(env.getMobDisplayName({ role: 'border' }), 'BORDER ZEALOT');
+        assert.equal(env.getMobDisplayName({ role: 'blackshirt' }), 'CITADEL BLACKSHIRT');
+        assert.equal(env.getMobDisplayName({ role: 'drone' }), 'SURVEILLANCE DRONE');
+
+        // Test showDeconstructToast with velvet enemy
+        env.appState = 'PLAYING';
+        env.showDeconstructToast('gendered', { role: 'velvet', name: 'Femosphere' });
+        assert.equal(env.appState, 'DIALOGUE');
+        const page1 = env.activeDialogueList[0];
+        assert.ok(page1.text.includes('FEMOSPHERE:'), 'Dialogue must show FEMOSPHERE: header in red text');
+        assert.ok(!page1.text.includes('RADICALIZED CITIZEN:'), 'Must not say RADICALIZED CITIZEN');
+
+        // Test showDeconstructToast with iron enemy
+        env.showDeconstructToast('gendered', { role: 'iron', name: 'Manosphere' });
+        const ironPage = env.activeDialogueList[0];
+        assert.ok(ironPage.text.includes('MANOSPHERE:'), 'Dialogue must show MANOSPHERE: header in red text');
+    });
+
+    test('Socratic duel header dynamically displays mob duel title and boss name', () => {
+        const env = loadGameEnvironment();
+        const ironBoss = {
+            name: 'MANOSPHERE',
+            role: 'iron',
+            hp: 260,
+            maxHp: 260,
+            duelData: {
+                claim: 'Outrage claim',
+                options: [{ text: 'Nuance', correct: true }, { text: 'Anger', correct: false }, { text: 'Course', correct: false }]
+            }
+        };
+        env.triggerSocraticBossDuel(ironBoss, 0.50);
+        assert.equal(env.document.getElementById('duelBossName').textContent, 'MANOSPHERE');
+        assert.equal(env.document.getElementById('duelHeaderTagText').textContent, '⚔️ MANOSPHERE DUEL');
+
+        const velvetBoss = {
+            name: 'FEMOSPHERE',
+            role: 'velvet',
+            hp: 260,
+            maxHp: 260,
+            duelData: {
+                claim: 'Outrage claim',
+                options: [{ text: 'Nuance', correct: true }, { text: 'Anger', correct: false }, { text: 'Course', correct: false }]
+            }
+        };
+        env.triggerSocraticBossDuel(velvetBoss, 0.50);
+        assert.equal(env.document.getElementById('duelBossName').textContent, 'FEMOSPHERE');
+        assert.equal(env.document.getElementById('duelHeaderTagText').textContent, '⚔️ FEMOSPHERE DUEL');
+    });
+
+    test('All sliced building sprites on disk have zero baked-in alpha 76 shadow pixels', () => {
+        const bdir = path.resolve(__dirname, '../assets/ingame/buildings');
+        const files = fs.readdirSync(bdir).filter(f => f.endsWith('.png'));
+        assert.ok(files.length >= 7, 'Must have at least 7 building sprites');
+        // Check files exist and have positive size
+        for (const file of files) {
+            const stat = fs.statSync(path.join(bdir, file));
+            assert.ok(stat.size > 500, `Building sprite ${file} must exist and have content`);
+        }
     });
 
 });

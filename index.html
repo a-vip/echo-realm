@@ -518,7 +518,7 @@
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between">
-                        <span class="pixel-font text-[9px] text-[#fbbf24] tracking-widest uppercase">⚔️ INOCULATION DUEL</span>
+                        <span id="duelHeaderTagText" class="pixel-font text-[9px] text-[#fbbf24] tracking-widest uppercase">⚔️ INOCULATION DUEL</span>
                         <div class="flex items-center gap-1.5 shrink-0">
                             <span id="duelThresholdBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-950/90 text-rose-300 border border-rose-500/80">50% DELUSION ARMOR</span>
                             <span class="text-[9px] mono-font text-amber-300 font-bold bg-[#271004] px-1.5 py-0.5 rounded border border-[#b45309]">[Q] [E] [R]</span>
@@ -1453,11 +1453,15 @@
             const im = this.images.get(id);
             return !!(im && im.loaded);
         }
-        drawImage(ctx, id, dx, dy, dw, dh) {
+        drawImage(ctx, id, a1, a2, a3, a4, a5, a6, a7, a8) {
             const im = this.images.get(id);
             if (!im || !im.loaded || !ctx.drawImage) return false;
             try {
-                ctx.drawImage(im.img, dx, dy, dw, dh);
+                if (a5 !== undefined) {
+                    ctx.drawImage(im.img, a1, a2, a3, a4, a5, a6, a7, a8);
+                } else {
+                    ctx.drawImage(im.img, a1, a2, a3, a4);
+                }
                 return true;
             } catch (e) {
                 return false;
@@ -3228,12 +3232,7 @@
             ctx.fillRect(ox + x * s, oy + y * s, w * s, h * s);
         };
 
-        // Ground / air drop shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.45)';
-        ctx.beginPath();
-        ctx.ellipse(cx, cy + 16, 7, 2.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-
+        // Pure floating 32-bit pixel quest marker without awkward face shadow
         if (symbol === '!') {
             // Crisp black pixel outline (no box)
             px(1, -1, 5, 7, '#020617');
@@ -4955,7 +4954,7 @@ const MAPS = [
             groundColor: '#241426',
             codexKey: 'gendered',
             curedGoal: 4,
-            questTitle: 'Free 4 Citizens & Defeat THE ALPHA-CYNIC ALGORITHM',
+            questTitle: 'Free 4 Citizens & Confront MANOSPHERE',
             mentorName: 'Comrade Tariq',
             portalTarget: 4,
             chest: { col: 27, row: 5, itemId: 'pauldrons_empathy' },
@@ -4968,7 +4967,7 @@ const MAPS = [
             ],
             aviPreDialogues: [
                 'Grievance profiteers split this sector in two: Manosphere gurus selling zero-sum dominance, and Velvet Fortresses monetizing cynical despair.',
-                'Free 4 radicalized citizens and dismantle the Alpha-Cynic Algorithm guarding the northern citadel.'
+                'Free 4 radicalized citizens and confront MANOSPHERE guarding the northern citadel.'
             ],
             aviPostDialogues: [
                 'When you strip away the outrage clips, both sides were suffering from the same isolation. Now they stand together in mutual respect.'
@@ -4983,7 +4982,8 @@ const MAPS = [
                 ]
             },
             boss: {
-                name: 'THE ALPHA-CYNIC ALGORITHM',
+                name: 'MANOSPHERE',
+                title: 'Manosphere Patriarch',
                 hp: 260,
                 maxHp: 260,
                 role: 'iron',
@@ -7489,7 +7489,8 @@ const MAPS = [
                 } else {
                     spot = findOpenTileSpot(34 + i * 4, 16);
                 }
-                enemies.push(createEnemy(spot.x, spot.y, roles[(mapIndex + i) % roles.length], ' isolated Citizen', false));
+                const rRole = roles[(mapIndex + i) % roles.length];
+                enemies.push(createEnemy(spot.x, spot.y, rRole, getMobDefaultName(rRole), false));
             }
         } else {
             const roleByMap = { 3: 'iron', 4: 'inquisitor', 6: 'border', 8: 'blackshirt' };
@@ -7498,7 +7499,7 @@ const MAPS = [
             for (let i = 0; i < 7; i++) {
                 const spot = findOpenTileSpot(5 + (i % 4) * 6, 7 + Math.floor(i / 4) * 6);
                 const eRole = (mapIndex === 3 && i % 2 === 1) ? 'velvet' : secRole;
-                enemies.push(createEnemy(spot.x, spot.y, eRole, 'Radicalized Citizen', false));
+                enemies.push(createEnemy(spot.x, spot.y, eRole, getMobDefaultName(eRole), false));
             }
             if (mapIndex === 8) {
                 // Spawn 3 Quadcopter Surveillance Drones patrolling the Citadel Courtyard
@@ -7873,7 +7874,58 @@ const MAPS = [
         return Object.values(player.equipment).some(eq => eq && eq.id === itemId);
     }
 
+    function getMobDefaultName(role) {
+        const r = (role || '').toLowerCase();
+        const names = {
+            iron: 'Manosphere',
+            velvet: 'Femosphere',
+            inquisitor: 'Purity Inquisitor',
+            border: 'Border Zealot',
+            blackshirt: 'Citadel Blackshirt',
+            drone: 'Surveillance Drone',
+            masked: 'Echo Drone',
+            valkor: 'Chancellor Valkor',
+            demagogue: 'The Sovereign Demagogue'
+        };
+        return names[r] || 'Citizen';
+    }
+
+    function getMobDisplayName(en) {
+        if (!en) return 'LIBERATED CITIZEN';
+        const role = (en.role || '').toLowerCase();
+        const roleMap = {
+            iron: 'MANOSPHERE',
+            velvet: 'FEMOSPHERE',
+            inquisitor: 'PURITY INQUISITOR',
+            border: 'BORDER ZEALOT',
+            blackshirt: 'CITADEL BLACKSHIRT',
+            drone: 'SURVEILLANCE DRONE',
+            masked: 'ECHO DRONE',
+            valkor: 'CHANCELLOR VALKOR',
+            demagogue: 'THE SOVEREIGN DEMAGOGUE',
+            boss_demagogue: 'THE SOVEREIGN DEMAGOGUE'
+        };
+
+        if (en.name) {
+            const raw = en.name.trim();
+            const upper = raw.toUpperCase();
+            if (upper.includes('ALPHA-CYNIC') || upper.includes('ALPHA CYNIC')) {
+                return (role === 'velvet') ? 'FEMOSPHERE' : 'MANOSPHERE';
+            }
+            if (upper.includes('RADICALIZED') || upper.includes('ISOLATED')) {
+                return roleMap[role] || 'CITIZEN';
+            }
+            if (!upper.includes('CITIZEN') && !upper.includes('DUMMY')) {
+                return upper.replace(/\s*\(.*\)/, '').trim();
+            }
+        }
+        return roleMap[role] || (en.name ? en.name.toUpperCase() : 'LIBERATED CITIZEN');
+    }
+
     function createEnemy(x, y, role, name, isDummy = false) {
+        if (!name || name === 'Radicalized Citizen' || name.toLowerCase().includes('isolated citizen')) {
+            name = getMobDefaultName(role);
+        }
         const quotes = {
             masked: '"Must farm outrage for the algorithm!"',
             iron: '"Empathy is weakness! Alpha frame only!"',
@@ -8302,7 +8354,23 @@ const MAPS = [
         appState = 'PAUSED';
         activeDuelBoss = boss;
         const modal = document.getElementById('socraticDuelModal');
-        document.getElementById('duelBossName').textContent = boss.name;
+
+        let bossDisplayName = boss.name;
+        if (boss.name === 'THE ALPHA-CYNIC ALGORITHM' || (boss.role === 'iron' && (boss.name.includes('ALPHA') || boss.name.includes('ALGORITHM')))) {
+            bossDisplayName = 'MANOSPHERE';
+        } else if (boss.role === 'velvet') {
+            bossDisplayName = 'FEMOSPHERE';
+        }
+        document.getElementById('duelBossName').textContent = bossDisplayName;
+
+        // Dynamically update the header tag to the specific mob's name (e.g. ⚔️ MANOSPHERE DUEL)
+        const duelHeaderTag = document.getElementById('duelHeaderTagText');
+        if (duelHeaderTag) {
+            let mobDuelTag = getMobDisplayName(boss);
+            if (!mobDuelTag || mobDuelTag === 'CITIZEN') mobDuelTag = bossDisplayName || 'MOB';
+            duelHeaderTag.textContent = `⚔️ ${mobDuelTag} DUEL`;
+        }
+
         let bossTitle = 'Echo Warden';
         if (boss.title) {
             bossTitle = boss.title;
@@ -8310,9 +8378,9 @@ const MAPS = [
             bossTitle = 'Arch-Demagogue of the Realm';
         } else if (boss.role === 'valkor' || (boss.name && boss.name.includes('VALKOR'))) {
             bossTitle = 'Citadel High Warden';
-        } else if (boss.role === 'iron' || (boss.name && boss.name.includes('ALPHA'))) {
+        } else if (boss.role === 'iron' || (boss.name && (boss.name.includes('ALPHA') || boss.name.includes('MANOSPHERE')))) {
             bossTitle = 'Manosphere Patriarch';
-        } else if (boss.role === 'velvet') {
+        } else if (boss.role === 'velvet' || (boss.name && boss.name.includes('FEMOSPHERE'))) {
             bossTitle = 'Velvet Grievance Architect';
         } else if (boss.role === 'inquisitor' || (boss.name && boss.name.includes('INQUISITOR'))) {
             bossTitle = 'Grand Inquisitor of Purity';
@@ -10198,32 +10266,21 @@ const MAPS = [
         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
         ctx.fillRect(offX - 10, offY - 10, roomW + 20, roomH + 20);
 
-        // 2. Tiled Flooring using authentic Environment floors_tiles or wood planks
+        // 2. Beautiful Rich Hardwood Flooring (Seamless warm oak & mahogany plank boards)
         const plankH = 26;
         const floorY = offY + 120;
         const floorH = roomH - 120;
-        if (assets.hasImage('floors_tiles')) {
-            const ftSz = 32;
-            for (let fy = floorY; fy < offY + roomH; fy += ftSz) {
-                for (let fx = offX; fx < offX + roomW; fx += ftSz) {
-                    const dw = Math.min(ftSz, offX + roomW - fx);
-                    const dh = Math.min(ftSz, offY + roomH - fy);
-                    assets.drawImage(ctx, 'floors_tiles', fx, fy, dw, dh, 96, 0, dw, dh);
-                }
-            }
-        } else {
-            const woodTones = ['#4a2c17', '#54321b', '#5c381f', '#462814', '#58351d'];
-            for (let py = floorY; py < offY + roomH; py += plankH) {
-                const rowIdx = Math.floor((py - floorY) / plankH);
-                ctx.fillStyle = woodTones[rowIdx % woodTones.length];
-                ctx.fillRect(offX, py, roomW, plankH);
-                ctx.fillStyle = '#26150b';
-                ctx.fillRect(offX, py + plankH - 2, roomW, 2);
-                ctx.fillStyle = '#1c0f08';
-                for (let nx = offX + 40 + (rowIdx % 3) * 35; nx < offX + roomW; nx += 90) {
-                    ctx.fillRect(nx, py + 4, 2, 2);
-                    ctx.fillRect(nx, py + plankH - 6, 2, 2);
-                }
+        const woodTones = ['#4a2c17', '#54321b', '#5c381f', '#462814', '#58351d'];
+        for (let py = floorY; py < offY + roomH; py += plankH) {
+            const rowIdx = Math.floor((py - floorY) / plankH);
+            ctx.fillStyle = woodTones[rowIdx % woodTones.length];
+            ctx.fillRect(offX, py, roomW, plankH);
+            ctx.fillStyle = '#26150b';
+            ctx.fillRect(offX, py + plankH - 2, roomW, 2);
+            ctx.fillStyle = '#1c0f08';
+            for (let nx = offX + 40 + (rowIdx % 3) * 35; nx < offX + roomW; nx += 90) {
+                ctx.fillRect(nx, py + 4, 2, 2);
+                ctx.fillRect(nx, py + plankH - 6, 2, 2);
             }
         }
 
@@ -10556,27 +10613,6 @@ const MAPS = [
         ctx.fillRect(deskX + 12, deskY + 18, 12, 2);
         ctx.fillRect(deskX + 31, deskY + 12, 12, 2);
         ctx.fillRect(deskX + 31, deskY + 18, 12, 2);
-
-        // Draw Authentic Environment Furniture & Artisan Workbench Props
-        if (assets.hasImage('furniture_sheet')) {
-            // Carved Wooden Armoire / Wardrobe along back wall
-            assets.drawImage(ctx, 'furniture_sheet', offX + 40, offY + 44, 48, 88, 0, 0, 48, 96);
-            // Upholstered Armchairs flanking the rug
-            assets.drawImage(ctx, 'furniture_sheet', offX + 115, floorY + 70, 44, 44, 48, 48, 48, 48);
-            assets.drawImage(ctx, 'furniture_sheet', offX + roomW - 160, floorY + 70, 44, 44, 48, 48, 48, 48);
-        }
-        if (assets.hasImage('workbench_sheet')) {
-            // Artisan Workbench on the right wall
-            assets.drawImage(ctx, 'workbench_sheet', offX + roomW - 120, offY + 45, 64, 64, 0, 0, 64, 64);
-        }
-        if (assets.hasImage('wood_interior_set')) {
-            // Master Four-Poster Bed in the upper right alcove
-            assets.drawImage(ctx, 'wood_interior_set', offX + roomW - 130, offY + 40, 64, 88, 0, 32, 64, 88);
-            // Elegant Nightstand / End Table beside bed
-            assets.drawImage(ctx, 'wood_interior_set', offX + roomW - 165, offY + 68, 32, 48, 64, 64, 32, 48);
-            // Grand Carved Bookshelf unit along upper left
-            assets.drawImage(ctx, 'wood_interior_set', offX + 36, offY + 36, 96, 88, 192, 0, 96, 96);
-        }
 
         // 9. Physical Wooden Table & Chairs in Room Center (Using standalone asset & fine props)
         const tblX = rugX + Math.floor(rugW / 2) - 60;
@@ -12082,7 +12118,8 @@ const MAPS = [
                             markerChar = '?';
                             symbolColor = '#fde047';
                         }
-                        const my = npc.y - 70 + bobOffset;
+                        // Elevated quest marker position so it never overlaps the character's face or hair
+                        const my = npc.y - 88 + bobOffset;
                         drawPixelQuestSymbol(ctx, npc.x, my, markerChar, symbolColor);
                     }
                 }
@@ -13559,14 +13596,14 @@ const MAPS = [
         // Route combat epistemic insights through clean minimal 32-bit conversational dialogue box
         const mythClean = item.myth ? item.myth.replace(/^["']+|["']+$/g, '') : '';
         const truthClean = item.truth ? item.truth.replace(/^["']+|["']+$/g, '') : '';
-        const npcName = (en && en.name) ? en.name : 'LIBERATED CITIZEN';
+        const mobDisplayName = getMobDisplayName(en);
         const playerName = (player && player.name ? player.name : 'AURON');
 
-        activeDialogueNpc = { name: npcName, role: en && en.role ? en.role : 'citizen' };
+        activeDialogueNpc = { name: mobDisplayName, role: en && en.role ? en.role : 'citizen' };
         activeDialogueList = [
             {
                 speaker: '',
-                text: `<div class="mb-1 text-rose-400 font-bold tracking-wide text-xs">${npcName.toUpperCase()}:</div><div class="italic text-slate-100 text-sm md:text-base leading-relaxed">"${mythClean}"</div>`,
+                text: `<div class="mb-1 text-rose-400 font-bold tracking-wide text-xs">${mobDisplayName}:</div><div class="italic text-slate-100 text-sm md:text-base leading-relaxed">"${mythClean}"</div>`,
                 portrait: { type: 'citizen' }
             },
             {

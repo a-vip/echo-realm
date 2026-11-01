@@ -93,6 +93,8 @@ function loadGameEnvironment() {
         get drawPixelQuestSymbol() { return drawPixelQuestSymbol; },
         set drawPixelQuestSymbol(fn) { drawPixelQuestSymbol = fn; },
         findNearestInteractable,
+        getMobDisplayName,
+        getMobDefaultName,
         };`;
 
     function createMockElement(id = '') {
