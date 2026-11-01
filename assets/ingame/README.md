@@ -44,21 +44,16 @@ assets/
 │   │       ├── portrait_zephyr.png
 │   │       ├── portrait_boss_valkor.png
 │   │       └── portrait_boss_demagogue.png
-│   ├── buildings/              # Sliced standalone building sprites from terribleCOTTAGES.png
-│   │   ├── archive_sanctuary_tower.png
-│   │   ├── archive_library_large.png
-│   │   ├── cottage_red_medium.png
-│   │   ├── cottage_red_large.png
-│   │   ├── cottage_blue_medium.png
-│   │   ├── cottage_stone_small.png
-│   │   ├── cottage_wood_medium.png
-│   │   ├── cottage_brick_large.png
-│   │   ├── village_inn_long.png
+│   ├── buildings/              # Valid front-facing cottage architecture (7 active accessible models)
 │   │   ├── armory_bastion.png
-│   │   ├── hermitage_lodge.png
-│   │   ├── manor_grand.png
-│   │   ├── temple_shrine.png
-│   │   └── keep_citadel_fortress.png
+│   │   ├── cottage_blue_medium.png
+│   │   ├── cottage_brick_large.png
+│   │   ├── cottage_red_large.png
+│   │   ├── cottage_red_medium.png
+│   │   ├── cottage_stone_small.png
+│   │   └── village_inn_long.png
+│   ├── doors/                  # Entrance door variations & architectural portals
+│   │   └── doors_sheet.png
 │   └── creatures/              # Flying aquatic critters & companions
 └── staging/                    # Trial appearances pool & raw full sheets
 ```

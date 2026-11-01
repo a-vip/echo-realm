@@ -119,7 +119,8 @@ function loadGameEnvironment() {
                         else classSet.add(c);
                     }
                 },
-                contains: (c) => classSet.has(c)
+                contains: (c) => classSet.has(c),
+                replace: (a, b) => { classSet.delete(a); classSet.add(b); }
             },
             style: {},
             appendChild: function(ch) {

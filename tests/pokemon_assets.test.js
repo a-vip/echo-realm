@@ -108,20 +108,13 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
         const bldDir = path.resolve(__dirname, '../assets/ingame/buildings');
 
         const expectedBuildings = [
-            'cottage_stone_small.png',
-            'cottage_wood_medium.png',
-            'cottage_red_large.png',
-            'cottage_blue_medium.png',
-            'cottage_red_medium.png',
-            'village_inn_long.png',
-            'archive_library_large.png',
-            'archive_sanctuary_tower.png',
-            'cottage_brick_large.png',
             'armory_bastion.png',
-            'hermitage_lodge.png',
-            'manor_grand.png',
-            'keep_citadel_fortress.png',
-            'temple_shrine.png'
+            'cottage_blue_medium.png',
+            'cottage_brick_large.png',
+            'cottage_red_large.png',
+            'cottage_red_medium.png',
+            'cottage_stone_small.png',
+            'village_inn_long.png'
         ];
 
         for (const f of expectedBuildings) {
@@ -130,6 +123,8 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
             const stat = fs.statSync(p);
             assert.ok(stat.size > 1000, `Building sprite file is too small: ${f}`);
         }
+        const doorsPath = path.resolve(__dirname, '../assets/ingame/doors/doors_sheet.png');
+        assert.ok(fs.existsSync(doorsPath), 'doors_sheet.png must exist on disk');
     });
 
     test('Directional frame column calculator computes correct 4-direction walk and idle frames', () => {
@@ -195,9 +190,64 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
         assert.ok(assets.images.has('char_mentor_avi'), 'char_mentor_avi must be registered');
         assert.ok(assets.images.has('char_mentor_maya'), 'char_mentor_maya must be registered');
         assert.ok(assets.images.has('cottage_red_medium'), 'cottage_red_medium must be registered');
-        assert.ok(assets.images.has('keep_citadel_fortress'), 'keep_citadel_fortress must be registered');
+        assert.ok(assets.images.has('doors_sheet'), 'keep_citadel_fortress must be registered');
         assert.ok(assets.images.has('portrait_boss_demagogue'), 'portrait_boss_demagogue must be registered');
         assert.ok(assets.images.has('char_boss_valkor'), 'char_boss_valkor must be registered');
         assert.ok(assets.images.has('char_boss_demagogue'), 'char_boss_demagogue must be registered');
+    });
+    test('Character creation provides clean Male and Female character sprite selection', () => {
+        const env = loadGameEnvironment();
+        const btnMale = env.document.getElementById('btnSelectMale');
+        const btnFemale = env.document.getElementById('btnSelectFemale');
+
+        assert.ok(btnMale, '#btnSelectMale must exist in character creator');
+        assert.ok(btnFemale, '#btnSelectFemale must exist in character creator');
+
+        // Initial default is male
+        assert.equal(env.player.gender || 'male', 'male');
+        assert.equal(env.getSpriteRegistryKey('player', { gender: env.player.gender }), 'player_m');
+
+        // Toggle female
+        btnFemale.onclick();
+        assert.equal(env.player.gender, 'female');
+        assert.equal(env.getSpriteRegistryKey('player', { gender: env.player.gender }), 'player_f');
+
+        // Toggle male
+        btnMale.onclick();
+        assert.equal(env.player.gender, 'male');
+        assert.equal(env.getSpriteRegistryKey('player', { gender: env.player.gender }), 'player_m');
+    });
+
+    test('Strict validation: Only 7 valid front-facing cottage models exist and no backwards buildings', () => {
+        const bldDir = path.resolve(__dirname, '../assets/ingame/buildings');
+        const files = fs.readdirSync(bldDir);
+
+        assert.equal(files.length, 7, 'Must have exactly 7 valid cottage building files');
+
+        const forbiddenBackwards = [
+            'archive_library_large.png',
+            'archive_sanctuary_tower.png',
+            'cottage_wood_medium.png',
+            'hermitage_lodge.png',
+            'keep_citadel_fortress.png',
+            'manor_grand.png',
+            'temple_shrine.png'
+        ];
+
+        for (const bad of forbiddenBackwards) {
+            assert.ok(!files.includes(bad), `Backwards/doorless building must NOT exist in buildings: ${bad}`);
+        }
+
+        const doorsFile = path.resolve(__dirname, '../assets/ingame/doors/doors_sheet.png');
+        assert.ok(fs.existsSync(doorsFile), 'doors_sheet.png must exist in doors directory');
+    });
+
+    test('Teleporting to Map 8 is strictly blocked unless citadel is unlocked', () => {
+        const env = loadGameEnvironment();
+        env.player.citadelUnlocked = false;
+        env.player.zoneQuests = { 8: { accepted: false, completed: false } };
+
+        env.teleportPlayerTo(8, 20, 20);
+        assert.notEqual(env.currentMapIndex, 8, 'Teleportation to Map 8 must be blocked when citadel is locked');
     });
 });

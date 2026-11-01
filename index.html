@@ -246,97 +246,59 @@
                         </button>
                     </div>
 
-                    <!-- Systemic Difficulty Box -->
-                    <div class="w-full mt-3 bg-slate-950 border-2 border-amber-500/50 rounded-lg p-3">
+                    <!-- Hero Archetype Info Box -->
+                    <div class="w-full mt-3 bg-slate-950 border-2 border-cyan-500/40 rounded-lg p-3">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="pixel-font text-[10px] uppercase text-amber-300">SYSTEMIC PROFILE:</span>
-                            <span id="diffBadgeTitle" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">EASY MODE</span>
+                            <span class="pixel-font text-[10px] uppercase text-amber-300">HERO ARCHETYPE:</span>
+                            <span id="heroRoleBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300">ARCHIVIST OF TRUTH</span>
                         </div>
-                        <p id="diffDescText" class="text-xs text-slate-300 leading-relaxed mb-2">
-                            Algorithms and authorities grant you the benefit of the doubt. -25% enemy hostility range, +25% Data Shard rewards, and border sentries ignore you unless attacked.
+                        <p id="heroDescText" class="text-xs text-slate-300 leading-relaxed mb-2">
+                            Equipped with the Prism Beam and Axiom Blade to dispel manufactured outrage, expose algorithmic echo chambers, and liberate the realm.
                         </p>
-                        <div id="diffStatsText" class="text-[10px] mono-font text-cyan-300 border-t border-slate-800 pt-1.5">
-                            Aggro Radius: 0.75x | Damage Taken: 0.85x | Shard Gain: 1.25x
+                        <div class="text-[10px] mono-font text-cyan-300 border-t border-slate-800 pt-1.5 flex justify-between">
+                            <span>Base Clarity: 120 HP</span>
+                            <span>Speed: 100%</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column: Customization Controls -->
-                <div class="lg:col-span-7 space-y-3.5">
+                <!-- Right Column: Customization Controls (Streamlined Male/Female Choice) -->
+                <div class="lg:col-span-7 space-y-4">
                     <div>
                         <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Archivist Name</label>
-                        <input id="inputPlayerName" type="text" value="Auron" maxlength="14" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-lg px-3 py-1.5 text-white font-bold outline-none text-sm" />
+                        <input id="inputPlayerName" type="text" value="Auron" maxlength="14" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-lg px-3 py-2 text-white font-bold outline-none text-sm" />
                     </div>
 
-                    <!-- Skin Tone / Systemic Difficulty Slider -->
+                    <!-- Character Model / Gender Selection -->
                     <div>
-                        <div class="flex justify-between text-xs font-bold uppercase mb-1">
-                            <span class="pixel-font text-[10px] text-amber-300">Skin Tone & Systemic Scrutiny</span>
-                            <span class="text-slate-400 text-[10px]">Click to Select</span>
+                        <div class="flex justify-between text-xs font-bold uppercase mb-2">
+                            <span class="pixel-font text-[10px] text-amber-300">Choose Character Sprite</span>
+                            <span class="text-slate-400 text-[10px]">Select Hero Model</span>
                         </div>
-                        <div class="grid grid-cols-4 gap-2" id="skinToneButtons">
-                            <button data-skin="0" class="skin-btn p-2 rounded-lg border-2 border-cyan-400 bg-slate-900 flex flex-col items-center gap-1">
-                                <span class="w-7 h-7 rounded-full border border-white/30" style="background:#fde6d8"></span>
-                                <span class="text-[10px] font-bold text-emerald-300">Privileged</span>
-                                <span class="text-[9px] text-slate-400">Easy Mode</span>
+                        <div class="grid grid-cols-2 gap-3" id="genderSelectButtons">
+                            <button id="btnSelectMale" data-gender="male" class="gender-btn p-3 rounded-xl border-2 border-cyan-400 bg-slate-900/90 hover:bg-slate-800 flex items-center gap-3 transition-all cursor-pointer">
+                                <div class="w-10 h-10 rounded-lg bg-slate-950 border border-cyan-400/50 flex items-center justify-center shrink-0">
+                                    <span class="text-lg">🗡️</span>
+                                </div>
+                                <div class="text-left">
+                                    <div class="pixel-font text-[11px] text-cyan-300 font-bold">Auron (Male)</div>
+                                    <div class="text-[10px] text-slate-400">Adventurer Sprite</div>
+                                </div>
                             </button>
-                            <button data-skin="1" class="skin-btn p-2 rounded-lg border-2 border-slate-700 bg-slate-900 flex flex-col items-center gap-1">
-                                <span class="w-7 h-7 rounded-full border border-white/30" style="background:#e0ac69"></span>
-                                <span class="text-[10px] font-bold text-cyan-300">Standard</span>
-                                <span class="text-[9px] text-slate-400">Normal</span>
+                            <button id="btnSelectFemale" data-gender="female" class="gender-btn p-3 rounded-xl border-2 border-slate-700 bg-slate-900/90 hover:bg-slate-800 flex items-center gap-3 transition-all cursor-pointer">
+                                <div class="w-10 h-10 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center shrink-0">
+                                    <span class="text-lg">🏹</span>
+                                </div>
+                                <div class="text-left">
+                                    <div class="pixel-font text-[11px] text-slate-300 font-bold">Auron (Female)</div>
+                                    <div class="text-[10px] text-slate-400">Adventurer Sprite</div>
+                                </div>
                             </button>
-                            <button data-skin="2" class="skin-btn p-2 rounded-lg border-2 border-slate-700 bg-slate-900 flex flex-col items-center gap-1">
-                                <span class="w-7 h-7 rounded-full border border-white/30" style="background:#9c6137"></span>
-                                <span class="text-[10px] font-bold text-amber-300">Profiled</span>
-                                <span class="text-[9px] text-slate-400">Hard Mode</span>
-                            </button>
-                            <button data-skin="3" class="skin-btn p-2 rounded-lg border-2 border-slate-700 bg-slate-900 flex flex-col items-center gap-1">
-                                <span class="w-7 h-7 rounded-full border border-white/30" style="background:#4a2912"></span>
-                                <span class="text-[10px] font-bold text-rose-400">Targeted</span>
-                                <span class="text-[9px] text-slate-400">Expert</span>
-                            </button>
-                        </div>
-                        <p class="text-[10px] text-slate-400 mt-1 italic">
-                            *Reflects how real-world surveillance algorithms and authoritarian policing disproportionately target darker skin tones.
-                        </p>
-                    </div>
-
-                    <!-- Hair Style & Hair Color -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Archivist Attire</label>
-                            <div class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-cyan-400 font-bold flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                                Canonical Hero Garb
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Hair / Hood Color</label>
-                            <div class="flex gap-2 pt-0.5" id="hairColorButtons">
-                                <button data-hcolor="#f59e0b" class="w-6 h-6 rounded-full border-2 border-white" style="background:#f59e0b"></button>
-                                <button data-hcolor="#3b2219" class="w-6 h-6 rounded-full border border-slate-600" style="background:#3b2219"></button>
-                                <button data-hcolor="#111827" class="w-6 h-6 rounded-full border border-slate-600" style="background:#111827"></button>
-                                <button data-hcolor="#dc2626" class="w-6 h-6 rounded-full border border-slate-600" style="background:#dc2626"></button>
-                                <button data-hcolor="#e2e8f0" class="w-6 h-6 rounded-full border border-slate-600" style="background:#e2e8f0"></button>
-                                <button data-hcolor="#38bdf8" class="w-6 h-6 rounded-full border border-slate-600" style="background:#38bdf8"></button>
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Tunic Color -->
-                    <div>
-                        <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Tunic & Cloak Color</label>
-                        <div class="grid grid-cols-5 gap-1.5" id="tunicColorButtons">
-                            <button data-tcolor="#0284c7" class="py-1 px-1.5 rounded-lg border-2 border-white text-[11px] font-bold text-white" style="background:#0284c7">Sapphire</button>
-                            <button data-tcolor="#059669" class="py-1 px-1.5 rounded-lg border border-slate-700 text-[11px] font-bold text-white" style="background:#059669">Emerald</button>
-                            <button data-tcolor="#dc2626" class="py-1 px-1.5 rounded-lg border border-slate-700 text-[11px] font-bold text-white" style="background:#dc2626">Crimson</button>
-                            <button data-tcolor="#7c3aed" class="py-1 px-1.5 rounded-lg border border-slate-700 text-[11px] font-bold text-white" style="background:#7c3aed">Amethyst</button>
-                            <button data-tcolor="#d97706" class="py-1 px-1.5 rounded-lg border border-slate-700 text-[11px] font-bold text-white" style="background:#d97706">Amber</button>
-                        </div>
-                    </div>
-
-                    <div class="pt-2">
-                        <button id="btnConfirmChar" class="retro-btn w-full py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-bold pixel-font text-xs tracking-wider">
+                    <div class="pt-4">
+                        <button id="btnConfirmChar" class="retro-btn w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-bold pixel-font text-xs tracking-wider cursor-pointer">
                             ⚔️ BEGIN JOURNEY IN THE QUIET ARCHIVE
                         </button>
                     </div>
@@ -1833,32 +1795,25 @@
     // =========================================================================
     // IN-GAME BUILDING SPRITES SLICED FROM terribleCOTTAGES.png
     // =========================================================================
-    assets.registerImage('cottage_stone_small', 'assets/ingame/buildings/cottage_stone_small.png');
-    assets.registerImage('cottage_wood_medium', 'assets/ingame/buildings/cottage_wood_medium.png');
-    assets.registerImage('cottage_red_large', 'assets/ingame/buildings/cottage_red_large.png');
-    assets.registerImage('cottage_blue_medium', 'assets/ingame/buildings/cottage_blue_medium.png');
-    assets.registerImage('cottage_red_medium', 'assets/ingame/buildings/cottage_red_medium.png');
-    assets.registerImage('village_inn_long', 'assets/ingame/buildings/village_inn_long.png');
-    assets.registerImage('archive_library_large', 'assets/ingame/buildings/archive_library_large.png');
-    assets.registerImage('archive_sanctuary_tower', 'assets/ingame/buildings/archive_sanctuary_tower.png');
-    assets.registerImage('cottage_brick_large', 'assets/ingame/buildings/cottage_brick_large.png');
+    // Sliced standalone valid front-facing cottage architecture (7 active accessible models)
     assets.registerImage('armory_bastion', 'assets/ingame/buildings/armory_bastion.png');
-    assets.registerImage('hermitage_lodge', 'assets/ingame/buildings/hermitage_lodge.png');
-    assets.registerImage('manor_grand', 'assets/ingame/buildings/manor_grand.png');
-    assets.registerImage('keep_citadel_fortress', 'assets/ingame/buildings/keep_citadel_fortress.png');
-    assets.registerImage('temple_shrine', 'assets/ingame/buildings/temple_shrine.png');
+    assets.registerImage('cottage_blue_medium', 'assets/ingame/buildings/cottage_blue_medium.png');
+    assets.registerImage('cottage_brick_large', 'assets/ingame/buildings/cottage_brick_large.png');
+    assets.registerImage('cottage_red_large', 'assets/ingame/buildings/cottage_red_large.png');
+    assets.registerImage('cottage_red_medium', 'assets/ingame/buildings/cottage_red_medium.png');
+    assets.registerImage('cottage_stone_small', 'assets/ingame/buildings/cottage_stone_small.png');
+    assets.registerImage('village_inn_long', 'assets/ingame/buildings/village_inn_long.png');
+    assets.registerImage('doors_sheet', 'assets/ingame/doors/doors_sheet.png');
 
-    // Backward compatibility aliases for existing spriteKeys in MAPS
+    // Backward compatibility aliases for existing spriteKeys in MAPS (mapped exclusively to front-facing models)
     assets.registerImage('red_cottage_1', 'assets/ingame/buildings/cottage_red_medium.png');
     assets.registerImage('red_cottage_2', 'assets/ingame/buildings/cottage_red_large.png');
     assets.registerImage('blue_cottage_1', 'assets/ingame/buildings/cottage_blue_medium.png');
     assets.registerImage('blue_cottage_2', 'assets/ingame/buildings/cottage_stone_small.png');
     assets.registerImage('cyan_house', 'assets/ingame/buildings/cottage_brick_large.png');
     assets.registerImage('long_tavern', 'assets/ingame/buildings/village_inn_long.png');
-    assets.registerImage('shed', 'assets/ingame/buildings/cottage_wood_medium.png');
-    assets.registerImage('citadel', 'assets/ingame/buildings/keep_citadel_fortress.png');
-    assets.registerImage('citadel_keep', 'assets/ingame/buildings/keep_citadel_fortress.png');
-    assets.registerImage('archive_tower', 'assets/ingame/buildings/archive_sanctuary_tower.png');
+    assets.registerImage('shed', 'assets/ingame/buildings/cottage_stone_small.png');
+    assets.registerImage('citadel', 'assets/ingame/buildings/armory_bastion.png');
 
     // =========================================================================
     // MODULAR NPC & PLAYER SPRITE REGISTRY
@@ -3556,14 +3511,55 @@
         const w = b.wCols * TILE_SIZE;
         const h = b.hRows * TILE_SIZE;
 
-        // 1. Try rendering sliced cottage asset from terribleCOTTAGES if available
+        // Direct dedicated renderers for Grand Keep and Arcane Sanctuary
+        if (b.id === 'demagogue_keep' || b.style === 'citadel_keep' || b.style === 'citadel') {
+            drawGrandDemagogueKeep(ctx, b, x, y, w, h);
+            if (b.name && typeof player !== 'undefined' && Number.isFinite(player.x)) {
+                const distToPlayer = Math.hypot(player.x - (x + w / 2), player.y - (y + h / 2));
+                if (distToPlayer < 180) {
+                    ctx.save();
+                    ctx.font = 'bold 11px "Space Grotesk", sans-serif';
+                    const textWidth = (ctx.measureText && ctx.measureText(b.name)) ? ctx.measureText(b.name).width : 70;
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+                    ctx.fillRect(x + w / 2 - textWidth / 2 - 8, y - 22, textWidth + 16, 20);
+                    ctx.strokeStyle = '#fbbf24';
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x + w / 2 - textWidth / 2 - 8, y - 22, textWidth + 16, 20);
+                    ctx.fillStyle = '#fde047';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(b.name, x + w / 2, y - 8);
+                    ctx.restore();
+                }
+            }
+            return;
+        }
+
+        if (b.id === 'archive_sanctuary' || b.style === 'archive_tower') {
+            drawGrandArchiveWizardTower(ctx, b, x, y, w, h);
+            if (b.name && typeof player !== 'undefined' && Number.isFinite(player.x)) {
+                const distToPlayer = Math.hypot(player.x - (x + w / 2), player.y - (y + h / 2));
+                if (distToPlayer < 180) {
+                    ctx.save();
+                    ctx.font = 'bold 11px "Space Grotesk", sans-serif';
+                    const textWidth = (ctx.measureText && ctx.measureText(b.name)) ? ctx.measureText(b.name).width : 70;
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+                    ctx.fillRect(x + w / 2 - textWidth / 2 - 8, y - 22, textWidth + 16, 20);
+                    ctx.strokeStyle = '#fbbf24';
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(x + w / 2 - textWidth / 2 - 8, y - 22, textWidth + 16, 20);
+                    ctx.fillStyle = '#fde047';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(b.name, x + w / 2, y - 8);
+                    ctx.restore();
+                }
+            }
+            return;
+        }
+
+        // 1. Try rendering sliced cottage asset from valid front-facing models
         const bKey = b.spriteKey || b.style || b.id;
         let imgKey = null;
-        if (b.id === 'demagogue_keep' || b.style === 'citadel_keep') {
-            imgKey = 'keep_citadel_fortress';
-        } else if (b.id === 'archive_sanctuary' || b.style === 'archive_tower') {
-            imgKey = 'archive_sanctuary_tower';
-        } else if (assets.hasImage(bKey)) {
+        if (assets.hasImage(bKey)) {
             imgKey = bKey;
         } else if (b.spriteKey && assets.hasImage(b.spriteKey)) {
             imgKey = b.spriteKey;
@@ -13575,40 +13571,50 @@ wrap.appendChild(btn);
         renderCharacterMenu();
     };
 
-    document.querySelectorAll('.skin-btn').forEach(btn => {
-        btn.onclick = () => {
-            player.skinIndex = parseInt(btn.dataset.skin, 10);
-            document.querySelectorAll('.skin-btn').forEach(b => b.classList.replace('border-cyan-400', 'border-slate-700'));
-            btn.classList.replace('border-slate-700', 'border-cyan-400');
-            updateCharPreviewUI();
-        };
-    });
+    // Character Model (Male / Female) Selection
+    if (!player.gender) player.gender = 'male';
 
-    // Hair style canonical hero locks
+    const btnMale = document.getElementById('btnSelectMale');
+    const btnFemale = document.getElementById('btnSelectFemale');
+    if (btnMale && btnFemale) {
+        btnMale.onclick = () => {
+            player.gender = 'male';
+            if (btnMale.classList) {
+                if (btnMale.classList.replace) btnMale.classList.replace('border-slate-700', 'border-cyan-400');
+                else { btnMale.classList.remove('border-slate-700'); btnMale.classList.add('border-cyan-400'); }
+            }
+            if (btnFemale.classList) {
+                if (btnFemale.classList.replace) btnFemale.classList.replace('border-cyan-400', 'border-slate-700');
+                else { btnFemale.classList.remove('border-cyan-400'); btnFemale.classList.add('border-slate-700'); }
+            }
+            const mText = btnMale.querySelector ? btnMale.querySelector('.pixel-font') : null;
+            const fText = btnFemale.querySelector ? btnFemale.querySelector('.pixel-font') : null;
+            if (mText) mText.className = 'pixel-font text-[11px] text-cyan-300 font-bold';
+            if (fText) fText.className = 'pixel-font text-[11px] text-slate-300 font-bold';
+        };
+        btnFemale.onclick = () => {
+            player.gender = 'female';
+            if (btnFemale.classList) {
+                if (btnFemale.classList.replace) btnFemale.classList.replace('border-slate-700', 'border-cyan-400');
+                else { btnFemale.classList.remove('border-slate-700'); btnFemale.classList.add('border-cyan-400'); }
+            }
+            if (btnMale.classList) {
+                if (btnMale.classList.replace) btnMale.classList.replace('border-cyan-400', 'border-slate-700');
+                else { btnMale.classList.remove('border-cyan-400'); btnMale.classList.add('border-slate-700'); }
+            }
+            const mText = btnMale.querySelector ? btnMale.querySelector('.pixel-font') : null;
+            const fText = btnFemale.querySelector ? btnFemale.querySelector('.pixel-font') : null;
+            if (fText) fText.className = 'pixel-font text-[11px] text-cyan-300 font-bold';
+            if (mText) mText.className = 'pixel-font text-[11px] text-slate-300 font-bold';
+        };
+    }
+
+    // Default hero profile baseline
+    player.skinIndex = 0;
     player.hairStyle = 0;
 
-    document.querySelectorAll('#hairColorButtons button').forEach(btn => {
-        btn.onclick = () => {
-            player.hairColor = btn.dataset.hcolor;
-        };
-    });
-
-    document.querySelectorAll('#tunicColorButtons button').forEach(btn => {
-        btn.onclick = () => {
-            player.tunicColor = btn.dataset.tcolor;
-            if (player.equipment.chest && player.equipment.chest.id === 'init_tunic') {
-                player.equipment.chest.visualColor = btn.dataset.tcolor;
-            }
-        };
-    });
-
     function updateCharPreviewUI() {
-        const diff = DIFFICULTY_PROFILES[player.skinIndex];
-        const badge = document.getElementById('diffBadgeTitle');
-        badge.textContent = diff.name.toUpperCase();
-        badge.className = `text-[11px] font-bold px-2 py-0.5 rounded border ${diff.badgeClass}`;
-        document.getElementById('diffDescText').textContent = diff.desc;
-        document.getElementById('diffStatsText').textContent = `Aggro Radius: ${diff.aggroMult}x | Damage Taken: ${diff.dmgTakenMult}x | EXP Gain: ${diff.xpMult}x`;
+        // Maintained for backward compatibility
     }
 
     document.getElementById('btnConfirmChar').onclick = () => {
@@ -13725,10 +13731,8 @@ wrap.appendChild(btn);
                     role: 'player',
                     dir: previewDir,
                     frame: Math.floor(now / 220) % 4,
-                    skinColor: DIFFICULTY_PROFILES[player.skinIndex].skinHex,
-                    hairStyle: player.hairStyle,
-                    hairColor: player.hairColor,
-                    tunicColor: player.tunicColor,
+                    gender: player.gender || 'male',
+                    skinColor: '#fde6d8',
                     hideWeapons: true,
                     equipment: null
                 });
