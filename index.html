@@ -1537,10 +1537,20 @@
             const im = this.images.get(id);
             if (!im || !im.loaded || !ctx.drawImage) return false;
             try {
-                const sx = frameCol * 18;
-                const sy = 0;
-                const sw = 18;
-                const sh = 26;
+                let sx = 0, sy = 0, sw = 18, sh = 26;
+                if (im.img.width === 54 && im.img.height === 104) {
+                    // Direct 3x4 grid support (54x104):
+                    // frameCol: 0-2 South (row 0), 3-5 East (row 2), 6-8 West (row 1), 9-11 North (row 3)
+                    const dirRowMap = { 0: 0, 1: 0, 2: 0, 3: 2, 4: 2, 5: 2, 6: 1, 7: 1, 8: 1, 9: 3, 10: 3, 11: 3 };
+                    const colOffset = frameCol % 3;
+                    const r = dirRowMap[frameCol] ?? 0;
+                    sx = colOffset * 18;
+                    sy = r * 26;
+                } else {
+                    // Standard assembled 12-frame horizontal strip (216x26)
+                    sx = frameCol * 18;
+                    sy = 0;
+                }
                 ctx.drawImage(im.img, sx, sy, sw, sh, dx, dy, dw, dh);
                 return true;
             } catch (e) {

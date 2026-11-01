@@ -275,6 +275,10 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
             assert.ok(fs.existsSync(spriteP), 'Missing sprite.png in ' + cid);
             assert.ok(fs.statSync(spriteP).size > 100, 'sprite.png too small in ' + cid);
 
+            const gridP = path.join(cDir, 'grid.png');
+            assert.ok(fs.existsSync(gridP), 'Missing grid.png in ' + cid);
+            assert.ok(fs.statSync(gridP).size > 500, 'grid.png too small in ' + cid);
+
             const animP = path.join(cDir, 'animations.png');
             assert.ok(fs.existsSync(animP), 'Missing animations.png in ' + cid);
             assert.ok(fs.statSync(animP).size > 500, 'animations.png too small in ' + cid);
