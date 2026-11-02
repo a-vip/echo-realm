@@ -178,7 +178,7 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
         assert.equal(getKey('zephyr'), 'zephyr');
         assert.equal(getKey('iron'), 'mob_manosphere');
         assert.equal(getKey('velvet'), 'mob_velvet');
-        assert.equal(getKey('inquisitor'), 'scholar');
+        assert.equal(getKey('inquisitor'), 'mob_inquisitor');
         assert.equal(getKey('valkor'), 'boss_valkor');
         assert.equal(getKey('demagogue'), 'boss_demagogue');
     });
@@ -444,6 +444,103 @@ describe('Pokemon-Style NPC Sprites & Sliced Cottage Architecture Test Suite', (
         for (const p of peacocks) {
             assert.ok(['idle', 'walk', 'flee'].includes(p.state), 'Peacock must have valid state');
             assert.ok(typeof p.x === 'number' && typeof p.y === 'number', 'Peacock must have valid coordinates');
+        }
+    });
+
+    test('Super Smash Bros style 7-Hero Roster: All 7 player character sprite sheets, portraits, and roster profiles exist and select dynamically', () => {
+        const env = loadGameEnvironment();
+        const baseDir = path.resolve(__dirname, '../assets/ingame/characters');
+        const roster = env.ROSTER_PROFILES;
+        assert.ok(roster, 'ROSTER_PROFILES must be defined');
+
+        const expectedHeroes = ['player_m', 'player_f', 'astronaut', 'dog', 'cat', 'lugia', 'ho_oh'];
+        for (const h of expectedHeroes) {
+            assert.ok(roster[h], `Hero ${h} must be defined in ROSTER_PROFILES`);
+            assert.ok(roster[h].archetypeName, `Hero ${h} must have archetypeName`);
+            assert.ok(roster[h].roleBadge, `Hero ${h} must have roleBadge`);
+            assert.ok(roster[h].desc, `Hero ${h} must have description`);
+            assert.ok(roster[h].clarity, `Hero ${h} must have clarity stat`);
+            assert.ok(roster[h].speed, `Hero ${h} must have speed stat`);
+
+            // Verify sheet exists on disk
+            const regEntry = env.NPC_SPRITE_REGISTRY[h];
+            assert.ok(regEntry, `Hero ${h} must exist in NPC_SPRITE_REGISTRY`);
+            const sheetPath = path.join(baseDir, regEntry.src.replace('assets/ingame/characters/', ''));
+            assert.ok(fs.existsSync(sheetPath), `Hero ${h} sprite sheet must exist on disk: ${sheetPath}`);
+
+            // Verify portrait exists on disk
+            const portPath = path.join(baseDir, 'portraits', `${regEntry.portrait}.png`);
+            assert.ok(fs.existsSync(portPath), `Hero ${h} portrait must exist on disk: ${portPath}`);
+
+            // Verify getSpriteRegistryKey resolves to character key
+            assert.equal(env.getSpriteRegistryKey('player', { characterKey: h }), h);
+        }
+
+        // Test interactive selectRosterCharacter function
+        if (typeof env.selectRosterCharacter === 'function') {
+            env.selectRosterCharacter('astronaut');
+            assert.equal(env.player.characterKey, 'astronaut');
+            assert.equal(env.player.gender, 'male');
+            assert.equal(env.getSpriteRegistryKey('player'), 'astronaut');
+
+            env.selectRosterCharacter('cat');
+            assert.equal(env.player.characterKey, 'cat');
+            assert.equal(env.player.gender, 'female');
+            assert.equal(env.getSpriteRegistryKey('player'), 'cat');
+
+            env.selectRosterCharacter('lugia');
+            assert.equal(env.player.characterKey, 'lugia');
+            assert.equal(env.getSpriteRegistryKey('player'), 'lugia');
+        }
+    });
+
+    test('Purity Inquisitor and Demagogue boss use dedicated Cleric and Clown sprites', () => {
+        const env = loadGameEnvironment();
+        const baseDir = path.resolve(__dirname, '../assets/ingame/characters');
+
+        // Purity Inquisitor (Cleric)
+        const inqEntry = env.NPC_SPRITE_REGISTRY.mob_inquisitor;
+        assert.ok(inqEntry, 'mob_inquisitor must exist in registry');
+        assert.equal(env.getSpriteRegistryKey('inquisitor'), 'mob_inquisitor');
+        assert.equal(env.getSpriteRegistryKey('mob_inquisitor'), 'mob_inquisitor');
+        const inqPath = path.join(baseDir, 'mobs/mob_inquisitor.png');
+        assert.ok(fs.existsSync(inqPath), 'Cleric mob_inquisitor.png must exist');
+        const inqPort = path.join(baseDir, 'portraits/portrait_mob_inquisitor.png');
+        assert.ok(fs.existsSync(inqPort), 'Cleric portrait_mob_inquisitor.png must exist');
+
+        // Demagogue Final Boss (Clown)
+        const demEntry = env.NPC_SPRITE_REGISTRY.boss_demagogue;
+        assert.ok(demEntry, 'boss_demagogue must exist in registry');
+        assert.equal(env.getSpriteRegistryKey('demagogue'), 'boss_demagogue');
+        assert.equal(env.getSpriteRegistryKey('boss_demagogue'), 'boss_demagogue');
+        const demPath = path.join(baseDir, 'bosses/boss_demagogue.png');
+        assert.ok(fs.existsSync(demPath), 'Clown boss_demagogue.png must exist');
+        const demPort = path.join(baseDir, 'portraits/portrait_boss_demagogue.png');
+        assert.ok(fs.existsSync(demPort), 'Clown portrait_boss_demagogue.png must exist');
+    });
+
+    test('Super Retro World water animation sheet is registered and Map 3 & 4 ground colors avoid muddy purple', () => {
+        const env = loadGameEnvironment();
+        const waterPath = path.resolve(__dirname, '../assets/ingame/environment/tilesets/water_animation.png');
+        assert.ok(fs.existsSync(waterPath), 'water_animation.png must exist on disk');
+        assert.ok(env.assets.images.has('water_animation'), 'water_animation must be registered in AssetManager');
+
+        // Map 3 and Map 4 colors
+        const map3 = env.MAPS[3];
+        const map4 = env.MAPS[4];
+        assert.notEqual(map3.groundColor, '#241426', 'Map 3 groundColor must not be muddy purple #241426');
+        assert.notEqual(map4.groundColor, '#1b112c', 'Map 4 groundColor must not be muddy purple #1b112c');
+        assert.equal(map3.groundColor, '#334155', 'Map 3 should use rich slate paver groundColor #334155');
+        assert.equal(map4.groundColor, '#374151', 'Map 4 should use stone crypt groundColor #374151');
+    });
+
+    test('Peacock creatures spawn in Map 0 (Quiet Archive) for immediate visibility', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(0);
+        const peacocks = env.critters.filter(c => c.type === 'peacock');
+        assert.ok(peacocks.length >= 2, 'Map 0 must spawn peacocks in the Quiet Archive garden courtyard');
+        for (const p of peacocks) {
+            assert.ok(['idle', 'walk', 'flee'].includes(p.state), 'Peacock in Map 0 must have valid state');
         }
     });
 });

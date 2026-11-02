@@ -87,7 +87,7 @@ describe('Character Sprite Sheets & Cutscene Robustness Test Suite', () => {
         // Verify that freed roles resolve to their own dedicated identities
         assert.equal(getKey('iron'), 'mob_manosphere');
         assert.equal(getKey('velvet'), 'mob_velvet');
-        assert.equal(getKey('inquisitor'), 'scholar');
+        assert.equal(getKey('inquisitor'), 'mob_inquisitor');
         assert.equal(getKey('blackshirt'), 'villager_m');
         assert.equal(getKey('valkor'), 'boss_valkor');
         assert.equal(getKey('demagogue'), 'boss_demagogue');

@@ -239,9 +239,9 @@
                 <!-- Left Column: Live Animated Pixel Sprite Preview -->
                 <div class="lg:col-span-5 bg-slate-900/90 border-2 border-slate-800 rounded-xl p-4 flex flex-col items-center justify-between">
                     <div class="pixel-font text-[10px] text-cyan-300 uppercase tracking-widest mb-2">HERO PREVIEW</div>
-                    <div class="bg-slate-950 border-2 border-slate-800 rounded-lg p-3 flex items-center justify-center w-40 h-40 relative">
-                        <canvas id="previewSpriteCanvas" width="128" height="128" class="w-32 h-32"></canvas>
-                        <button id="btnRotatePreview" class="absolute bottom-2 right-2 bg-slate-900 hover:bg-slate-800 text-[10px] pixel-font px-2 py-1 rounded text-cyan-300 border border-slate-700">
+                    <div class="bg-slate-950 border-2 border-slate-800 rounded-lg p-2 flex items-center justify-center w-44 h-44 relative">
+                        <canvas id="previewSpriteCanvas" width="144" height="144" class="w-36 h-36"></canvas>
+                        <button id="btnRotatePreview" class="absolute bottom-2 right-2 bg-slate-900 hover:bg-slate-800 text-[10px] pixel-font px-2 py-1 rounded text-cyan-300 border border-slate-700 cursor-pointer">
                             ↻ TURN
                         </button>
                     </div>
@@ -249,54 +249,93 @@
                     <!-- Hero Archetype Info Box -->
                     <div class="w-full mt-3 bg-slate-950 border-2 border-cyan-500/40 rounded-lg p-3">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="pixel-font text-[10px] uppercase text-amber-300">HERO ARCHETYPE:</span>
-                            <span id="heroRoleBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300">ARCHIVIST OF TRUTH</span>
+                            <span id="heroArchetypeName" class="pixel-font text-[10px] uppercase text-amber-300">ADVENTURER</span>
+                            <span id="heroRoleBadge" class="text-[9px] font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">ARCHIVIST OF TRUTH</span>
                         </div>
-                        <p id="heroDescText" class="text-xs text-slate-300 leading-relaxed mb-2">
+                        <p id="heroDescText" class="text-xs text-slate-300 leading-relaxed mb-2 min-h-[2.8rem]">
                             Equipped with the Prism Beam and Axiom Blade to dispel manufactured outrage, expose algorithmic echo chambers, and liberate the realm.
                         </p>
                         <div class="text-[10px] mono-font text-cyan-300 border-t border-slate-800 pt-1.5 flex justify-between">
-                            <span>Base Clarity: 120 HP</span>
-                            <span>Speed: 100%</span>
+                            <span id="heroStatClarity">Base Clarity: 120 HP</span>
+                            <span id="heroStatSpeed">Speed: 100%</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column: Customization Controls (Streamlined Male/Female Choice) -->
+                <!-- Right Column: Super Smash Bros Style Fighter Selection Roster Grid -->
                 <div class="lg:col-span-7 space-y-4">
                     <div>
                         <label class="block pixel-font text-[10px] uppercase text-slate-300 mb-1">Archivist Name</label>
                         <input id="inputPlayerName" type="text" value="Auron" maxlength="14" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-lg px-3 py-2 text-white font-bold outline-none text-sm" />
                     </div>
 
-                    <!-- Character Model / Gender Selection -->
+                    <!-- Super Smash Bros Style Fighter Selection Roster Grid -->
                     <div>
-                        <div class="flex justify-between text-xs font-bold uppercase mb-2">
-                            <span class="pixel-font text-[10px] text-amber-300">Choose Character</span>
-                            <span class="text-slate-400 text-[10px]">Select Hero Model</span>
+                        <div class="flex justify-between items-center text-xs font-bold uppercase mb-2">
+                            <span class="pixel-font text-[10px] text-amber-300">SELECT YOUR FIGHTER</span>
+                            <span class="text-slate-400 text-[9px] mono-font tracking-wide">7 PLAYABLE HEROES</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-3" id="genderSelectButtons">
-                            <button id="btnSelectMale" data-gender="male" class="gender-btn p-3 rounded-xl border-2 border-cyan-400 bg-slate-900/90 hover:bg-slate-800 flex items-center gap-3 transition-all cursor-pointer">
-                                <div class="w-10 h-10 rounded-lg bg-slate-950 border border-cyan-400/50 flex items-center justify-center shrink-0 overflow-hidden">
-                                    <img src="assets/ingame/characters/player_male/trainer.png" alt="Male" class="w-9 h-9 object-contain" style="image-rendering: pixelated;" />
+                        <div class="grid grid-cols-4 gap-2" id="rosterSelectGrid">
+                            <!-- Fighter 1: Adventurer Male -->
+                            <button id="btnSelectMale" data-char="player_m" data-gender="male" class="roster-btn group p-2 rounded-xl border-2 border-amber-400 bg-amber-500/20 shadow-lg shadow-amber-500/20 flex flex-col items-center justify-center text-center transition-all cursor-pointer">
+                                <div class="w-11 h-11 rounded-lg bg-slate-950 border border-amber-400/60 flex items-center justify-center overflow-hidden mb-1 group-hover:scale-105 transition-transform">
+                                    <img src="assets/ingame/characters/portraits/portrait_player_m.png" alt="Male" class="w-10 h-10 object-contain" style="image-rendering: pixelated;" />
                                 </div>
-                                <div class="text-left">
-                                    <div class="pixel-font text-xs text-cyan-300 font-bold tracking-wider">Male</div>
-                                </div>
+                                <div class="pixel-font text-[9px] text-amber-300 font-bold tracking-wider truncate w-full">Adventurer</div>
                             </button>
-                            <button id="btnSelectFemale" data-gender="female" class="gender-btn p-3 rounded-xl border-2 border-slate-700 bg-slate-900/90 hover:bg-slate-800 flex items-center gap-3 transition-all cursor-pointer">
-                                <div class="w-10 h-10 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
-                                    <img src="assets/ingame/characters/player_female/trainer.png" alt="Female" class="w-9 h-9 object-contain" style="image-rendering: pixelated;" />
+
+                            <!-- Fighter 2: Adventuress Female -->
+                            <button id="btnSelectFemale" data-char="player_f" data-gender="female" class="roster-btn group p-2 rounded-xl border-2 border-slate-700 bg-slate-950/80 hover:bg-slate-800 flex flex-col items-center justify-center text-center transition-all cursor-pointer">
+                                <div class="w-11 h-11 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center overflow-hidden mb-1 group-hover:scale-105 transition-transform">
+                                    <img src="assets/ingame/characters/portraits/portrait_player_f.png" alt="Female" class="w-10 h-10 object-contain" style="image-rendering: pixelated;" />
                                 </div>
-                                <div class="text-left">
-                                    <div class="pixel-font text-xs text-slate-300 font-bold tracking-wider">Female</div>
+                                <div class="pixel-font text-[9px] text-slate-300 font-bold tracking-wider truncate w-full">Adventuress</div>
+                            </button>
+
+                            <!-- Fighter 3: Astronaut -->
+                            <button id="btnSelectAstronaut" data-char="astronaut" data-gender="male" class="roster-btn group p-2 rounded-xl border-2 border-slate-700 bg-slate-950/80 hover:bg-slate-800 flex flex-col items-center justify-center text-center transition-all cursor-pointer">
+                                <div class="w-11 h-11 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center overflow-hidden mb-1 group-hover:scale-105 transition-transform">
+                                    <img src="assets/ingame/characters/portraits/portrait_astronaut.png" alt="Astronaut" class="w-10 h-10 object-contain" style="image-rendering: pixelated;" />
                                 </div>
+                                <div class="pixel-font text-[9px] text-slate-300 font-bold tracking-wider truncate w-full">Astronaut</div>
+                            </button>
+
+                            <!-- Fighter 4: Dog -->
+                            <button id="btnSelectDog" data-char="dog" data-gender="male" class="roster-btn group p-2 rounded-xl border-2 border-slate-700 bg-slate-950/80 hover:bg-slate-800 flex flex-col items-center justify-center text-center transition-all cursor-pointer">
+                                <div class="w-11 h-11 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center overflow-hidden mb-1 group-hover:scale-105 transition-transform">
+                                    <img src="assets/ingame/characters/portraits/portrait_dog.png" alt="Dog" class="w-10 h-10 object-contain" style="image-rendering: pixelated;" />
+                                </div>
+                                <div class="pixel-font text-[9px] text-slate-300 font-bold tracking-wider truncate w-full">Loyal Dog</div>
+                            </button>
+
+                            <!-- Fighter 5: Cat -->
+                            <button id="btnSelectCat" data-char="cat" data-gender="female" class="roster-btn group p-2 rounded-xl border-2 border-slate-700 bg-slate-950/80 hover:bg-slate-800 flex flex-col items-center justify-center text-center transition-all cursor-pointer">
+                                <div class="w-11 h-11 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center overflow-hidden mb-1 group-hover:scale-105 transition-transform">
+                                    <img src="assets/ingame/characters/portraits/portrait_cat.png" alt="Cat" class="w-10 h-10 object-contain" style="image-rendering: pixelated;" />
+                                </div>
+                                <div class="pixel-font text-[9px] text-slate-300 font-bold tracking-wider truncate w-full">Shadow Cat</div>
+                            </button>
+
+                            <!-- Fighter 6: Lugia -->
+                            <button id="btnSelectLugia" data-char="lugia" data-gender="male" class="roster-btn group p-2 rounded-xl border-2 border-slate-700 bg-slate-950/80 hover:bg-slate-800 flex flex-col items-center justify-center text-center transition-all cursor-pointer">
+                                <div class="w-11 h-11 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center overflow-hidden mb-1 group-hover:scale-105 transition-transform">
+                                    <img src="assets/ingame/characters/portraits/portrait_lugia.png" alt="Lugia" class="w-10 h-10 object-contain" style="image-rendering: pixelated;" />
+                                </div>
+                                <div class="pixel-font text-[9px] text-slate-300 font-bold tracking-wider truncate w-full">Lugia</div>
+                            </button>
+
+                            <!-- Fighter 7: Ho-Oh -->
+                            <button id="btnSelectHoOh" data-char="ho_oh" data-gender="female" class="roster-btn group p-2 rounded-xl border-2 border-slate-700 bg-slate-950/80 hover:bg-slate-800 flex flex-col items-center justify-center text-center transition-all cursor-pointer">
+                                <div class="w-11 h-11 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center overflow-hidden mb-1 group-hover:scale-105 transition-transform">
+                                    <img src="assets/ingame/characters/portraits/portrait_ho_oh.png" alt="Ho-Oh" class="w-10 h-10 object-contain" style="image-rendering: pixelated;" />
+                                </div>
+                                <div class="pixel-font text-[9px] text-slate-300 font-bold tracking-wider truncate w-full">Ho-Oh</div>
                             </button>
                         </div>
                     </div>
 
-                    <div class="pt-4">
-                        <button id="btnConfirmChar" class="retro-btn w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-bold pixel-font text-xs tracking-wider cursor-pointer">
+                    <div class="pt-2">
+                        <button id="btnConfirmChar" class="retro-btn w-full py-3 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-bold pixel-font text-xs tracking-wider cursor-pointer">
                             ⚔️ BEGIN JOURNEY IN THE QUIET ARCHIVE
                         </button>
                     </div>
@@ -1458,7 +1497,11 @@
             if (!im || !im.loaded || !ctx.drawImage) return false;
             try {
                 if (a5 !== undefined) {
-                    ctx.drawImage(im.img, a1, a2, a3, a4, a5, a6, a7, a8);
+                    if (a1 < 0 && a5 >= 0) {
+                        ctx.drawImage(im.img, a5, a6, a7, a8, a1, a2, a3, a4);
+                    } else {
+                        ctx.drawImage(im.img, a1, a2, a3, a4, a5, a6, a7, a8);
+                    }
                 } else {
                     ctx.drawImage(im.img, a1, a2, a3, a4);
                 }
@@ -1772,6 +1815,11 @@
     // South walk/idle (cols 0-2), East (cols 3-5), West (cols 6-8), North (cols 9-11)
     assets.registerPokemonSheet('char_player_m', 'assets/ingame/characters/player/player_male.png');
     assets.registerPokemonSheet('char_player_f', 'assets/ingame/characters/player/player_female.png');
+    assets.registerPokemonSheet('char_player_astronaut', 'assets/ingame/characters/player/astronaut.png');
+    assets.registerPokemonSheet('char_player_dog', 'assets/ingame/characters/player/dog.png');
+    assets.registerPokemonSheet('char_player_cat', 'assets/ingame/characters/player/cat.png');
+    assets.registerPokemonSheet('char_player_lugia', 'assets/ingame/characters/player/lugia.png');
+    assets.registerPokemonSheet('char_player_ho_oh', 'assets/ingame/characters/player/ho_oh.png');
     assets.registerPokemonSheet('char_mentor_avi', 'assets/ingame/characters/mentors/mentor_avi.png');
     assets.registerPokemonSheet('char_mentor_maya', 'assets/ingame/characters/mentors/mentor_maya.png');
     assets.registerPokemonSheet('char_mentor_lyra', 'assets/ingame/characters/mentors/mentor_lyra.png');
@@ -1812,6 +1860,11 @@
     // High-Detail 64x64 Close-up Trainer Dialogue Portraits
     assets.registerImage('portrait_player_m', 'assets/ingame/characters/portraits/portrait_player_m.png');
     assets.registerImage('portrait_player_f', 'assets/ingame/characters/portraits/portrait_player_f.png');
+    assets.registerImage('portrait_astronaut', 'assets/ingame/characters/portraits/portrait_astronaut.png');
+    assets.registerImage('portrait_dog', 'assets/ingame/characters/portraits/portrait_dog.png');
+    assets.registerImage('portrait_cat', 'assets/ingame/characters/portraits/portrait_cat.png');
+    assets.registerImage('portrait_lugia', 'assets/ingame/characters/portraits/portrait_lugia.png');
+    assets.registerImage('portrait_ho_oh', 'assets/ingame/characters/portraits/portrait_ho_oh.png');
     assets.registerImage('portrait_avi', 'assets/ingame/characters/portraits/portrait_avi.png');
     assets.registerImage('portrait_maya', 'assets/ingame/characters/portraits/portrait_maya.png');
     assets.registerImage('portrait_lyra', 'assets/ingame/characters/portraits/portrait_lyra.png');
@@ -1882,6 +1935,7 @@
     assets.registerImage('workbench_sheet', 'assets/ingame/environment/props/workbench.png');
     assets.registerImage('interiors_sheet', 'assets/ingame/environment/interiors/interiors_sheet.png');
     assets.registerImage('room_builder_sheet', 'assets/ingame/environment/interiors/room_builder.png');
+    assets.registerImage('water_animation', 'assets/ingame/environment/tilesets/water_animation.png');
 
     // =========================================================================
     // CITY & URBAN TILESETS, PROPS & CIVIC BUILDINGS
@@ -1913,6 +1967,46 @@
             sheet: 'char_player_f',
             src: 'assets/ingame/characters/player/player_female.png',
             portrait: 'portrait_player_f',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        astronaut: {
+            id: 'player_astronaut',
+            name: 'Astronaut',
+            sheet: 'char_player_astronaut',
+            src: 'assets/ingame/characters/player/astronaut.png',
+            portrait: 'portrait_astronaut',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        dog: {
+            id: 'player_dog',
+            name: 'Isometric Dog',
+            sheet: 'char_player_dog',
+            src: 'assets/ingame/characters/player/dog.png',
+            portrait: 'portrait_dog',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        cat: {
+            id: 'player_cat',
+            name: 'Isometric Cat',
+            sheet: 'char_player_cat',
+            src: 'assets/ingame/characters/player/cat.png',
+            portrait: 'portrait_cat',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        lugia: {
+            id: 'player_lugia',
+            name: 'Lugia',
+            sheet: 'char_player_lugia',
+            src: 'assets/ingame/characters/player/lugia.png',
+            portrait: 'portrait_lugia',
+            frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
+        },
+        ho_oh: {
+            id: 'player_ho_oh',
+            name: 'Ho-Oh',
+            sheet: 'char_player_ho_oh',
+            src: 'assets/ingame/characters/player/ho_oh.png',
+            portrait: 'portrait_ho_oh',
             frameW: 18, frameH: 26, scale: 2.2, footOffsetY: 26
         },
         avi: {
@@ -2129,8 +2223,19 @@
     function getSpriteRegistryKey(role, opts = {}) {
         if (!role) return null;
         if (role === 'player' || role === 'hero') {
-            const isFem = (opts.gender === 'female' || (typeof player !== 'undefined' && player && player.gender === 'female'));
-            return isFem ? 'player_f' : 'player_m';
+            if (opts.characterKey && NPC_SPRITE_REGISTRY[opts.characterKey]) {
+                return opts.characterKey;
+            }
+            if (opts.gender) {
+                return opts.gender === 'female' ? 'player_f' : 'player_m';
+            }
+            if (typeof player !== 'undefined' && player) {
+                if (player.characterKey && NPC_SPRITE_REGISTRY[player.characterKey]) {
+                    return player.characterKey;
+                }
+                return player.gender === 'female' ? 'player_f' : 'player_m';
+            }
+            return 'player_m';
         }
         if (role === 'avi' || role === 'mentor_avi') return 'avi';
         if (role === 'maya' || role === 'mentor_maya') return 'maya';
@@ -2142,13 +2247,12 @@
         if (role === 'zephyr' || role === 'mentor_zephyr') return 'zephyr';
         if (role === 'iron' || role === 'mob_manosphere' || role === 'manosphere') return 'mob_manosphere';
         if (role === 'velvet' || role === 'mob_velvet') return 'mob_velvet';
-        if (role === 'inquisitor') return 'scholar'; // preserve legacy test expectation
-        if (role === 'mob_inquisitor') return 'mob_inquisitor';
-        if (role === 'border') return 'miner'; // preserve legacy test expectation
+        if (role === 'inquisitor' || role === 'mob_inquisitor') return 'mob_inquisitor';
+        if (role === 'border') return 'miner';
         if (role === 'mob_border') return 'mob_border';
-        if (role === 'blackshirt') return 'villager_m'; // preserve legacy test expectation
+        if (role === 'blackshirt') return 'villager_m';
         if (role === 'mob_blackshirt') return 'mob_blackshirt';
-        if (role === 'masked') return 'villager_m'; // preserve legacy test expectation
+        if (role === 'masked') return 'villager_m';
         if (role === 'mob_masked') return 'mob_masked';
         if (role === 'villager_m' || role === 'citizen_villager_m') return 'villager_m';
         if (role === 'villager_f' || role === 'citizen_villager_f') return 'villager_f';
@@ -4950,8 +5054,8 @@ const MAPS = [
             id: 3,
             name: 'Iron & Velvet Divide',
             chapter: 'Chapter 2: Gendered Grievance Loops',
-            themeColor: '#2e1025',
-            groundColor: '#241426',
+            themeColor: '#1e293b',
+            groundColor: '#334155',
             codexKey: 'gendered',
             curedGoal: 4,
             questTitle: 'Free 4 Citizens & Confront MANOSPHERE',
@@ -5013,8 +5117,8 @@ const MAPS = [
             id: 4,
             name: 'Dogma Catacombs',
             chapter: 'Chapter 3: The Purity Spiral',
-            themeColor: '#24123a',
-            groundColor: '#1b112c',
+            themeColor: '#1e1e24',
+            groundColor: '#374151',
             codexKey: 'dogma',
             curedGoal: 4,
             questTitle: 'Free 4 Zealots & Defeat the GRAND INQUISITOR',
@@ -7652,9 +7756,11 @@ const MAPS = [
                     animTimer: Math.random() * 10
                 });
             }
-            // Regal Peacocks in Performative Valley Gardens (Only in 1 zone for now)
-            if (mapIndex === 1) {
-                const peacockSpots = [findOpenTileSpot(21, 24), findOpenTileSpot(31, 22)];
+            // Regal Peacocks in Quiet Archive sanctuary (Map 0) and Performative Valley Gardens (Map 1)
+            if (mapIndex === 0 || mapIndex === 1) {
+                const peacockSpots = mapIndex === 0
+                    ? [findOpenTileSpot(10, 14), findOpenTileSpot(18, 20)]
+                    : [findOpenTileSpot(21, 24), findOpenTileSpot(31, 22)];
                 peacockSpots.forEach((spot, pIdx) => {
                     critters.push({
                         type: 'peacock',
@@ -11334,33 +11440,38 @@ const MAPS = [
                     ctx.fillStyle = mapMeta.isBrightAlttpZone ? '#14532d' : '#1e293b';
                     ctx.fillRect(tx + 4, ty + 4, TILE_SIZE - 8, TILE_SIZE - 12);
                 } else if (t === 4) {
-                    // MASTERWORK 32-BIT FLOWING RIVER WATER & NATURAL SEDIMENT SHORELINES
-                    // 1. Deep Crystalline River Water (Depth Gradation & Overlap for zero seams)
-                    ctx.fillStyle = '#0284c7';
-                    ctx.fillRect(tx, ty, TILE_SIZE + 1, TILE_SIZE + 1);
-
+                    // Super Retro World Animated River Water & Natural Sediment Shorelines
                     const waterPhase = (nowMs / 480) + (c * 0.45) + (r * 0.35);
-                    const waveSin = Math.sin(waterPhase);
-                    const waveCos = Math.cos(waterPhase * 0.75 + 1.2);
+                    if (assets.hasImage('water_animation')) {
+                        const wFrame = (Math.floor(nowMs / 180) + c + r) % 5;
+                        assets.drawImage(ctx, 'water_animation', wFrame * 16, 0, 16, 16, tx, ty, TILE_SIZE + 1, TILE_SIZE + 1);
+                    } else {
+                        // 1. Deep Crystalline River Water (Depth Gradation & Overlap for zero seams)
+                        ctx.fillStyle = '#0284c7';
+                        ctx.fillRect(tx, ty, TILE_SIZE + 1, TILE_SIZE + 1);
 
-                    // 2. Translucent Flowing River Caustic Bands (Soft shimmering ribbons)
-                    ctx.fillStyle = 'rgba(14, 165, 233, 0.42)';
-                    ctx.beginPath();
-                    ctx.ellipse(tx + 18 + waveSin * 4, ty + 12 + waveCos * 2, 12, 4.5, 0.1, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.ellipse(tx + 20 - waveCos * 4, ty + 26 + waveSin * 2.5, 10, 4, -0.1, 0, Math.PI * 2);
-                    ctx.fill();
+                        const waveSin = Math.sin(waterPhase);
+                        const waveCos = Math.cos(waterPhase * 0.75 + 1.2);
 
-                    // 3. Gentle Sparkling Specular Highlights
-                    ctx.fillStyle = 'rgba(224, 242, 254, 0.55)';
-                    ctx.fillRect(tx + 12 + Math.floor(waveSin * 3), ty + 11, 7, 1.5);
-                    ctx.fillRect(tx + 17 + Math.floor(waveCos * 3), ty + 24, 6, 1.5);
+                        // 2. Translucent Flowing River Caustic Bands (Soft shimmering ribbons)
+                        ctx.fillStyle = 'rgba(14, 165, 233, 0.42)';
+                        ctx.beginPath();
+                        ctx.ellipse(tx + 18 + waveSin * 4, ty + 12 + waveCos * 2, 12, 4.5, 0.1, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.ellipse(tx + 20 - waveCos * 4, ty + 26 + waveSin * 2.5, 10, 4, -0.1, 0, Math.PI * 2);
+                        ctx.fill();
 
-                    // Tiny drifting foam bubble / sparkle
-                    if (tileHash % 7 === 0) {
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-                        ctx.fillRect(tx + 8 + ((tileHash * 5) % 22) + Math.round(waveSin * 2), ty + 6 + ((tileHash * 3) % 24), 1.5, 1.5);
+                        // 3. Gentle Sparkling Specular Highlights
+                        ctx.fillStyle = 'rgba(224, 242, 254, 0.55)';
+                        ctx.fillRect(tx + 12 + Math.floor(waveSin * 3), ty + 11, 7, 1.5);
+                        ctx.fillRect(tx + 17 + Math.floor(waveCos * 3), ty + 24, 6, 1.5);
+
+                        // Tiny drifting foam bubble / sparkle
+                        if (tileHash % 7 === 0) {
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                            ctx.fillRect(tx + 8 + ((tileHash * 5) % 22) + Math.round(waveSin * 2), ty + 6 + ((tileHash * 3) % 24), 1.5, 1.5);
+                        }
                     }
 
                     // 4. Shoreline Neighbor Adjacency (Water touching land)
@@ -12045,7 +12156,7 @@ const MAPS = [
                                     const fw = 48, fh = 38;
                                     const dw = Math.round(fw * 0.95);
                                     const dh = Math.round(fh * 0.95);
-                                    assets.drawImage(ctx, 'peacock_folded', -dw / 2, -dh + 10, dw, dh, col * fw, row * fh, fw, fh);
+                                    assets.drawImage(ctx, 'peacock_folded', col * fw, row * fh, fw, fh, -dw / 2, -dh + 10, dw, dh);
                                 } else {
                                     ctx.fillStyle = '#0284c7';
                                     ctx.fillRect(-10, -18, 20, 18);
@@ -12058,7 +12169,7 @@ const MAPS = [
                                     const fw = 32, fh = 24;
                                     const dw = Math.round(fw * 1.35);
                                     const dh = Math.round(fh * 1.35);
-                                    assets.drawImage(ctx, 'peacock_walk', -dw / 2, -dh + 9, dw, dh, col * fw, row * fh, fw, fh);
+                                    assets.drawImage(ctx, 'peacock_walk', col * fw, row * fh, fw, fh, -dw / 2, -dh + 9, dw, dh);
                                 } else {
                                     ctx.fillStyle = '#059669';
                                     ctx.fillRect(-10, -18, 20, 18);
@@ -12871,8 +12982,13 @@ const MAPS = [
         // Check if high-detail trainer portrait is registered & loaded
         let portKey = null;
         if (opts.type === 'player') {
-            const isFem = (typeof player !== 'undefined' && player && player.gender === 'female');
-            portKey = isFem ? 'portrait_player_f' : 'portrait_player_m';
+            const rk = getSpriteRegistryKey('player', player);
+            if (rk && NPC_SPRITE_REGISTRY[rk] && NPC_SPRITE_REGISTRY[rk].portrait) {
+                portKey = NPC_SPRITE_REGISTRY[rk].portrait;
+            } else {
+                const isFem = (typeof player !== 'undefined' && player && player.gender === 'female');
+                portKey = isFem ? 'portrait_player_f' : 'portrait_player_m';
+            }
         } else if (opts.npc && opts.npc.role) {
             const rk = getSpriteRegistryKey(opts.npc.role, opts.npc);
             if (rk && NPC_SPRITE_REGISTRY[rk] && NPC_SPRITE_REGISTRY[rk].portrait) {
@@ -13311,8 +13427,9 @@ const MAPS = [
         pdCtx.fillStyle = '#38bdf8';
         pdCtx.fillRect(46, 118, 68, 3);
 
-        drawCharacterSprite(pdCtx, 80, 78, 4.5, {
+        drawCharacterSprite(pdCtx, 80, 114, 3.8, {
             role: 'player',
+            characterKey: player.characterKey || (player.gender === 'female' ? 'player_f' : 'player_m'),
             dir: paperDollDir,
             frame: 0,
             skinColor: DIFFICULTY_PROFILES[player.skinIndex].skinHex,
@@ -14025,43 +14142,141 @@ const MAPS = [
         renderCharacterMenu();
     };
 
-    // Character Model (Male / Female) Selection
+    // =========================================================================
+    // SUPER SMASH BROS STYLE 7-HERO ROSTER SELECTOR
+    // =========================================================================
+    const ROSTER_PROFILES = {
+        player_m: {
+            id: 'player_m',
+            name: 'Adventurer',
+            archetypeName: 'ADVENTURER',
+            roleBadge: 'ARCHIVIST OF TRUTH',
+            gender: 'male',
+            desc: 'Equipped with the Prism Beam and Axiom Blade to dispel manufactured outrage, expose algorithmic echo chambers, and liberate the realm.',
+            clarity: 'Base Clarity: 120 HP',
+            speed: 'Speed: 100%'
+        },
+        player_f: {
+            id: 'player_f',
+            name: 'Adventuress',
+            archetypeName: 'ADVENTURESS',
+            roleBadge: 'SCHOLAR OF CLARITY',
+            gender: 'female',
+            desc: 'Wields acute analytical clarity and agile perception to expose algorithmic outrage traps and restore communal solidarity.',
+            clarity: 'Base Clarity: 120 HP',
+            speed: 'Speed: 100%'
+        },
+        astronaut: {
+            id: 'astronaut',
+            name: 'Astronaut',
+            archetypeName: 'COSMIC ASTRONAUT',
+            roleBadge: 'DEEP SPACE EXPLORER',
+            gender: 'male',
+            desc: 'Equipped with pressurized EVA gear and cosmic overview effect. Immune to terrestrial echo chambers and gravity-bound ideological traps.',
+            clarity: 'Base Clarity: 130 HP',
+            speed: 'Speed: 105%'
+        },
+        dog: {
+            id: 'dog',
+            name: 'Loyal Dog',
+            archetypeName: 'CANINE COMPANION',
+            roleBadge: 'FAITHFUL INOCULATOR',
+            gender: 'male',
+            desc: 'Guided by pure intuition and unconditional loyalty. Sniffs out bad-faith manipulation, cynicism, and divisive cognitive deceit.',
+            clarity: 'Base Clarity: 115 HP',
+            speed: 'Speed: 115%'
+        },
+        cat: {
+            id: 'cat',
+            name: 'Shadow Cat',
+            archetypeName: 'AGILE FELINE',
+            roleBadge: 'NIMBLE PHILOSOPHER',
+            gender: 'female',
+            desc: 'Naturally skeptical, nimble, and intensely independent. Slips through algorithmic hostility unscathed with razor-sharp reflexes.',
+            clarity: 'Base Clarity: 110 HP',
+            speed: 'Speed: 120%'
+        },
+        lugia: {
+            id: 'lugia',
+            name: 'Lugia',
+            archetypeName: 'DIVING GUARDIAN',
+            roleBadge: 'GUARDIAN OF THE TIDES',
+            gender: 'male',
+            desc: 'Legendary psychokinetic guardian of tranquil waters. Emits calming psychic shockwaves to dispel collective panic and hysteria.',
+            clarity: 'Base Clarity: 150 HP',
+            speed: 'Speed: 110%'
+        },
+        ho_oh: {
+            id: 'ho_oh',
+            name: 'Ho-Oh',
+            archetypeName: 'RAINBOW DEITY',
+            roleBadge: 'PHOENIX OF TRUTH',
+            gender: 'female',
+            desc: 'Sacred avian deity that soars above radiant realms. Illuminates clouded minds with the pure seven-color spectrum of objective truth.',
+            clarity: 'Base Clarity: 150 HP',
+            speed: 'Speed: 110%'
+        }
+    };
+
+    if (!player.characterKey) player.characterKey = 'player_m';
     if (!player.gender) player.gender = 'male';
 
-    const btnMale = document.getElementById('btnSelectMale');
-    const btnFemale = document.getElementById('btnSelectFemale');
-    if (btnMale && btnFemale) {
-        btnMale.onclick = () => {
-            player.gender = 'male';
-            if (btnMale.classList) {
-                if (btnMale.classList.replace) btnMale.classList.replace('border-slate-700', 'border-cyan-400');
-                else { btnMale.classList.remove('border-slate-700'); btnMale.classList.add('border-cyan-400'); }
+    function selectRosterCharacter(charKey) {
+        const prof = ROSTER_PROFILES[charKey] || ROSTER_PROFILES['player_m'];
+        player.characterKey = prof.id;
+        player.gender = prof.gender;
+
+        // Update active golden glowing card border vs inactive cards
+        const rosterBtns = document.querySelectorAll('.roster-btn');
+        rosterBtns.forEach(btn => {
+            const bKey = btn.getAttribute('data-char');
+            const isActive = (bKey === charKey);
+            const textEl = btn.querySelector('.pixel-font');
+            const iconBorder = btn.querySelector('.w-11');
+            if (isActive) {
+                btn.className = 'roster-btn group p-2 rounded-xl border-2 border-amber-400 bg-amber-500/20 shadow-lg shadow-amber-500/20 flex flex-col items-center justify-center text-center transition-all cursor-pointer ring-1 ring-amber-300/40';
+                if (textEl) textEl.className = 'pixel-font text-[9px] text-amber-300 font-bold tracking-wider truncate w-full';
+                if (iconBorder) {
+                    iconBorder.classList.remove('border-slate-700');
+                    iconBorder.classList.add('border-amber-400/60');
+                }
+            } else {
+                btn.className = 'roster-btn group p-2 rounded-xl border-2 border-slate-700 bg-slate-950/80 hover:bg-slate-800 flex flex-col items-center justify-center text-center transition-all cursor-pointer';
+                if (textEl) textEl.className = 'pixel-font text-[9px] text-slate-300 font-bold tracking-wider truncate w-full';
+                if (iconBorder) {
+                    iconBorder.classList.remove('border-amber-400/60');
+                    iconBorder.classList.add('border-slate-700');
+                }
             }
-            if (btnFemale.classList) {
-                if (btnFemale.classList.replace) btnFemale.classList.replace('border-cyan-400', 'border-slate-700');
-                else { btnFemale.classList.remove('border-cyan-400'); btnFemale.classList.add('border-slate-700'); }
-            }
-            const mText = btnMale.querySelector ? btnMale.querySelector('.pixel-font') : null;
-            const fText = btnFemale.querySelector ? btnFemale.querySelector('.pixel-font') : null;
-            if (mText) mText.className = 'pixel-font text-[11px] text-cyan-300 font-bold';
-            if (fText) fText.className = 'pixel-font text-[11px] text-slate-300 font-bold';
-        };
-        btnFemale.onclick = () => {
-            player.gender = 'female';
-            if (btnFemale.classList) {
-                if (btnFemale.classList.replace) btnFemale.classList.replace('border-slate-700', 'border-cyan-400');
-                else { btnFemale.classList.remove('border-slate-700'); btnFemale.classList.add('border-cyan-400'); }
-            }
-            if (btnMale.classList) {
-                if (btnMale.classList.replace) btnMale.classList.replace('border-cyan-400', 'border-slate-700');
-                else { btnMale.classList.remove('border-cyan-400'); btnMale.classList.add('border-slate-700'); }
-            }
-            const mText = btnMale.querySelector ? btnMale.querySelector('.pixel-font') : null;
-            const fText = btnFemale.querySelector ? btnFemale.querySelector('.pixel-font') : null;
-            if (fText) fText.className = 'pixel-font text-[11px] text-cyan-300 font-bold';
-            if (mText) mText.className = 'pixel-font text-[11px] text-slate-300 font-bold';
-        };
+        });
+
+        // Update Hero Archetype Info Box
+        const nameEl = document.getElementById('heroArchetypeName');
+        const badgeEl = document.getElementById('heroRoleBadge');
+        const descEl = document.getElementById('heroDescText');
+        const clarityEl = document.getElementById('heroStatClarity');
+        const speedEl = document.getElementById('heroStatSpeed');
+        if (nameEl) nameEl.textContent = prof.archetypeName;
+        if (badgeEl) badgeEl.textContent = prof.roleBadge;
+        if (descEl) descEl.textContent = prof.desc;
+        if (clarityEl) clarityEl.textContent = prof.clarity;
+        if (speedEl) speedEl.textContent = prof.speed;
     }
+
+    // Attach click listeners to all roster buttons
+    ['player_m', 'player_f', 'astronaut', 'dog', 'cat', 'lugia', 'ho_oh'].forEach(k => {
+        const btnId = k === 'player_m' ? 'btnSelectMale'
+                    : k === 'player_f' ? 'btnSelectFemale'
+                    : k === 'astronaut' ? 'btnSelectAstronaut'
+                    : k === 'dog' ? 'btnSelectDog'
+                    : k === 'cat' ? 'btnSelectCat'
+                    : k === 'lugia' ? 'btnSelectLugia'
+                    : 'btnSelectHoOh';
+        const el = document.getElementById(btnId);
+        if (el) {
+            el.onclick = () => selectRosterCharacter(k);
+        }
+    });
 
     // Default hero profile baseline
     player.skinIndex = 0;
@@ -14073,8 +14288,12 @@ const MAPS = [
 
     document.getElementById('btnConfirmChar').onclick = () => {
         const chosenName = document.getElementById('inputPlayerName').value.trim() || 'Auron';
+        const savedChar = player.characterKey || 'player_m';
+        const savedGender = player.gender || 'male';
         resetGameState(true);
         player.name = chosenName;
+        player.characterKey = savedChar;
+        player.gender = savedGender;
         loadMap(0);
         updateAllHud();
     };
@@ -14191,9 +14410,13 @@ const MAPS = [
                 renderTitleBackground(now, dt);
             } else if (appState === 'CHAR_CREATE') {
                 renderTitleBackground(now, dt);
-                pCtx.clearRect(0, 0, 128, 128);
-                drawCharacterSprite(pCtx, 64, 70, 4.2, {
+                pCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+                const pW = previewCanvas.width;
+                const pH = previewCanvas.height;
+                const charK = player.characterKey || (player.gender === 'female' ? 'player_f' : 'player_m');
+                drawCharacterSprite(pCtx, Math.floor(pW / 2), Math.floor(pH * 0.80), 3.4, {
                     role: 'player',
+                    characterKey: charK,
                     dir: previewDir,
                     frame: Math.floor(now / 220) % 4,
                     gender: player.gender || 'male',

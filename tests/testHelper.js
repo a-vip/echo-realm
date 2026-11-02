@@ -95,6 +95,8 @@ function loadGameEnvironment() {
         findNearestInteractable,
         getMobDisplayName,
         getMobDefaultName,
+        get ROSTER_PROFILES() { return (typeof ROSTER_PROFILES !== 'undefined') ? ROSTER_PROFILES : {}; },
+        selectRosterCharacter,
         };`;
 
     function createMockElement(id = '') {
