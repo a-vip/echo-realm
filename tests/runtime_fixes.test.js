@@ -1231,4 +1231,47 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         }
     });
 
+    test('All 7 Smash-style playable roster fighters, Cleric Inquisitor, Clown Demagogue, and Peacock sheets have exact PNG dimensions', () => {
+        const readPngDims = (relPath) => {
+            const fullPath = path.resolve(__dirname, '..', relPath);
+            assert.ok(fs.existsSync(fullPath), `Expected asset ${relPath} to exist`);
+            const buf = fs.readFileSync(fullPath);
+            return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+        };
+
+        const charBundles = [
+            'player_male', 'player_astronaut',
+            'player_dog', 'player_cat', 'player_lugia', 'player_ho_oh',
+            'mob_inquisitor', 'boss_demagogue'
+        ];
+        for (const b of charBundles) {
+            assert.deepEqual(readPngDims(`assets/ingame/characters/${b}/animations.png`), { width: 216, height: 26 }, `${b} animations.png must be 216x26`);
+            assert.deepEqual(readPngDims(`assets/ingame/characters/${b}/grid.png`), { width: 54, height: 104 }, `${b} grid.png must be 54x104`);
+            assert.deepEqual(readPngDims(`assets/ingame/characters/${b}/sprite.png`), { width: 18, height: 26 }, `${b} sprite.png must be 18x26`);
+            assert.deepEqual(readPngDims(`assets/ingame/characters/${b}/trainer.png`), { width: 64, height: 64 }, `${b} trainer.png must be 64x64`);
+        }
+
+        // Peacock 4x4 sheets
+        assert.deepEqual(readPngDims('assets/ingame/creatures/peacock/peacock_folded.png'), { width: 144, height: 152 });
+        assert.deepEqual(readPngDims('assets/ingame/creatures/peacock/peacock_walk.png'), { width: 128, height: 96 });
+        assert.deepEqual(readPngDims('assets/ingame/environment/tilesets/water_animation.png'), { width: 80, height: 16 });
+    });
+
+    test('Signposts with any title (including SOUTH HIGHWAY) pass isSign and render signpost portrait', () => {
+        const env = loadGameEnvironment();
+        env.startNpcDialogue({
+            name: 'SOUTH HIGHWAY',
+            isSign: true,
+            dialogues: ['Follow the road south to the Outskirts.']
+        });
+        assert.equal(env.appState, 'DIALOGUE');
+        assert.equal(env.activeDialogueNpc.isSign, true);
+        assert.equal(env.document.getElementById('dialogueSpeaker').textContent, 'SOUTH HIGHWAY');
+    });
+
+    test('AI Agent extensibility pipeline and developer documentation exist', () => {
+        assert.ok(fs.existsSync(path.resolve(__dirname, '../scripts/build_assets.py')), 'scripts/build_assets.py must exist');
+        assert.ok(fs.existsSync(path.resolve(__dirname, '../docs/AI_AGENT_DEVELOPMENT_GUIDE.md')), 'docs/AI_AGENT_DEVELOPMENT_GUIDE.md must exist');
+    });
+
 });
