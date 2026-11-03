@@ -1274,4 +1274,78 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         assert.ok(fs.existsSync(path.resolve(__dirname, '../docs/AI_AGENT_DEVELOPMENT_GUIDE.md')), 'docs/AI_AGENT_DEVELOPMENT_GUIDE.md must exist');
     });
 
+    test('Modular interior pixel-art assets and rendering pipeline execute cleanly', () => {
+        const interiorAssets = [
+            'assets/ingame/environment/interiors/floors/floor_wood_plank.png',
+            'assets/ingame/environment/interiors/floors/floor_oak_parquet.png',
+            'assets/ingame/environment/interiors/floors/floor_stone_slate.png',
+            'assets/ingame/environment/interiors/walls/wall_wood_panel.png',
+            'assets/ingame/environment/interiors/walls/wall_stone_slate.png',
+            'assets/ingame/environment/interiors/bookshelves/bookshelf_grand.png',
+            'assets/ingame/environment/interiors/bookshelves/bookshelf_tall.png',
+            'assets/ingame/environment/interiors/bookshelves/bookshelf_wide.png',
+            'assets/ingame/environment/interiors/tables/desk_scholar.png',
+            'assets/ingame/environment/interiors/tables/table_dining.png',
+            'assets/ingame/environment/interiors/chairs/chair_study.png',
+            'assets/ingame/environment/interiors/chairs/chair_armchair.png',
+            'assets/ingame/environment/interiors/fireplaces/fireplace_anim_sheet.png',
+            'assets/ingame/environment/interiors/carpets/rug_ornate_large.png',
+            'assets/ingame/environment/interiors/decor/painting_landscape.png',
+            'assets/ingame/environment/interiors/decor/window_curtain.png',
+            'assets/ingame/environment/interiors/decor/potted_plant_fern.png'
+        ];
+        for (const p of interiorAssets) {
+            assert.ok(fs.existsSync(path.resolve(__dirname, '..', p)), `Interior asset ${p} must exist on disk`);
+        }
+        assert.ok(fs.existsSync(path.resolve(__dirname, '../assets/ingame/environment/interiors/README.md')), 'Interiors README catalog must exist');
+
+        const env = loadGameEnvironment();
+        // Test standard interior rendering (cottages / shops / residential)
+        const mockCtx = {
+            fillStyle: '',
+            strokeStyle: '',
+            lineWidth: 1,
+            fillRect: () => {},
+            strokeRect: () => {},
+            rect: () => {},
+            clip: () => {},
+            beginPath: () => {},
+            arc: () => {},
+            ellipse: () => {},
+            moveTo: () => {},
+            lineTo: () => {},
+            closePath: () => {},
+            fill: () => {},
+            stroke: () => {},
+            save: () => {},
+            restore: () => {},
+            translate: () => {},
+            rotate: () => {},
+            fillText: () => {},
+            createLinearGradient: () => ({ addColorStop: () => {} }),
+            createRadialGradient: () => ({ addColorStop: () => {} }),
+            drawImage: () => {}
+        };
+        env.currentInterior = {
+            building: { id: 'cottage_1', name: 'Oasis Cottage', style: 'cottage' },
+            roomW: 760,
+            roomH: 580,
+            chest: { opened: false, item: { name: 'Focus Prism', tier: 'Epic', type: 'relic', stat: '+5 Clarity' } }
+        };
+        assert.doesNotThrow(() => {
+            env.renderInterior(mockCtx, 1200, 800);
+        });
+
+        // Test Grand Archive interior rendering
+        env.currentInterior = {
+            building: { id: 'archive_sanctuary', name: 'The Grand Archive', style: 'archive_tower' },
+            roomW: 760,
+            roomH: 580,
+            chest: { opened: false, item: { name: 'Axiom Codex', tier: 'Legendary', type: 'tome', stat: '+10 All' } }
+        };
+        assert.doesNotThrow(() => {
+            env.renderInterior(mockCtx, 1200, 800);
+        });
+    });
+
 });

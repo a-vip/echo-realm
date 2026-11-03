@@ -51,6 +51,7 @@ function loadGameEnvironment() {
         useQuickTonic,
         get portals() { return portals; },
         get currentInterior() { return currentInterior; },
+        set currentInterior(val) { currentInterior = val; },
         enterBuildingInterior,
         exitBuildingInterior,
         throwHeldPot,
@@ -97,6 +98,8 @@ function loadGameEnvironment() {
         getMobDefaultName,
         get ROSTER_PROFILES() { return (typeof ROSTER_PROFILES !== 'undefined') ? ROSTER_PROFILES : {}; },
         selectRosterCharacter,
+        renderInterior,
+        renderGrandArchiveTowerInterior,
         };`;
 
     function createMockElement(id = '') {

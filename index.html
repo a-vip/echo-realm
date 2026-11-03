@@ -1950,6 +1950,34 @@
     assets.registerImage('water_animation', 'assets/ingame/environment/tilesets/water_animation.png');
 
     // =========================================================================
+    // MODULAR REAL PIXEL-ART INTERIOR ASSETS & PROPS (Organized folders)
+    // =========================================================================
+    assets.registerImage('int_floor_wood', 'assets/ingame/environment/interiors/floors/floor_wood_plank.png');
+    assets.registerImage('int_floor_oak', 'assets/ingame/environment/interiors/floors/floor_oak_parquet.png');
+    assets.registerImage('int_floor_stone', 'assets/ingame/environment/interiors/floors/floor_stone_slate.png');
+    assets.registerImage('int_wall_wood', 'assets/ingame/environment/interiors/walls/wall_wood_panel.png');
+    assets.registerImage('int_wall_stone', 'assets/ingame/environment/interiors/walls/wall_stone_slate.png');
+    assets.registerImage('int_bookshelf_grand', 'assets/ingame/environment/interiors/bookshelves/bookshelf_grand.png');
+    assets.registerImage('int_bookshelf_tall', 'assets/ingame/environment/interiors/bookshelves/bookshelf_tall.png');
+    assets.registerImage('int_bookshelf_medium', 'assets/ingame/environment/interiors/bookshelves/bookshelf_medium.png');
+    assets.registerImage('int_bookshelf_wide', 'assets/ingame/environment/interiors/bookshelves/bookshelf_wide.png');
+    assets.registerImage('int_desk_scholar', 'assets/ingame/environment/interiors/tables/desk_scholar.png');
+    assets.registerImage('int_table_dining', 'assets/ingame/environment/interiors/tables/table_dining.png');
+    assets.registerImage('int_table_coffee', 'assets/ingame/environment/interiors/tables/table_coffee.png');
+    assets.registerImage('int_chair_study', 'assets/ingame/environment/interiors/chairs/chair_study.png');
+    assets.registerImage('int_chair_armchair', 'assets/ingame/environment/interiors/chairs/chair_armchair.png');
+    assets.registerImage('int_fireplace_anim', 'assets/ingame/environment/interiors/fireplaces/fireplace_anim_sheet.png');
+    assets.registerImage('int_fireplace_brick', 'assets/ingame/environment/interiors/fireplaces/fireplace_brick.png');
+    assets.registerImage('int_rug_large', 'assets/ingame/environment/interiors/carpets/rug_ornate_large.png');
+    assets.registerImage('int_rug_runner', 'assets/ingame/environment/interiors/carpets/rug_runner.png');
+    assets.registerImage('int_painting_landscape', 'assets/ingame/environment/interiors/decor/painting_landscape.png');
+    assets.registerImage('int_painting_portrait', 'assets/ingame/environment/interiors/decor/painting_portrait.png');
+    assets.registerImage('int_painting_classic', 'assets/ingame/environment/interiors/decor/painting_classic.png');
+    assets.registerImage('int_window', 'assets/ingame/environment/interiors/decor/window_curtain.png');
+    assets.registerImage('int_plant_fern', 'assets/ingame/environment/interiors/decor/potted_plant_fern.png');
+    assets.registerImage('int_plant_flower', 'assets/ingame/environment/interiors/decor/potted_plant_flowering.png');
+
+    // =========================================================================
     // CITY & URBAN TILESETS, PROPS & CIVIC BUILDINGS
     // =========================================================================
     assets.registerImage('wood_interior_set', 'assets/ingame/environment/props/wood_interior_set.png');
@@ -9505,29 +9533,39 @@ const MAPS = [
         ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
         ctx.fillRect(offX - 14, offY - 14, roomW + 28, roomH + 28);
 
-        // 2. Arcane Flagstone Paving in Hexagonal & Ashlar Slate
+        // 2. Arcane Flagstone Paving (Tiled using authentic pixel-art stone slate tiles)
         const floorY = offY + 110;
         const floorH = roomH - 110;
-        const slateTones = ['#0f172a', '#1e293b', '#1e2433', '#162032', '#0f172a'];
-        const tileSz = 34;
-        for (let fy = floorY; fy < offY + roomH; fy += tileSz) {
-            const rowIdx = Math.floor((fy - floorY) / tileSz);
-            for (let fx = offX; fx < offX + roomW; fx += tileSz) {
-                const colIdx = Math.floor((fx - offX) / tileSz);
-                ctx.fillStyle = slateTones[(rowIdx * 3 + colIdx * 7) % slateTones.length];
-                ctx.fillRect(fx, fy, tileSz, tileSz);
-                ctx.fillStyle = '#020617';
-                ctx.fillRect(fx, fy, tileSz, 1.5);
-                ctx.fillRect(fx, fy, 1.5, tileSz);
-                // Subtle floor stone texture highlight
-                if ((rowIdx + colIdx) % 3 === 0) {
-                    ctx.fillStyle = '#334155';
-                    ctx.fillRect(fx + 2, fy + 2, tileSz - 4, 1.5);
+        const tileSz = 48;
+        if (assets.hasImage('int_floor_stone')) {
+            for (let fy = floorY; fy < offY + roomH; fy += tileSz) {
+                for (let fx = offX; fx < offX + roomW; fx += tileSz) {
+                    assets.drawImage(ctx, 'int_floor_stone', fx, fy, tileSz, tileSz);
+                }
+            }
+        } else {
+            const slateTones = ['#0f172a', '#1e293b', '#1e2433', '#162032', '#0f172a'];
+            for (let fy = floorY; fy < offY + roomH; fy += 34) {
+                const rowIdx = Math.floor((fy - floorY) / 34);
+                for (let fx = offX; fx < offX + roomW; fx += 34) {
+                    const colIdx = Math.floor((fx - offX) / 34);
+                    ctx.fillStyle = slateTones[(rowIdx * 3 + colIdx * 7) % slateTones.length];
+                    ctx.fillRect(fx, fy, 34, 34);
                 }
             }
         }
 
-        // 3. Grand Inlaid Brass Astrolabe & Celestial Zodiac Floor Medallion
+        // 3. Back Wall: Arcane Stone Masonry Wall (Tiled with authentic pixel-art wall panels)
+        if (assets.hasImage('int_wall_stone')) {
+            for (let wx = offX; wx < offX + roomW; wx += 48) {
+                assets.drawImage(ctx, 'int_wall_stone', wx, offY + 14, 48, 96);
+            }
+        } else {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(offX, offY, roomW, 110);
+        }
+
+        // 4. Inlaid Celestial Astrolabe & Zodiac Floor Medallion
         const centerX = offX + Math.floor(roomW / 2);
         const centerY = floorY + Math.floor(floorH / 2) - 10;
         const radPulse = Math.sin(performance.now() / 700) * 2;
@@ -9562,264 +9600,52 @@ const MAPS = [
         ctx.strokeStyle = '#38bdf8';
         ctx.stroke();
 
-        // 4. Back Wall: Towering 2-Story Mahogany Library Bookshelves
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(offX, offY, roomW, 110);
-        ctx.fillStyle = '#3e1a06';
-        ctx.fillRect(offX + 16, offY + 12, roomW - 32, 94);
-
-        const shelfW = 76;
-        const bookColors = ['#991b1b', '#1e3a8a', '#065f46', '#78350f', '#581c87', '#b45309', '#0f766e'];
-        for (let bx = offX + 22; bx < offX + roomW - 28; bx += shelfW) {
-            ctx.fillStyle = '#260e02';
-            ctx.fillRect(bx, offY + 12, 4, 94);
-
-            [offY + 20, offY + 60].forEach(sy => {
-                ctx.fillStyle = '#260e02';
-                ctx.fillRect(bx + 4, sy + 32, shelfW - 4, 4);
-
-                let kx = bx + 5;
-                while (kx < bx + shelfW - 6) {
-                    const bkW = 5 + ((kx * 7) % 4);
-                    const bkH = 24 + ((kx * 11) % 6);
-                    ctx.fillStyle = bookColors[(kx * 13) % bookColors.length];
-                    ctx.fillRect(kx, sy + 32 - bkH, bkW - 1, bkH);
-                    if (kx % 3 === 0) {
-                        ctx.fillStyle = '#fbbf24';
-                        ctx.fillRect(kx + 1, sy + 32 - Math.floor(bkH * 0.6), bkW - 3, 2);
-                    }
-                    kx += bkW;
-                }
-            });
-        }
-        ctx.fillStyle = '#d97706';
-        ctx.fillRect(offX + 18, offY + 54, roomW - 36, 3);
-
-        // 5. Flanking 2-Story Mahogany Library Stacks on West and East Walls
-        // Left (West) Wall Bookshelf Stack with Brass Sliding Ladder
-        const sideShelfW = 44;
-        const sideShelfH = 220;
-        const leftShelfX = offX + 16;
-        const leftShelfY = floorY + 12;
-
-        ctx.fillStyle = '#260e02';
-        ctx.fillRect(leftShelfX, leftShelfY, sideShelfW, sideShelfH);
-        ctx.fillStyle = '#3e1a06';
-        ctx.fillRect(leftShelfX + 2, leftShelfY + 2, sideShelfW - 4, sideShelfH - 4);
-        for (let lsy = leftShelfY + 20; lsy < leftShelfY + sideShelfH - 20; lsy += 45) {
-            ctx.fillStyle = '#1c0f08';
-            ctx.fillRect(leftShelfX + 2, lsy + 36, sideShelfW - 4, 4);
-            // Books
-            for (let bk = 0; bk < 4; bk++) {
-                ctx.fillStyle = bookColors[(bk * 3 + Math.floor(lsy / 45)) % bookColors.length];
-                ctx.fillRect(leftShelfX + 5 + bk * 9, lsy + 8, 7, 28);
-                ctx.fillStyle = '#fde047';
-                ctx.fillRect(leftShelfX + 5 + bk * 9, lsy + 14, 7, 2);
+        // 5. Grand Library Bookshelves along the North Wall (Authentic Pixel-Art Assets!)
+        if (assets.hasImage('int_bookshelf_grand')) {
+            const grandW = 160;
+            const grandH = 100;
+            assets.drawImage(ctx, 'int_bookshelf_grand', offX + 40, offY + 10, grandW, grandH);
+            assets.drawImage(ctx, 'int_bookshelf_grand', offX + Math.floor(roomW / 2) - grandW / 2, offY + 10, grandW, grandH);
+            assets.drawImage(ctx, 'int_bookshelf_grand', offX + roomW - grandW - 40, offY + 10, grandW, grandH);
+        } else if (assets.hasImage('int_bookshelf_wide')) {
+            for (let bx = offX + 30; bx < offX + roomW - 100; bx += 110) {
+                assets.drawImage(ctx, 'int_bookshelf_wide', bx, offY + 18, 96, 92);
             }
         }
-        // Brass Sliding Ladder on Left Wall
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(leftShelfX + sideShelfW - 6, leftShelfY + 10, 4, sideShelfH);
-        for (let r = leftShelfY + 25; r < leftShelfY + sideShelfH; r += 20) {
-            ctx.fillRect(leftShelfX + sideShelfW - 14, r, 12, 2.5);
+
+        // 6. Side Wall Bookshelves (Authentic Tall Modular Bookcases)
+        if (assets.hasImage('int_bookshelf_tall')) {
+            assets.drawImage(ctx, 'int_bookshelf_tall', offX + 16, floorY + 30, 48, 140);
+            assets.drawImage(ctx, 'int_bookshelf_tall', offX + 16, floorY + 180, 48, 140);
+            assets.drawImage(ctx, 'int_bookshelf_tall', offX + roomW - 64, floorY + 30, 48, 140);
+            assets.drawImage(ctx, 'int_bookshelf_tall', offX + roomW - 64, floorY + 180, 48, 140);
         }
 
-        // Right (East) Wall Matching Bookshelf Stack with Apothecary Scrolls & Jars
-        const rightShelfX = offX + roomW - 60;
-        const rightShelfY = floorY + 12;
-        ctx.fillStyle = '#260e02';
-        ctx.fillRect(rightShelfX, rightShelfY, sideShelfW, sideShelfH);
-        ctx.fillStyle = '#3e1a06';
-        ctx.fillRect(rightShelfX + 2, rightShelfY + 2, sideShelfW - 4, sideShelfH - 4);
-        for (let rsy = rightShelfY + 20; rsy < rightShelfY + sideShelfH - 20; rsy += 45) {
-            ctx.fillStyle = '#1c0f08';
-            ctx.fillRect(rightShelfX + 2, rsy + 36, sideShelfW - 4, 4);
-            // Scrolls & Glass Jars
-            ctx.fillStyle = '#fef3c7';
-            ctx.fillRect(rightShelfX + 6, rsy + 14, 6, 22);
-            ctx.fillRect(rightShelfX + 14, rsy + 12, 6, 24);
-            ctx.fillStyle = '#38bdf8';
-            ctx.fillRect(rightShelfX + 24, rsy + 18, 10, 18);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(rightShelfX + 26, rsy + 20, 3, 5);
-        }
-
-        // 6. Left Alcove: Scribe's Manuscript Desk & Button-Tufted Velvet Scholar Chair
+        // 7. Left Study Alcove: Scholar Study Desk & High-Backed Chair
         const deskX = offX + 85;
-        const deskY = floorY + 90;
-        const deskW = 92;
-        const deskH = 50;
-
-        // Desk Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.fillRect(deskX - 2, deskY + deskH - 6, deskW + 4, 10);
-        // Bevelled Mahogany Desk
-        ctx.fillStyle = '#3e1a06';
-        ctx.fillRect(deskX, deskY, deskW, deskH);
-        ctx.fillStyle = '#5c2b09';
-        ctx.fillRect(deskX + 3, deskY + 3, deskW - 6, deskH - 6);
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(deskX + 6, deskY + 6, deskW - 12, 8); // desk top bevel
-        // Carved Desk Legs
-        ctx.fillStyle = '#260e02';
-        ctx.fillRect(deskX + 4, deskY + deskH - 8, 8, 8);
-        ctx.fillRect(deskX + deskW - 12, deskY + deskH - 8, 8, 8);
-
-        // Open Illuminated Manuscript with red initial drop-cap
-        ctx.fillStyle = '#fef3c7';
-        ctx.fillRect(deskX + 16, deskY + 16, 40, 26);
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillRect(deskX + 35, deskY + 16, 2, 26); // center binding
-        ctx.fillStyle = '#dc2626'; // illuminated capital
-        ctx.fillRect(deskX + 20, deskY + 20, 6, 6);
-        ctx.fillStyle = '#78350f';
-        for (let ly = deskY + 22; ly < deskY + 38; ly += 4) {
-            ctx.fillRect(deskX + 28, ly, 6, 1.5);
-            ctx.fillRect(deskX + 39, ly, 12, 1.5);
+        const deskY = floorY + 80;
+        if (assets.hasImage('int_chair_study')) {
+            assets.drawImage(ctx, 'int_chair_study', deskX + 30, deskY - 30, 36, 42);
+        }
+        if (assets.hasImage('int_desk_scholar')) {
+            assets.drawImage(ctx, 'int_desk_scholar', deskX, deskY, 96, 52);
         }
 
-        // Inkwell with Feather Quill
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(deskX + 62, deskY + 22, 6, 8);
-        ctx.fillStyle = '#f8fafc';
-        ctx.beginPath();
-        ctx.moveTo(deskX + 65, deskY + 22);
-        ctx.lineTo(deskX + 72, deskY + 10);
-        ctx.lineTo(deskX + 74, deskY + 11);
-        ctx.lineTo(deskX + 66, deskY + 24);
-        ctx.fill();
+        // 8. Right Study Alcove: Matching Study Desk & Chair
+        const rightDeskX = offX + roomW - 195;
+        const rightDeskY = floorY + 80;
+        if (assets.hasImage('int_chair_study')) {
+            assets.drawImage(ctx, 'int_chair_study', rightDeskX + 30, rightDeskY - 30, 36, 42);
+        }
+        if (assets.hasImage('int_desk_scholar')) {
+            assets.drawImage(ctx, 'int_desk_scholar', rightDeskX, rightDeskY, 96, 52);
+        }
 
-        // 3-Branch Brass Candelabra with warm flickering flame
-        const candX = deskX + 78;
-        const candY = deskY + 16;
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(candX, candY, 3, 14);
-        ctx.fillRect(candX - 5, candY + 4, 13, 2.5);
-        ctx.fillStyle = '#fef08a';
-        [-4, 1, 6].forEach((cOff, cIdx) => {
-            const fBob = Math.sin(performance.now() / 200 + cIdx) * 1.5;
-            ctx.fillStyle = '#fde047';
-            ctx.beginPath();
-            ctx.arc(candX + cOff + 1, candY - 2 + fBob, 3, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // High-Backed Scholar Armchair with Crimson Velvet Upholstery (Behind Desk)
-        const chairX = deskX + 26;
-        const chairY = deskY - 26;
-        ctx.fillStyle = '#260e02';
-        ctx.fillRect(chairX, chairY, 28, 30);
-        ctx.fillStyle = '#991b1b'; // Royal crimson velvet
-        ctx.fillRect(chairX + 3, chairY + 3, 22, 24);
-        ctx.fillStyle = '#fde047'; // Gold tufting buttons
-        ctx.fillRect(chairX + 8, chairY + 8, 2, 2);
-        ctx.fillRect(chairX + 18, chairY + 8, 2, 2);
-        ctx.fillRect(chairX + 13, chairY + 16, 2, 2);
-        // Chair armrests
-        ctx.fillStyle = '#5c2b09';
-        ctx.fillRect(chairX - 3, chairY + 12, 4, 14);
-        ctx.fillRect(chairX + 27, chairY + 12, 4, 14);
-
-        // 7. Right Alcove: Alchemical Distillation Bench & Scholar Chair
-        const benchX = offX + roomW - 175;
-        const benchY = floorY + 90;
-        const benchW = 92;
-        const benchH = 50;
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.fillRect(benchX - 2, benchY + benchH - 6, benchW + 4, 10);
-        ctx.fillStyle = '#3e1a06';
-        ctx.fillRect(benchX, benchY, benchW, benchH);
-        ctx.fillStyle = '#5c2b09';
-        ctx.fillRect(benchX + 3, benchY + 3, benchW - 6, benchH - 6);
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(benchX + 6, benchY + 6, benchW - 12, 8);
-
-        // Alchemical Glassware, Bubbling Azure Alembic & Rack
-        ctx.fillStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.arc(benchX + 24, benchY + 28, 9, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(benchX + 21, benchY + 22, 3, 5);
-
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath();
-        ctx.arc(benchX + 50, benchY + 30, 7, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#34d399';
-        ctx.fillRect(benchX + 68, benchY + 18, 5, 14);
-        ctx.fillRect(benchX + 76, benchY + 16, 5, 16);
-
-        // Matching Scholar Armchair for Right Alcove
-        const rChairX = benchX + 26;
-        const rChairY = benchY - 26;
-        ctx.fillStyle = '#260e02';
-        ctx.fillRect(rChairX, rChairY, 28, 30);
-        ctx.fillStyle = '#991b1b';
-        ctx.fillRect(rChairX + 3, rChairY + 3, 22, 24);
-        ctx.fillStyle = '#fde047';
-        ctx.fillRect(rChairX + 8, rChairY + 8, 2, 2);
-        ctx.fillRect(rChairX + 18, rChairY + 8, 2, 2);
-        ctx.fillRect(rChairX + 13, rChairY + 16, 2, 2);
-        ctx.fillStyle = '#5c2b09';
-        ctx.fillRect(rChairX - 3, rChairY + 12, 4, 14);
-        ctx.fillRect(rChairX + 27, rChairY + 12, 4, 14);
-
-        // 8. Central Octagonal Reading Table & Chairs near the Armillary Sphere
-        const octX = centerX - 50;
-        const octY = floorY + floorH - 120;
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-        ctx.beginPath();
-        ctx.ellipse(centerX, octY + 20, 52, 24, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#3e1a06';
-        ctx.fillRect(octX, octY, 100, 36);
-        ctx.fillStyle = '#5c2b09';
-        ctx.fillRect(octX + 4, octY + 4, 92, 28);
-        // Tabletop Map Scroll & Magnifying Glass
-        ctx.fillStyle = '#fef3c7';
-        ctx.fillRect(octX + 20, octY + 8, 44, 20);
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(octX + 28, octY + 12, 14, 2);
-        ctx.fillRect(octX + 32, octY + 18, 16, 2);
-        // Brass Magnifying Glass
-        ctx.fillStyle = '#fbbf24';
-        ctx.beginPath();
-        ctx.arc(octX + 74, octY + 18, 6, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.fillRect(octX + 78, octY + 22, 6, 2.5);
-
-        // Two student reading chairs at the table
-        [octX - 18, octX + 96].forEach(scx => {
-            ctx.fillStyle = '#260e02';
-            ctx.fillRect(scx, octY + 4, 16, 24);
-            ctx.fillStyle = '#991b1b';
-            ctx.fillRect(scx + 2, octY + 6, 12, 18);
-        });
-
-        // 9. Center Ornate Pedestal with Ancient Socratic Armillary Sphere
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(centerX - 24, centerY - 14, 48, 28);
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(centerX - 22, centerY - 12, 44, 24);
-        const spinA = performance.now() / 800;
-        ctx.strokeStyle = '#fde047';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.ellipse(centerX, centerY - 24, 14 * Math.abs(Math.sin(spinA)) + 4, 14, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.strokeStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.ellipse(centerX, centerY - 24, 14, 14 * Math.abs(Math.cos(spinA)) + 4, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.fillStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.arc(centerX, centerY - 24, 4, 0, Math.PI * 2);
-        ctx.fill();
-
+        // 9. Potted Decor & Ferns
+        if (assets.hasImage('int_plant_fern')) {
+            assets.drawImage(ctx, 'int_plant_fern', offX + 70, offY + roomH - 90, 42, 54);
+            assets.drawImage(ctx, 'int_plant_fern', offX + roomW - 110, offY + roomH - 90, 42, 54);
+        }
         // 10. Interactive Treasure Chest in Upper Alcove
         if (currentInterior.chest) {
             const ch = currentInterior.chest;
@@ -10389,415 +10215,190 @@ const MAPS = [
         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
         ctx.fillRect(offX - 10, offY - 10, roomW + 20, roomH + 20);
 
-        // 2. Beautiful Rich Hardwood Flooring (Seamless warm oak & mahogany plank boards)
-        const plankH = 26;
-        const floorY = offY + 120;
-        const floorH = roomH - 120;
-        const woodTones = ['#4a2c17', '#54321b', '#5c381f', '#462814', '#58351d'];
-        for (let py = floorY; py < offY + roomH; py += plankH) {
-            const rowIdx = Math.floor((py - floorY) / plankH);
-            ctx.fillStyle = woodTones[rowIdx % woodTones.length];
-            ctx.fillRect(offX, py, roomW, plankH);
-            ctx.fillStyle = '#26150b';
-            ctx.fillRect(offX, py + plankH - 2, roomW, 2);
-            ctx.fillStyle = '#1c0f08';
-            for (let nx = offX + 40 + (rowIdx % 3) * 35; nx < offX + roomW; nx += 90) {
-                ctx.fillRect(nx, py + 4, 2, 2);
-                ctx.fillRect(nx, py + plankH - 6, 2, 2);
+        // 2. Authentic Pixel-Art Hardwood Flooring (Tiled 48x48 oak plank boards)
+        const floorY = offY + 110;
+        const floorH = roomH - 110;
+        const tileSz = 48;
+        if (assets.hasImage('int_floor_wood')) {
+            for (let fy = floorY; fy < offY + roomH; fy += tileSz) {
+                const dh = Math.min(tileSz, offY + roomH - fy);
+                for (let fx = offX; fx < offX + roomW; fx += tileSz) {
+                    const dw = Math.min(tileSz, offX + roomW - fx);
+                    assets.drawImage(ctx, 'int_floor_wood', 0, 0, dw, dh, fx, fy, dw, dh);
+                }
+            }
+        } else {
+            const plankH = 26;
+            const woodTones = ['#4a2c17', '#54321b', '#5c381f', '#462814', '#58351d'];
+            for (let py = floorY; py < offY + roomH; py += plankH) {
+                const rowIdx = Math.floor((py - floorY) / plankH);
+                ctx.fillStyle = woodTones[rowIdx % woodTones.length];
+                ctx.fillRect(offX, py, roomW, plankH);
+                ctx.fillStyle = '#26150b';
+                ctx.fillRect(offX, py + plankH - 2, roomW, 2);
             }
         }
 
-        // 3. Luxurious Area Rug in Room Center
-        const rugX = offX + 160;
-        const rugY = floorY + 60;
-        const rugW = roomW - 320;
-        const rugH = floorH - 140;
-        // Rug shadow
-        ctx.fillStyle = 'rgba(15, 10, 6, 0.45)';
-        ctx.fillRect(rugX - 4, rugY - 4, rugW + 8, rugH + 8);
-        // Rich Burgundy Carpet Body
-        ctx.fillStyle = '#7f1d1d';
-        ctx.fillRect(rugX, rugY, rugW, rugH);
-        // Golden Embroidered Borders
-        ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(rugX + 8, rugY + 8, rugW - 16, rugH - 16);
-        ctx.strokeStyle = '#d97706';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(rugX + 14, rugY + 14, rugW - 28, rugH - 28);
-        // Gold Medallion in Center of Rug
-        ctx.fillStyle = 'rgba(251, 191, 36, 0.2)';
-        ctx.beginPath();
-        ctx.ellipse(rugX + rugW / 2, rugY + rugH / 2, 60, 40, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#fde047';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Rug Fringe Tassels along top and bottom
-        for (let fx = rugX + 6; fx < rugX + rugW - 6; fx += 8) {
-            ctx.fillStyle = (Math.floor(fx / 8) % 2 === 0) ? '#fef3c7' : '#ca8a04';
-            ctx.fillRect(fx, rugY - 4, 4, 4);
-            ctx.fillRect(fx, rugY + rugH, 4, 4);
-        }
-        // Corner Filigree Brackets
-        [[rugX + 8, rugY + 8], [rugX + rugW - 24, rugY + 8], [rugX + 8, rugY + rugH - 24], [rugX + rugW - 24, rugY + rugH - 24]].forEach(([cx, cy]) => {
-            ctx.strokeStyle = '#fde047';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(cx, cy, 16, 16);
-            ctx.fillStyle = '#fde047';
-            ctx.fillRect(cx + 6, cy + 6, 4, 4);
-        });
-
-        // 4. Back Wall: Rich Wainscoted Wood Paneling & Crown Molding
-        const wallH = 120;
-        ctx.fillStyle = '#2a180e';
-        ctx.fillRect(offX, offY, roomW, wallH);
-        // Wainscot Vertical Panels
-        const panelW = 48;
-        for (let px = offX + 16; px < offX + roomW - 16; px += panelW) {
-            ctx.fillStyle = '#3a2215';
-            ctx.fillRect(px, offY + 18, panelW - 6, wallH - 26);
-            ctx.strokeStyle = '#1b0f08';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(px, offY + 18, panelW - 6, wallH - 26);
-            ctx.fillStyle = '#4a2c1c';
-            ctx.fillRect(px + 4, offY + 22, panelW - 14, wallH - 34);
-        }
-        // Crown Molding at Ceiling
-        ctx.fillStyle = '#54321b';
-        ctx.fillRect(offX, offY, roomW, 14);
-        ctx.fillStyle = '#6b4024';
-        ctx.fillRect(offX, offY + 2, roomW, 4);
-        ctx.fillStyle = '#1b0f08';
-        ctx.fillRect(offX, offY + 14, roomW, 4);
-        // Baseboard rail
-        ctx.fillStyle = '#1b0f08';
-        ctx.fillRect(offX, offY + wallH - 8, roomW, 8);
-
-        // Framed Paintings on Wainscoted Wall
-        const paintings = [
-            { x: offX + 175, y: offY + 28, title: 'Athenian Peaks' },
-            { x: offX + roomW - 235, y: offY + 28, title: 'Dialectic Sun' }
-        ];
-        paintings.forEach((p, pIdx) => {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-            ctx.fillRect(p.x - 2, p.y - 2, 44, 34);
-            ctx.fillStyle = '#ca8a04';
-            ctx.fillRect(p.x, p.y, 40, 30);
-            ctx.strokeStyle = '#78350f';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(p.x, p.y, 40, 30);
-            ctx.fillStyle = '#fde047';
-            ctx.fillRect(p.x + 1, p.y + 1, 3, 3);
-            ctx.fillRect(p.x + 36, p.y + 1, 3, 3);
-            ctx.fillRect(p.x + 1, p.y + 26, 3, 3);
-            ctx.fillRect(p.x + 36, p.y + 26, 3, 3);
-            if (pIdx === 0) {
-                ctx.fillStyle = '#1e1b4b';
-                ctx.fillRect(p.x + 4, p.y + 4, 32, 22);
-                ctx.fillStyle = '#f472b6';
-                ctx.fillRect(p.x + 4, p.y + 14, 32, 4);
-                ctx.fillStyle = '#0f172a';
-                ctx.beginPath();
-                ctx.moveTo(p.x + 4, p.y + 26);
-                ctx.lineTo(p.x + 18, p.y + 10);
-                ctx.lineTo(p.x + 28, p.y + 26);
-                ctx.fill();
-                ctx.fillStyle = '#38bdf8';
-                ctx.fillRect(p.x + 24, p.y + 6, 4, 4);
-            } else {
-                ctx.fillStyle = '#064e3b';
-                ctx.fillRect(p.x + 4, p.y + 4, 32, 22);
-                ctx.fillStyle = '#fbbf24';
-                ctx.beginPath();
-                ctx.arc(p.x + 20, p.y + 11, 6, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#065f46';
-                ctx.fillRect(p.x + 18, p.y + 16, 4, 10);
-                ctx.fillStyle = '#10b981';
-                ctx.beginPath();
-                ctx.arc(p.x + 20, p.y + 15, 8, 0, Math.PI * 2);
-                ctx.fill();
+        // 3. Back Wall: Authentic Pixel-Art Wainscot Wood Paneling
+        const wallH = 110;
+        if (assets.hasImage('int_wall_wood')) {
+            for (let wx = offX; wx < offX + roomW; wx += 48) {
+                const dw = Math.min(48, offX + roomW - wx);
+                assets.drawImage(ctx, 'int_wall_wood', 0, 0, dw, 96, wx, offY + 14, dw, 96);
             }
-        });
-
-        // Wall Sconces & Torches with flickering ambient glow
-        const tInterior = performance.now() / 150;
-        [offX + 70, offX + roomW - 90].forEach((scX, scIdx) => {
-            const scY = offY + 45;
-            const sconceGrad = ctx.createRadialGradient(scX, scY, 4, scX, scY, 55);
-            sconceGrad.addColorStop(0, 'rgba(254, 240, 138, 0.28)');
-            sconceGrad.addColorStop(0.5, 'rgba(251, 191, 36, 0.10)');
-            sconceGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = sconceGrad;
-            ctx.beginPath();
-            ctx.arc(scX, scY, 55, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#92400e';
-            ctx.fillRect(scX - 4, scY - 6, 8, 18);
-            ctx.fillStyle = '#ca8a04';
-            ctx.fillRect(scX - 6, scY + 4, 12, 6);
-            const fShift = Math.sin((tInterior * 2) + scIdx * 2.5) * 1.5;
-            ctx.fillStyle = '#dc2626';
-            ctx.beginPath();
-            ctx.arc(scX + fShift, scY - 2, 7, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ea580c';
-            ctx.beginPath();
-            ctx.arc(scX - fShift, scY - 4, 5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#fef08a';
-            ctx.beginPath();
-            ctx.arc(scX, scY - 6, 3, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // 5. Grand Arched Windows with Warm Sunlight Shafts
-        const winPositions = [offX + 90, offX + roomW - 160];
-        winPositions.forEach((wx, wIdx) => {
-            // Window Frame
-            ctx.fillStyle = '#1b0f08';
-            ctx.fillRect(wx - 4, offY + 16, 78, 86);
-            // Amber Glass Glowing
-            ctx.fillStyle = '#fef08a';
-            ctx.fillRect(wx, offY + 20, 70, 78);
-            // Window Mullions
+            // Crown moulding header at ceiling top
+            ctx.fillStyle = '#3e1e0d';
+            ctx.fillRect(offX, offY, roomW, 14);
+            ctx.fillStyle = '#5c3016';
+            ctx.fillRect(offX, offY + 2, roomW, 4);
+        } else {
             ctx.fillStyle = '#2a180e';
-            ctx.fillRect(wx + 34, offY + 20, 4, 78);
-            ctx.fillRect(wx, offY + 54, 70, 4);
-            // Arched Top Header
-            ctx.fillStyle = '#1b0f08';
-            ctx.beginPath();
-            ctx.arc(wx + 35, offY + 20, 35, Math.PI, 0);
-            ctx.fill();
+            ctx.fillRect(offX, offY, roomW, wallH);
+        }
 
-            // Velvet Window Drapery with Gold Tiebacks
-            ctx.fillStyle = '#991b1b';
-            ctx.fillRect(wx - 10, offY + 16, 10, 86);
-            ctx.fillRect(wx + 70, offY + 16, 10, 86);
-            ctx.fillStyle = '#7f1d1d';
-            ctx.fillRect(wx - 8, offY + 18, 6, 82);
-            ctx.fillRect(wx + 72, offY + 18, 6, 82);
-            ctx.fillStyle = '#991b1b';
-            ctx.fillRect(wx - 12, offY + 12, 94, 8);
-            ctx.fillStyle = '#fde047';
-            ctx.fillRect(wx - 12, offY + 20, 94, 2);
-            ctx.fillStyle = '#fbbf24';
-            ctx.fillRect(wx - 12, offY + 60, 14, 4);
-            ctx.fillRect(wx + 68, offY + 60, 14, 4);
+        // Framed Authentic Pixel-Art Wall Art
+        if (assets.hasImage('int_painting_landscape')) {
+            assets.drawImage(ctx, 'int_painting_landscape', offX + 175, offY + 28, 42, 51);
+        }
+        if (assets.hasImage('int_painting_portrait')) {
+            assets.drawImage(ctx, 'int_painting_portrait', offX + roomW - 225, offY + 28, 42, 51);
+        }
 
-            // Diagonal Sunlight Shaft projecting down onto the floor
-            const sunGrad = ctx.createLinearGradient(wx + 35, offY + 80, wx + (wIdx === 0 ? 80 : -40), floorY + 240);
-            sunGrad.addColorStop(0, 'rgba(254, 240, 138, 0.22)');
-            sunGrad.addColorStop(0.6, 'rgba(254, 240, 138, 0.08)');
+        // 4. Authentic Pixel-Art Curtain Windows with Gentle Sunbeams
+        const winPositions = [offX + 80, offX + roomW - 160];
+        winPositions.forEach((wx, wIdx) => {
+            if (assets.hasImage('int_window')) {
+                assets.drawImage(ctx, 'int_window', wx, offY + 18, 72, 80);
+            }
+            // Gentle warm sunbeam projecting downward onto the floor
+            const sunGrad = ctx.createLinearGradient(wx + 36, offY + 80, wx + (wIdx === 0 ? 80 : -40), floorY + 220);
+            sunGrad.addColorStop(0, 'rgba(254, 240, 138, 0.18)');
+            sunGrad.addColorStop(0.6, 'rgba(254, 240, 138, 0.06)');
             sunGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
             ctx.fillStyle = sunGrad;
             ctx.beginPath();
-            ctx.moveTo(wx, offY + 98);
-            ctx.lineTo(wx + 70, offY + 98);
-            ctx.lineTo(wx + (wIdx === 0 ? 170 : 10), floorY + 240);
-            ctx.lineTo(wx + (wIdx === 0 ? 30 : -130), floorY + 240);
+            ctx.moveTo(wx + 8, offY + 95);
+            ctx.lineTo(wx + 64, offY + 95);
+            ctx.lineTo(wx + (wIdx === 0 ? 150 : 0), floorY + 220);
+            ctx.lineTo(wx + (wIdx === 0 ? 30 : -120), floorY + 220);
             ctx.closePath();
             ctx.fill();
         });
 
-        // 6. Central Stone Fireplace & Animated Hearth
-        const fpX = offX + Math.floor(roomW / 2) - 55;
-        const fpY = offY + 24;
-        const fpW = 110;
+        // 5. Central Stone Fireplace with Real 8-Frame Pixel-Art Fire Animation!
+        const fpW = 96;
         const fpH = 96;
-
-        // Chimney breast & stone bricks
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(fpX, fpY, fpW, fpH);
-        ctx.fillStyle = '#475569';
-        for (let by = fpY + 4; by < fpY + fpH - 16; by += 14) {
-            const rowShift = ((by - fpY) % 28 === 0) ? 0 : 12;
-            for (let bx = fpX + 4 + rowShift; bx < fpX + fpW - 14; bx += 24) {
-                ctx.fillRect(bx, by, 20, 10);
-            }
-        }
-        // Heavy Wood Mantel
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(fpX - 8, fpY, fpW + 16, 12);
-        ctx.fillStyle = '#92400e';
-        ctx.fillRect(fpX - 6, fpY + 2, fpW + 12, 4);
-
-        // Mantel Brass Clock & Candlestick
-        const clkX = fpX + Math.floor(fpW / 2) - 10;
-        ctx.fillStyle = '#ca8a04';
-        ctx.fillRect(clkX, fpY - 14, 20, 14);
-        ctx.fillStyle = '#fef08a';
-        ctx.beginPath();
-        ctx.arc(clkX + 10, fpY - 7, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#020617';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        const cndX = fpX + 12;
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(cndX - 2, fpY - 10, 4, 10);
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(cndX - 1, fpY - 18, 2, 8);
-        ctx.fillStyle = '#fef08a';
-        ctx.beginPath();
-        ctx.arc(cndX, fpY - 21, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Firebox Arch
-        const fbX = fpX + 22;
-        const fbY = fpY + 42;
-        const fbW = 66;
-        const fbH = 54;
-        ctx.fillStyle = '#090d16';
-        ctx.fillRect(fbX, fbY, fbW, fbH);
-
-        // Hearthstone Floor Slab
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(fbX - 8, fbY + fbH - 4, fbW + 16, 10);
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(fbX - 6, fbY + fbH - 3, fbW + 12, 4);
-
-        // Wrought-iron grate
-        ctx.fillStyle = '#020617';
-        for (let gx = fbX + 8; gx < fbX + fbW - 8; gx += 10) {
-            ctx.fillRect(gx, fbY + fbH - 18, 4, 16);
-        }
-
-        // Layered Animated Fireplace Hearth Flames (Using user's authentic 16x16 pixel fire asset)
-        const t = performance.now() / 150;
-        const flameCX = fbX + fbW / 2;
-        const flameBaseY = fbY + fbH - 4;
+        const fpX = offX + Math.floor(roomW / 2) - Math.floor(fpW / 2);
+        const fpY = offY + 14;
 
         // Warm radial ambient hearth glow
-        const hearthGlow = ctx.createRadialGradient(flameCX, flameBaseY - 14, 6, flameCX, flameBaseY - 14, 55);
-        hearthGlow.addColorStop(0, 'rgba(254, 215, 170, 0.45)');
-        hearthGlow.addColorStop(0.4, 'rgba(249, 115, 22, 0.22)');
+        const hearthGlow = ctx.createRadialGradient(fpX + fpW / 2, fpY + fpH - 10, 8, fpX + fpW / 2, fpY + fpH - 10, 85);
+        hearthGlow.addColorStop(0, 'rgba(254, 215, 170, 0.40)');
+        hearthGlow.addColorStop(0.45, 'rgba(249, 115, 22, 0.18)');
         hearthGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = hearthGlow;
         ctx.beginPath();
-        ctx.arc(flameCX, flameBaseY - 14, 55, 0, Math.PI * 2);
+        ctx.arc(fpX + fpW / 2, fpY + fpH - 10, 85, 0, Math.PI * 2);
         ctx.fill();
 
-        const fireSprite = assets.hasImage('fireplace_fire') ? 'fireplace_fire' : 'fire';
-        const fShift = Math.sin(t * 2.2) * 2;
-        const fScale = 1 + Math.sin(t * 1.8) * 0.08;
-        const fSize = 34 * fScale;
+        if (assets.hasImage('int_fireplace_anim')) {
+            const fpFrame = Math.floor(performance.now() / 120) % 8;
+            assets.drawImage(ctx, 'int_fireplace_anim', fpFrame * 48, 0, 48, 48, fpX, fpY, fpW, fpH);
+        } else if (assets.hasImage('int_fireplace_brick')) {
+            assets.drawImage(ctx, 'int_fireplace_brick', fpX, fpY, fpW, fpH);
+        }
 
-        if (assets.hasImage(fireSprite)) {
-            // Flanking flickering embers
-            assets.drawImage(ctx, fireSprite, flameCX - 22, flameBaseY - 26 + Math.sin(t * 2) * 2, 22, 22);
-            assets.drawImage(ctx, fireSprite, flameCX + 2, flameBaseY - 26 - Math.cos(t * 2) * 2, 22, 22);
-            // Main central blazing flame
-            assets.drawImage(ctx, fireSprite, flameCX - fSize / 2 + fShift, flameBaseY - fSize + 2, fSize, fSize);
+        // 6. Luxurious Real Pixel-Art Area Rug in Center of Living Room
+        const rugW = 420;
+        const rugH = 216;
+        const rugX = offX + Math.floor((roomW - rugW) / 2);
+        const rugY = floorY + Math.floor((floorH - rugH) / 2) - 10;
+        if (assets.hasImage('int_rug_large')) {
+            // Ambient rug contact shadow
+            ctx.fillStyle = 'rgba(15, 10, 6, 0.35)';
+            ctx.fillRect(rugX - 4, rugY - 4, rugW + 8, rugH + 8);
+            assets.drawImage(ctx, 'int_rug_large', rugX, rugY, rugW, rugH);
         } else {
-            ctx.fillStyle = '#dc2626';
-            ctx.beginPath();
-            ctx.arc(flameCX + Math.sin(t) * 4, flameBaseY - 10, 16, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillStyle = '#7f1d1d';
+            ctx.fillRect(rugX, rugY, rugW, rugH);
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(rugX + 8, rugY + 8, rugW - 16, rugH - 16);
         }
 
-        // 7. Library Bookshelves on Left Wall
-        const bsX = offX + 18;
-        const bsY = offY + 18;
-        const bsW = 54;
-        const bsH = 180;
-        ctx.fillStyle = '#451a03';
-        ctx.fillRect(bsX, bsY, bsW, bsH);
-        ctx.strokeStyle = '#260f02';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(bsX, bsY, bsW, bsH);
-        const bookColors = ['#dc2626', '#2563eb', '#16a34a', '#ca8a04', '#9333ea', '#0284c7'];
-        for (let sy = bsY + 12; sy < bsY + bsH - 10; sy += 38) {
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(bsX, sy + 28, bsW, 6);
-            for (let bk = 0; bk < 5; bk++) {
-                ctx.fillStyle = bookColors[(bk + Math.floor(sy / 38)) % bookColors.length];
-                ctx.fillRect(bsX + 6 + bk * 9, sy + 6, 7, 22);
-                ctx.fillStyle = '#fde047';
-                ctx.fillRect(bsX + 6 + bk * 9, sy + 10, 7, 2);
-            }
+        // 7. Authentic Pixel-Art Bookshelves on Left Wall
+        const bsX = offX + 16;
+        const bsY = floorY + 10;
+        if (assets.hasImage('int_bookshelf_wide')) {
+            assets.drawImage(ctx, 'int_bookshelf_wide', bsX, bsY, 96, 92);
+        } else if (assets.hasImage('int_bookshelf_tall')) {
+            assets.drawImage(ctx, 'int_bookshelf_tall', bsX, bsY, 56, 110);
         }
 
-        // 8. Scriptorium Reading Desk on Left
-        const deskX = offX + 110;
-        const deskY = floorY + 120;
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(deskX, deskY, 56, 42);
-        ctx.fillStyle = '#92400e';
-        ctx.fillRect(deskX + 2, deskY + 2, 52, 38);
-        ctx.fillStyle = '#fef08a';
-        ctx.fillRect(deskX + 8, deskY + 8, 40, 24);
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(deskX + 26, deskY + 8, 2, 24);
-        ctx.fillStyle = '#92400e';
-        ctx.fillRect(deskX + 12, deskY + 12, 12, 2);
-        ctx.fillRect(deskX + 12, deskY + 18, 12, 2);
-        ctx.fillRect(deskX + 31, deskY + 12, 12, 2);
-        ctx.fillRect(deskX + 31, deskY + 18, 12, 2);
-
-        // 9. Physical Wooden Table & Chairs in Room Center (Using standalone asset & fine props)
-        const tblX = rugX + Math.floor(rugW / 2) - 60;
-        const tblY = rugY + Math.floor(rugH / 2) - 20;
-        [-36, 128].forEach(cxOffset => {
-            const chX = tblX + cxOffset;
-            const chY = tblY + 6;
-            ctx.fillStyle = '#451a03';
-            ctx.fillRect(chX, chY, 20, 32);
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(chX + 2, chY + 2, 16, 4);
-            ctx.fillRect(chX + 2, chY + 12, 16, 2);
-            ctx.fillStyle = '#991b1b';
-            ctx.fillRect(chX + 2, chY + 18, 16, 10);
-            ctx.fillStyle = '#fbbf24';
-            ctx.fillRect(chX + 2, chY + 27, 16, 1.5);
-            ctx.fillStyle = '#270e02';
-            ctx.fillRect(chX + 2, chY + 28, 3, 10);
-            ctx.fillRect(chX + 15, chY + 28, 3, 10);
-        });
-
-        if (assets.hasImage('alttp_table_wood')) {
-            assets.drawImage(ctx, 'alttp_table_wood', tblX, tblY, 120, 80);
-        } else {
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(tblX, tblY, 120, 80);
+        // 8. Study Desk & Chair on Left
+        const deskX = offX + 30;
+        const deskY = floorY + 130;
+        if (assets.hasImage('int_chair_study')) {
+            assets.drawImage(ctx, 'int_chair_study', deskX + 28, deskY - 26, 30, 46);
+        }
+        if (assets.hasImage('int_desk_scholar')) {
+            assets.drawImage(ctx, 'int_desk_scholar', deskX, deskY, 84, 46);
         }
 
-        // Detailed Props on Table: Open Manuscript, Scholar's Inkwell, Steaming Goblet
+        // 9. Dining Table & High-Backed Armchairs (Placed symmetrically on the carpet)
+        const tblW = 120;
+        const tblH = 56;
+        const tblX = rugX + Math.floor(rugW / 2) - Math.floor(tblW / 2);
+        const tblY = rugY + Math.floor(rugH / 2) - Math.floor(tblH / 2);
+
+        // Flanking Armchairs
+        if (assets.hasImage('int_chair_armchair')) {
+            assets.drawImage(ctx, 'int_chair_armchair', tblX - 32, tblY + 2, 28, 54);
+            assets.drawImage(ctx, 'int_chair_armchair', tblX + tblW + 4, tblY + 2, 28, 54);
+        }
+
+        // Tabletop Drop Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.fillRect(tblX + 4, tblY + tblH - 4, tblW - 8, 8);
+
+        if (assets.hasImage('int_table_dining')) {
+            assets.drawImage(ctx, 'int_table_dining', tblX, tblY, tblW, tblH);
+        } else if (assets.hasImage('int_table_coffee')) {
+            assets.drawImage(ctx, 'int_table_coffee', tblX, tblY, tblW, tblH);
+        }
+
+        // Detailed Tabletop Props: Open Manuscript, Scholar Inkwell & Quill
         ctx.fillStyle = '#fef3c7';
-        ctx.fillRect(tblX + 18, tblY + 24, 32, 22);
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillRect(tblX + 33, tblY + 24, 2, 22);
+        ctx.fillRect(tblX + 22, tblY + 14, 28, 18);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(tblX + 35, tblY + 14, 2, 18);
         ctx.fillStyle = '#78350f';
-        for (let ly = tblY + 27; ly < tblY + 44; ly += 4) {
-            ctx.fillRect(tblX + 21, ly, 10, 1.5);
-            ctx.fillRect(tblX + 37, ly, 10, 1.5);
-        }
-        ctx.fillStyle = '#1e3a8a';
-        ctx.fillRect(tblX + 56, tblY + 26, 6, 8);
+        ctx.fillRect(tblX + 24, tblY + 18, 9, 1.5);
+        ctx.fillRect(tblX + 24, tblY + 22, 9, 1.5);
+        ctx.fillRect(tblX + 38, tblY + 18, 9, 1.5);
+        ctx.fillRect(tblX + 38, tblY + 22, 9, 1.5);
+
+        // Inkwell with feather quill
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(tblX + 58, tblY + 16, 6, 8);
         ctx.fillStyle = '#f8fafc';
         ctx.beginPath();
-        ctx.moveTo(tblX + 59, tblY + 26);
-        ctx.lineTo(tblX + 66, tblY + 14);
-        ctx.lineTo(tblX + 68, tblY + 15);
-        ctx.lineTo(tblX + 60, tblY + 28);
-        ctx.fill();
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(tblX + 82, tblY + 28, 10, 14);
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(tblX + 84, tblY + 30, 6, 10);
-        const steam1 = Math.sin(t * 1.5) * 2;
-        const steam2 = Math.cos(t * 1.8) * 2;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-        ctx.beginPath();
-        ctx.arc(tblX + 86 + steam1, tblY + 22, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(tblX + 87 + steam2, tblY + 16, 2, 0, Math.PI * 2);
+        ctx.moveTo(tblX + 61, tblY + 16);
+        ctx.lineTo(tblX + 68, tblY + 6);
+        ctx.lineTo(tblX + 70, tblY + 7);
+        ctx.lineTo(tblX + 63, tblY + 18);
         ctx.fill();
 
-        // 10. Physical Lone Treasure Chest in Alcove (Using standalone asset)
+        // 10. Lush Potted Ferns & Plants in the Room Corners
+        if (assets.hasImage('int_plant_fern')) {
+            assets.drawImage(ctx, 'int_plant_fern', offX + 24, offY + roomH - 110, 36, 58);
+            assets.drawImage(ctx, 'int_plant_fern', offX + roomW - 70, offY + roomH - 110, 36, 58);
+        }
+        if (assets.hasImage('int_plant_flower')) {
+            assets.drawImage(ctx, 'int_plant_flower', offX + roomW - 120, floorY + 20, 22, 46);
+        }
+
+        // 11. Physical Lone Treasure Chest in Alcove
         const chX = offX + roomW - 140;
         const chY = floorY + 80;
         const chSprite = (currentInterior.chest && currentInterior.chest.opened) ? 'alttp_chest_lone_open' : 'alttp_chest_lone';
@@ -10814,7 +10415,7 @@ const MAPS = [
             ctx.fillText('🎁 CHEST [SPACE]', chX + 22, chY - 12);
         }
 
-        // 11. South Arched Doorway Exit Threshold
+        // 12. South Arched Doorway Exit Threshold
         const doorW = 88;
         const doorH = 26;
         const doorX = offX + Math.floor(roomW / 2) - doorW / 2;
