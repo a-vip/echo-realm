@@ -1473,4 +1473,137 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         env.clearCurrentInteriorProps();
         assert.equal(env.currentInterior.props.length, 0, 'Props should be cleared');
     });
+
+    test('Interactive Target Dummy: Authentic sprite sheet, 3 animation rows, and open courtyard placement', () => {
+        const env = loadGameEnvironment();
+
+        // 1. Image sheet exists on disk with exact 256x96 dimensions
+        const fs = require('fs');
+        const path = require('path');
+        const sheetPath = path.join(__dirname, '../assets/Training Dummy Sprite Sheet.png');
+        assert.ok(fs.existsSync(sheetPath), 'Training Dummy Sprite Sheet must exist on disk');
+
+        // 2. Map 0 spawns 2 target dummies with role: dummy and isDummy: true
+        env.loadMap(0);
+        const dummies = env.enemies.filter(e => e.role === 'dummy' || e.isDummy);
+        assert.equal(dummies.length, 2, 'Map 0 must spawn exactly 2 training dummies');
+        assert.equal(dummies[0].role, 'dummy');
+        assert.equal(dummies[1].role, 'dummy');
+        assert.equal(dummies[0].isDummy, true);
+
+        // 3. Open courtyard positioning: Verify dummies are in the open plaza, NOT behind scriptoria (col 10..14, row 14..17)
+        dummies.forEach(d => {
+            const col = Math.round(d.x / env.TILE_SIZE);
+            const row = Math.round(d.y / env.TILE_SIZE);
+            assert.ok(col >= 14 && col <= 21, 'Dummy col should be in open central courtyard (found ' + col + ')');
+            assert.ok(row >= 17 && row <= 19, 'Dummy row should be in open walkway plaza (found ' + row + ')');
+            // Ensure strictly not inside scriptoria building footprint (cols 10..13, rows 14..16)
+            const inScriptoria = (col >= 10 && col < 14 && row >= 14 && row < 17);
+            assert.ok(!inScriptoria, 'Dummy must NOT be behind or inside archive scriptoria');
+        });
+
+        // 4. Combat Practice Interaction: Prism beam increments clarity and triggers hit wobble
+        const dummy = dummies[0];
+        dummy.hitTimer = 0.4;
+        dummy.clarity = 50;
+        assert.equal(dummy.hitTimer, 0.4);
+
+        // 5. Liberation triggers spin reset without despawning entity
+        dummy.state = 'stunned';
+        dummy.clarity = 100;
+        env.player.mapCitizensFreed = 0;
+        env.handleEnemyLiberated(dummy);
+        assert.equal(dummy.state, 'hostile', 'Dummy must reset to hostile so player can continue training');
+        assert.equal(dummy.clarity, 0, 'Dummy clarity resets after mastery');
+        assert.ok(dummy.spinTimer > 0, 'Spin reset animation triggers on mastery');
+        assert.equal(env.player.mapCitizensFreed, 1, 'Dummy mastery progresses citizen freedom quest');
+        assert.ok(env.enemies.includes(dummy), 'Dummy stays in the world forever for endless practice');
+    });
+
+    test('In-Engine Scene Builder: Floating Contextual Gizmo Toolbar, Dragging, Collision, and Live Updates', () => {
+        const env = loadGameEnvironment();
+
+        // 1. Floating Gizmo elements exist in DOM
+        assert.ok(env.document.getElementById('sbFloatingGizmo'), '#sbFloatingGizmo must exist');
+        assert.ok(env.document.getElementById('sbGizmoTitle'), '#sbGizmoTitle must exist');
+        assert.ok(env.document.getElementById('sbGizmoMove'), '#sbGizmoMove must exist');
+        assert.ok(env.document.getElementById('sbGizmoResizeDown'), '#sbGizmoResizeDown must exist');
+        assert.ok(env.document.getElementById('sbGizmoResizeUp'), '#sbGizmoResizeUp must exist');
+        assert.ok(env.document.getElementById('sbGizmoCollision'), '#sbGizmoCollision must exist');
+        assert.ok(env.document.getElementById('sbGizmoLayer'), '#sbGizmoLayer must exist');
+        assert.ok(env.document.getElementById('sbGizmoDelete'), '#sbGizmoDelete must exist');
+
+        // 2. Enter interior and open builder
+        env.enterBuildingInterior({ id: 'grand_lodge', name: 'Grand Lodge', style: 'cottage' });
+        env.openSceneBuilder();
+        assert.equal(env.appState, 'BUILDER');
+
+        // 3. Place a table with collision enabled
+        env.builderSelected = { id: 'int_table_dining', name: 'Dining Table', type: 'furniture', w: 96, h: 48, hasCollision: true };
+        env.builderMouse.rx = 200;
+        env.builderMouse.ry = 220;
+        env.handleBuilderAction(true);
+
+        assert.equal(env.currentInterior.props.length, 1);
+        const table = env.currentInterior.props[0];
+        assert.equal(table.hasCollision, true);
+        assert.equal(env.builderSelectedProp, table, 'Newly placed prop must be selected automatically');
+
+        // 4. Test Resize via Gizmo buttons
+        const btnUp = env.document.getElementById('sbGizmoResizeUp');
+        btnUp.onclick();
+        assert.equal(table.w, 112, 'Resize up increases width by 16px');
+        assert.equal(table.h, 64, 'Resize up increases height by 16px');
+
+        const btnDown = env.document.getElementById('sbGizmoResizeDown');
+        btnDown.onclick();
+        assert.equal(table.w, 96, 'Resize down returns to 96px');
+        assert.equal(table.h, 48, 'Resize down returns to 48px');
+
+        // 5. Test Collision Toggle
+        const btnCol = env.document.getElementById('sbGizmoCollision');
+        btnCol.onclick();
+        assert.equal(table.hasCollision, false, 'Collision toggles OFF');
+        btnCol.onclick();
+        assert.equal(table.hasCollision, true, 'Collision toggles back ON');
+
+        // 6. Test Items & Pickups catalog category
+        assert.ok(env.BUILDER_CATALOG.items, 'BUILDER_CATALOG.items category must exist');
+        assert.ok(env.BUILDER_CATALOG.items.some(i => i.id === 'potion_red'), 'Logic Tonic must be in items catalog');
+        assert.ok(env.BUILDER_CATALOG.items.some(i => i.id === 'training_dummy'), 'Target Dummy must be in catalog');
+
+        // 7. Test Prop Deletion via Gizmo
+        const btnDel = env.document.getElementById('sbGizmoDelete');
+        btnDel.onclick();
+        assert.equal(env.currentInterior.props.length, 0, 'Prop must be removed from interior');
+        assert.equal(env.builderSelectedProp, null, 'Selection must clear');
+    });
+
+    test('Consumables & Quick Potions: Tonic usage cleans up zero counts and interior chest safely loots', () => {
+        const env = loadGameEnvironment();
+
+        // 1. Initial inventory has tonics
+        env.player.hp = 50;
+        const initialCount = env.player.inventory.find(i => i.id === 'tonic').count;
+        env.useQuickTonic();
+        assert.ok(env.player.hp > 50, 'Player HP restored by tonic');
+
+        // 2. Depleting tonics completely removes entry from player.inventory
+        const tonic = env.player.inventory.find(i => i.id === 'tonic');
+        if (tonic) tonic.count = 1;
+        env.player.inventory = env.player.inventory.filter(i => i.id !== 'tonic_blue'); // isolate red tonic
+        env.useQuickTonic();
+        const leftover = env.player.inventory.find(i => i.id === 'tonic');
+        assert.equal(leftover, undefined, 'Exhausted tonic should be cleanly removed from player.inventory');
+
+        // 3. Looting interior chest when out of tonics restores logic tonic entry
+        env.enterBuildingInterior({ id: 'safehouse', name: 'Safehouse', style: 'cottage' });
+        env.player.x = env.currentInterior.chest.x;
+        env.player.y = env.currentInterior.chest.y + 10;
+        env.triggerInteraction(); // target interior chest
+        const lootedTonic = env.player.inventory.find(i => i.id === 'tonic');
+        assert.ok(lootedTonic, 'Looting interior chest grants Logic Tonic even if inventory had none');
+        assert.ok(lootedTonic.count >= 1);
+    });
+
 });

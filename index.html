@@ -1949,6 +1949,8 @@
     assets.registerImage('peacock_folded', 'assets/ingame/creatures/peacock/peacock_folded.png');
     assets.registerImage('peacock_walk', 'assets/ingame/creatures/peacock/peacock_walk.png');
     assets.registerImage('peacock_sprite', 'assets/ingame/creatures/peacock/sprite.png');
+    assets.registerImage('training_dummy', 'assets/ingame/entities/training_dummy.png');
+    assets.registerImage('training_dummy_sheet', 'assets/Training Dummy Sprite Sheet.png');
 
     // =========================================================================
     // ENVIRONMENT TILESETS & PROPS (Modular Interior & Overworld Architecture)
@@ -2349,6 +2351,77 @@
     // =========================================================================
     // 5. 32-BIT ZELDA-STYLE 16x20 PIXEL SPRITE RENDERER
     // =========================================================================
+    
+    // =========================================================================
+    // Interactive Training Dummy Sprite & 3-Row Animation System
+    // =========================================================================
+    function drawTrainingDummySprite(ctx, x, y, scale = 2.0, dummy = {}) {
+        ctx.save();
+
+        // 1. Shadow underneath
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.38)';
+        ctx.beginPath();
+        ctx.ellipse(x, y + 16, 15, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Determine animation row & frame:
+        // Row 0: Idle (4 frames at y=0)
+        // Row 1: Hit / Wobble (5 frames at y=32)
+        // Row 2: Spin / Knockback / Reset (8 frames at y=64)
+        let row = 0;
+        let frame = 0;
+
+        if (dummy.spinTimer && dummy.spinTimer > 0) {
+            row = 2;
+            const progress = Math.max(0, Math.min(1, 1 - (dummy.spinTimer / 0.8)));
+            frame = Math.floor(progress * 8) % 8;
+        } else if (dummy.hitTimer && dummy.hitTimer > 0) {
+            row = 1;
+            const progress = Math.max(0, Math.min(1, 1 - (dummy.hitTimer / 0.4)));
+            frame = Math.floor(progress * 5) % 5;
+        } else {
+            row = 0;
+            frame = Math.floor(performance.now() / 200) % 4;
+        }
+
+        const dw = 32 * scale;
+        const dh = 32 * scale;
+        const drawX = Math.round(x - dw / 2);
+        const drawY = Math.round(y - dh / 2 - 2);
+
+        if (assets.hasImage('training_dummy') || assets.hasImage('training_dummy_sheet')) {
+            const sprId = assets.hasImage('training_dummy') ? 'training_dummy' : 'training_dummy_sheet';
+            assets.drawImage(ctx, sprId, frame * 32, row * 32, 32, 32, drawX, drawY, dw, dh);
+        } else {
+            // High-detail procedural straw dummy fallback
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(x - 10, y - 24, 20, 32);
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.arc(x, y - 26, 9, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 3. Mini clarity gauge if illuminated
+        if (dummy.clarity > 0 || dummy.state === 'stunned') {
+            const bw = 32;
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(x - bw / 2, y - 36, bw, 5);
+            ctx.fillStyle = dummy.state === 'stunned' ? '#fde047' : '#38bdf8';
+            ctx.fillRect(x - bw / 2 + 1, y - 35, (bw - 2) * (dummy.clarity / 100), 3);
+        }
+
+        // 4. Proximity prompt
+        if (typeof player !== 'undefined' && Math.hypot(player.x - x, player.y - y) < 140) {
+            ctx.font = 'bold 9px monospace';
+            ctx.fillStyle = '#fde047';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎯 TARGET DUMMY [Q/E/R]', x, y - 40);
+        }
+
+        ctx.restore();
+    }
+
     function drawCharacterSprite(ctx, x, y, scale, opts) {
         // Draws crisp, high-detail 32-bit Zelda/Chrono-style 16x20 pixel-art characters centered at (x, y)
         const {
@@ -7636,8 +7709,8 @@ const MAPS = [
 
         // Spawn Dummies or Sector Enemies on verified open tiles
         if (mapIndex === 0) {
-            enemies.push(createEnemy(11.5 * TILE_SIZE, 12.5 * TILE_SIZE, 'masked', 'Training Dummy Alpha', true));
-            enemies.push(createEnemy(23.5 * TILE_SIZE, 12.5 * TILE_SIZE, 'masked', 'Training Dummy Beta', true));
+            enemies.push(createEnemy(15.0 * TILE_SIZE, 18.0 * TILE_SIZE, 'dummy', 'Training Dummy Alpha', true));
+            enemies.push(createEnemy(20.0 * TILE_SIZE, 18.0 * TILE_SIZE, 'dummy', 'Training Dummy Beta', true));
         } else if (mapIndex === 1) {
             // Performative Valley: 8 Masked Citizens wandering around village plazas & gardens
             const villagerSpawns = [
@@ -8099,6 +8172,29 @@ const MAPS = [
     }
 
     function createEnemy(x, y, role, name, isDummy = false) {
+        if (role === 'dummy' || isDummy) {
+            return {
+                x, y,
+                radius: 18,
+                name: name || 'Training Dummy',
+                role: 'dummy',
+                isBoss: false,
+                isDummy: true,
+                state: 'hostile',
+                hp: 9999,
+                maxHp: 9999,
+                clarity: 0,
+                stunTimer: 0,
+                hitTimer: 0,
+                spinTimer: 0,
+                attackTimer: 9999,
+                dir: 0,
+                frame: 0,
+                wanderAngle: 0,
+                wanderTimer: 9999,
+                quote: '🎯 Strike with [Q], [E], or [R] to practice techniques!'
+            };
+        }
         if (!name || name === 'Radicalized Citizen' || name.toLowerCase().includes('isolated citizen')) {
             name = getMobDefaultName(role);
         }
@@ -8229,6 +8325,18 @@ const MAPS = [
             const doorMaxY = roomH - 12;
 
             // Solid Physical Interior Obstacle Boxes { x1, y1, x2, y2 }
+            if (currentInterior.props && Array.isArray(currentInterior.props)) {
+                currentInterior.props.forEach(p => {
+                    if (p.hasCollision) {
+                        obstacles.push({
+                            x1: p.x + 4,
+                            y1: p.y + Math.floor(p.h * 0.4),
+                            x2: p.x + p.w - 4,
+                            y2: p.y + p.h
+                        });
+                    }
+                });
+            }
             const obstacles = isKeep ? [
                 // Grand Colonnade Fluted Marble Pillars
                 { x1: 220, y1: 260, x2: 270, y2: 340 },
@@ -8446,6 +8554,14 @@ const MAPS = [
             if (en.state === 'cured') return;
             const d = Math.hypot(en.x - player.x, en.y - player.y);
             if (d <= strikeRange + en.radius) {
+                if (en.isDummy || en.role === 'dummy') {
+                    en.hitTimer = 0.4;
+                    if (en.state === 'stunned') {
+                        en.spinTimer = 0.8;
+                        handleEnemyLiberated(en);
+                        return;
+                    }
+                }
                 if (en.state === 'stunned') {
                     if (en.isBoss) {
                         const dmg = Math.round(totalAtk * 2.2);
@@ -8720,6 +8836,10 @@ const MAPS = [
         enemies.forEach(en => {
             if (en.state === 'cured') return;
             if (Math.hypot(en.x - player.x, en.y - player.y) <= novaRadius + en.radius) {
+                if (en.isDummy || en.role === 'dummy') {
+                    en.hitTimer = 0.4;
+                    en.spinTimer = 0.7;
+                }
                 en.clarity = Math.min(100, en.clarity + 55);
                 if (en.clarity >= 100) {
                     en.state = 'stunned';
@@ -8744,6 +8864,21 @@ const MAPS = [
     }
 
     function handleEnemyLiberated(en) {
+        if (en.isDummy || en.role === 'dummy') {
+            en.spinTimer = 0.8;
+            en.clarity = 0;
+            en.hp = en.maxHp;
+            en.state = 'hostile';
+            player.mapCitizensFreed++;
+            player.shards += 15;
+            gainExp(35);
+            audio.sfxCure();
+            spawnBurst(en.x, en.y, '#38bdf8', 26);
+            addFloatText(en.x, en.y - 28, 'DUMMY MASTERED! +15💠', '#38bdf8');
+            checkQuestProgressState();
+            updateAllHud();
+            return;
+        }
         en.state = 'cured';
         en.clarity = 100;
         audio.sfxCure();
@@ -9050,6 +9185,7 @@ const MAPS = [
                     if (Math.abs(angDiff) <= halfCone) {
                         const rate = en.isBoss ? 0.55 : 1.0;
                         en.clarity = Math.min(100, en.clarity + totalContext * rate * dt);
+                        if (en.isDummy || en.role === 'dummy') en.hitTimer = 0.35;
                         if (en.clarity >= 100 && en.state !== 'stunned') {
                             en.state = 'stunned';
                             en.stunTimer = 5.5;
@@ -9129,8 +9265,24 @@ const MAPS = [
         let activeBoss = null;
 
         enemies.forEach(en => {
+            if (en.hitTimer && en.hitTimer > 0) en.hitTimer = Math.max(0, en.hitTimer - dt);
+            if (en.spinTimer && en.spinTimer > 0) en.spinTimer = Math.max(0, en.spinTimer - dt);
+
             if (en.isBoss && en.state !== 'cured') activeBoss = en;
             if (en.state === 'cured') return;
+
+            if (en.isDummy || en.role === 'dummy') {
+                en.vx = 0;
+                en.vy = 0;
+                if (en.state === 'stunned') {
+                    en.stunTimer -= dt;
+                    if (en.stunTimer <= 0) {
+                        en.state = 'hostile';
+                        en.clarity = 0;
+                    }
+                }
+                return;
+            }
 
             if (en.state === 'stunned') {
                 en.stunTimer -= dt;
@@ -9574,6 +9726,7 @@ const MAPS = [
         const roomH = currentInterior.roomH || 580;
         const offX = Math.floor((w - roomW) / 2);
         const offY = Math.floor((h - roomH) / 2);
+        const centerX = offX + Math.floor(roomW / 2);
 
         ctx.save();
 
@@ -9581,14 +9734,17 @@ const MAPS = [
         ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
         ctx.fillRect(offX - 14, offY - 14, roomW + 28, roomH + 28);
 
-        // 2. Arcane Flagstone Paving (Tiled using authentic pixel-art stone slate tiles)
+        // 2. Authentic Flooring (Dynamic room floor style)
         const floorY = offY + 110;
         const floorH = roomH - 110;
         const tileSz = 48;
-        if (assets.hasImage('int_floor_stone')) {
+        const floorSprite = (currentInterior && currentInterior.floorType) || 'int_floor_stone';
+        if (assets.hasImage(floorSprite)) {
             for (let fy = floorY; fy < offY + roomH; fy += tileSz) {
+                const dh = Math.min(tileSz, offY + roomH - fy);
                 for (let fx = offX; fx < offX + roomW; fx += tileSz) {
-                    assets.drawImage(ctx, 'int_floor_stone', fx, fy, tileSz, tileSz);
+                    const dw = Math.min(tileSz, offX + roomW - fx);
+                    assets.drawImage(ctx, floorSprite, 0, 0, dw, dh, fx, fy, dw, dh);
                 }
             }
         } else {
@@ -9603,16 +9759,19 @@ const MAPS = [
             }
         }
 
-        // 3. Back Wall: Arcane Stone Masonry Wall (Tiled with authentic pixel-art wall panels)
-        if (assets.hasImage('int_wall_stone')) {
+        // 3. Back Wall: Authentic Masonry Wall (Dynamic room wall style)
+        const wallSprite = (currentInterior && currentInterior.wallType) || 'int_wall_stone';
+        if (assets.hasImage(wallSprite)) {
             for (let wx = offX; wx < offX + roomW; wx += 48) {
-                assets.drawImage(ctx, 'int_wall_stone', wx, offY + 14, 48, 96);
+                const dw = Math.min(48, offX + roomW - wx);
+                assets.drawImage(ctx, wallSprite, 0, 0, dw, 96, wx, offY + 14, dw, 96);
             }
         } else {
             ctx.fillStyle = '#0f172a';
             ctx.fillRect(offX, offY, roomW, 110);
         }
 
+        if (!currentInterior || !currentInterior.hideDefaultDecor) {
         // 4. Inlaid Celestial Astrolabe & Zodiac Floor Medallion
         const centerX = offX + Math.floor(roomW / 2);
         const centerY = floorY + Math.floor(floorH / 2) - 10;
@@ -9696,10 +9855,14 @@ const MAPS = [
             assets.drawImage(ctx, 'int_plant_fern', offX + roomW - 108, offY + roomH - 74, 48, 48);
         }
 
+        } // End of hideDefaultDecor check
+
         // Render Custom Scene Builder Placed Props in Grand Archive
         if (currentInterior.props && Array.isArray(currentInterior.props)) {
             currentInterior.props.forEach(p => {
-                if (assets.hasImage(p.assetId)) {
+                if (p.assetId === 'training_dummy' || p.id === 'entity_dummy') {
+                    drawTrainingDummySprite(ctx, offX + p.x + p.w / 2, offY + p.y + p.h / 2, (p.w || 32) / 32, { hitTimer: 0, spinTimer: 0, clarity: 0 });
+                } else if (assets.hasImage(p.assetId)) {
                     assets.drawImage(ctx, p.assetId, offX + p.x, offY + p.y, p.w, p.h);
                 }
             });
@@ -9739,6 +9902,11 @@ const MAPS = [
             tunicColor: '#0284c7',
             equipment: player.equipment
         });
+
+        // In-Engine Scene Builder Overlay inside Grand Archive Tower
+        if (appState === 'BUILDER') {
+            renderSceneBuilderOverlay(ctx, w, h);
+        }
 
         ctx.restore();
     }
@@ -10247,6 +10415,22 @@ const MAPS = [
         ctx.textAlign = 'center';
         ctx.fillText('▼ EXIT', doorCenterX, exitDoorY + 16);
 
+        // Render Custom Scene Builder Placed Props in Keep of Demagogue
+        if (currentInterior.props && Array.isArray(currentInterior.props)) {
+            currentInterior.props.forEach(p => {
+                if (p.assetId === 'training_dummy' || p.id === 'entity_dummy') {
+                    drawTrainingDummySprite(ctx, offX + p.x + p.w / 2, offY + p.y + p.h / 2, (p.w || 32) / 32, { hitTimer: 0, spinTimer: 0, clarity: 0 });
+                } else if (assets.hasImage(p.assetId)) {
+                    assets.drawImage(ctx, p.assetId, offX + p.x, offY + p.y, p.w, p.h);
+                }
+            });
+        }
+
+        // In-Engine Scene Builder Overlay inside Keep of Demagogue
+        if (appState === 'BUILDER') {
+            renderSceneBuilderOverlay(ctx, w, h);
+        }
+
         ctx.restore();
     }
 
@@ -10431,7 +10615,9 @@ const MAPS = [
         // Render Custom Scene Builder Placed Props in Room Interior
         if (currentInterior.props && Array.isArray(currentInterior.props)) {
             currentInterior.props.forEach(p => {
-                if (assets.hasImage(p.assetId)) {
+                if (p.assetId === 'training_dummy' || p.id === 'entity_dummy') {
+                    drawTrainingDummySprite(ctx, offX + p.x + p.w / 2, offY + p.y + p.h / 2, (p.w || 32) / 32, { hitTimer: 0, spinTimer: 0, clarity: 0 });
+                } else if (assets.hasImage(p.assetId)) {
                     assets.drawImage(ctx, p.assetId, offX + p.x, offY + p.y, p.w, p.h);
                 }
             });
@@ -10635,7 +10821,11 @@ const MAPS = [
             if (currentInterior.building) currentInterior.building.interiorChestOpened = true;
             player.shards += 75;
             const tonic = player.inventory.find(i => i.id === 'tonic');
-            if (tonic) tonic.count++;
+            if (tonic) {
+                tonic.count++;
+            } else {
+                player.inventory.push({ id: 'tonic', name: 'Logic Tonic (Red)', icon: 'potion_red', sprite: 'potion_red', type: 'consumable', count: 1, heal: 60, desc: 'Restores 60 Epistemic Clarity (HP) instantly.' });
+            }
 
             // Trigger full Zelda-style fanfare!
             audio.sfxItemFanfare();
@@ -11903,6 +12093,10 @@ const MAPS = [
                 type: 'enemy',
                 baseY: en.y + 14,
                 draw: () => {
+                    if (en.role === 'dummy' || en.isDummy) {
+                        drawTrainingDummySprite(ctx, en.x, en.y, 2.0, en);
+                        return;
+                    }
                     const scale = en.isBoss ? 2.5 : 2.2;
                     drawCharacterSprite(ctx, en.x, en.y, scale, {
                         role: en.role,
@@ -13631,7 +13825,19 @@ const MAPS = [
     let builderUndoStack = [];
     let builderMouse = { x: 0, y: 0, col: 0, row: 0, rx: 0, ry: 0 };
 
+    let builderSelectedProp = null;
+    let builderDragOffsetX = 0;
+    let builderDragOffsetY = 0;
+
     const BUILDER_CATALOG = {
+        items: [
+            { id: 'potion_red', name: 'Logic Tonic (Red)', type: 'item', w: 32, h: 32, preview: 'assets/sprites/potion_red.png' },
+            { id: 'potion_blue', name: 'Axiom Elixir (Blue)', type: 'item', w: 32, h: 32, preview: 'assets/sprites/potion_blue.png' },
+            { id: 'gold_coin', name: 'Animated Gold Coin', type: 'item', w: 32, h: 32, preview: 'assets/sprites/boots_gold.png' },
+            { id: 'alttp_chest_lone', name: 'Relic Chest', type: 'item', w: 44, h: 44, preview: 'assets/sprites/alttp_chest_lone.png' },
+            { id: 'chest_big_closed', name: 'Grand Relic Chest', type: 'item', w: 48, h: 48, preview: 'assets/sprites/chest_big_closed.png' },
+            { id: 'training_dummy', name: 'Target Dummy', type: 'prop', w: 48, h: 48, hasCollision: true, preview: 'assets/ingame/entities/training_dummy.png' }
+        ],
         interiors: [
             { id: 'int_floor_wood', name: 'Wood Plank Floor', type: 'floor', tileId: 101, w: 48, h: 48, preview: 'assets/ingame/environment/interiors/floors/floor_wood_plank.png' },
             { id: 'int_floor_oak', name: 'Oak Parquet Floor', type: 'floor', tileId: 102, w: 48, h: 48, preview: 'assets/ingame/environment/interiors/floors/floor_oak_parquet.png' },
@@ -13680,6 +13886,7 @@ const MAPS = [
             { id: 'entity_mentor', name: 'Zone Mentor NPC', type: 'entity', w: 32, h: 48 },
             { id: 'entity_inquisitor', name: 'Purity Inquisitor', type: 'entity', w: 32, h: 48 },
             { id: 'entity_peacock', name: 'Peacock Creature', type: 'entity', w: 48, h: 48 },
+            { id: 'entity_dummy', name: 'Training Dummy', type: 'entity', w: 32, h: 48 },
             { id: 'entity_sign', name: 'Signpost', type: 'entity', w: 32, h: 32 }
         ]
     };
@@ -13808,13 +14015,32 @@ const MAPS = [
                 <span class="text-[9px] font-bold truncate max-w-[70px]">${item.name}</span>
                 <span class="text-[8px] mono-font text-slate-400">${item.w}x${item.h || item.w}</span>
             `;
+            btn.draggable = true;
+            btn.ondragstart = (e) => {
+                builderSelected = item;
+                try {
+                    e.dataTransfer.setData('application/json', JSON.stringify(item));
+                } catch (err) {}
+            };
+
             btn.onclick = () => {
                 builderSelected = item;
                 const info = document.getElementById('sbHoverItemText');
                 if (info) info.textContent = `Selected: ${item.name} (${item.w}x${item.h || item.w})`;
-                if (item.type === 'floor' || item.type === 'wall' || item.type === 'tile') {
+
+                if (item.type === 'floor' && currentInterior) {
+                    pushBuilderUndo();
+                    currentInterior.floorType = item.id;
+                    saveCurrentInterior();
+                    addFloatText(player.x, player.y - 20, `Applied Floor: ${item.name}`, '#10b981');
+                } else if (item.type === 'wall' && currentInterior) {
+                    pushBuilderUndo();
+                    currentInterior.wallType = item.id;
+                    saveCurrentInterior();
+                    addFloatText(player.x, player.y - 20, `Applied Wall: ${item.name}`, '#10b981');
+                } else if (item.type === 'tile') {
                     setBuilderTool('paint');
-                } else if (item.type === 'prop' || item.type === 'entity') {
+                } else {
                     setBuilderTool('place');
                 }
                 initSceneBuilderPalette();
@@ -13843,6 +14069,7 @@ const MAPS = [
         if (!devMode) toggleDevMode();
         builderMode = currentInterior ? 'interior' : 'overworld';
         updateSceneBuilderModeUI();
+        wireSceneBuilderUI();
         initSceneBuilderPalette();
         setBuilderTool(builderSelected && (builderSelected.type === 'floor' || builderSelected.type === 'tile') ? 'paint' : 'place');
         const modal = document.getElementById('sceneBuilderModal');
@@ -13919,6 +14146,86 @@ const MAPS = [
         if (btnToggleBase) btnToggleBase.onclick = toggleBaseDecor;
 
         // Close button
+        // Wire Floating Contextual Gizmo Controls
+        const btnGizmoMove = document.getElementById('sbGizmoMove');
+        if (btnGizmoMove) btnGizmoMove.onclick = () => setBuilderTool('move');
+
+        const btnGizmoResizeUp = document.getElementById('sbGizmoResizeUp');
+        if (btnGizmoResizeUp) {
+            btnGizmoResizeUp.onclick = () => {
+                if (!builderSelectedProp) return;
+                pushBuilderUndo();
+                builderSelectedProp.w = Math.min(320, (builderSelectedProp.w || 48) + 16);
+                builderSelectedProp.h = Math.min(320, (builderSelectedProp.h || 48) + 16);
+                saveCurrentInterior();
+                updateFloatingGizmoUI();
+            };
+        }
+
+        const btnGizmoResizeDown = document.getElementById('sbGizmoResizeDown');
+        if (btnGizmoResizeDown) {
+            btnGizmoResizeDown.onclick = () => {
+                if (!builderSelectedProp) return;
+                pushBuilderUndo();
+                builderSelectedProp.w = Math.max(16, (builderSelectedProp.w || 48) - 16);
+                builderSelectedProp.h = Math.max(16, (builderSelectedProp.h || 48) - 16);
+                saveCurrentInterior();
+                updateFloatingGizmoUI();
+            };
+        }
+
+        const btnGizmoCollision = document.getElementById('sbGizmoCollision');
+        if (btnGizmoCollision) {
+            btnGizmoCollision.onclick = () => {
+                if (!builderSelectedProp) return;
+                pushBuilderUndo();
+                builderSelectedProp.hasCollision = !builderSelectedProp.hasCollision;
+                saveCurrentInterior();
+                updateFloatingGizmoUI();
+                addFloatText(player.x, player.y - 20, builderSelectedProp.hasCollision ? '🧱 Collision: ON' : '💨 Passable', '#38bdf8');
+            };
+        }
+
+        const btnGizmoLayer = document.getElementById('sbGizmoLayer');
+        if (btnGizmoLayer) {
+            btnGizmoLayer.onclick = () => {
+                if (!builderSelectedProp || !currentInterior || !currentInterior.props) return;
+                pushBuilderUndo();
+                const arr = currentInterior.props;
+                const idx = arr.indexOf(builderSelectedProp);
+                if (idx !== -1) {
+                    arr.push(arr.splice(idx, 1)[0]);
+                    saveCurrentInterior();
+                    addFloatText(player.x, player.y - 20, '⬆️ Brought to Front', '#c084fc');
+                }
+            };
+        }
+
+        const btnGizmoDelete = document.getElementById('sbGizmoDelete');
+        if (btnGizmoDelete) {
+            btnGizmoDelete.onclick = () => {
+                if (!builderSelectedProp || !currentInterior || !currentInterior.props) return;
+                pushBuilderUndo();
+                const arr = currentInterior.props;
+                const idx = arr.indexOf(builderSelectedProp);
+                if (idx !== -1) {
+                    arr.splice(idx, 1);
+                    builderSelectedProp = null;
+                    saveCurrentInterior();
+                    updateFloatingGizmoUI();
+                    addFloatText(player.x, player.y - 20, '🗑️ Deleted Prop', '#f43f5e');
+                }
+            };
+        }
+
+        const btnGizmoClose = document.getElementById('sbGizmoClose');
+        if (btnGizmoClose) {
+            btnGizmoClose.onclick = () => {
+                builderSelectedProp = null;
+                updateFloatingGizmoUI();
+            };
+        }
+
         const closeBtn = document.getElementById('sbBtnClose');
         if (closeBtn) closeBtn.onclick = closeSceneBuilder;
 
@@ -14004,6 +14311,51 @@ const MAPS = [
     }
 
     // Render In-Engine Scene Builder Grid, Highlight & Live Cursor Preview
+    
+    function updateFloatingGizmoUI() {
+        if (typeof document === 'undefined') return;
+        const gizmo = document.getElementById('sbFloatingGizmo');
+        if (!gizmo) return;
+        if (typeof canvas === 'undefined' || !canvas || typeof canvas.getBoundingClientRect !== 'function') return;
+
+        if (appState === 'BUILDER' && builderSelectedProp && currentInterior && currentInterior.props && currentInterior.props.includes(builderSelectedProp)) {
+            const roomW = currentInterior.roomW || 760;
+            const roomH = currentInterior.roomH || 580;
+            const offX = Math.floor((canvas.width - roomW) / 2);
+            const offY = Math.floor((canvas.height - roomH) / 2);
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = rect.width / canvas.width;
+            const scaleY = rect.height / canvas.height;
+
+            const canvasTargetX = offX + builderSelectedProp.x + builderSelectedProp.w / 2;
+            const canvasTargetY = offY + builderSelectedProp.y - 10;
+            const domX = rect.left + canvasTargetX * scaleX;
+            const domY = rect.top + canvasTargetY * scaleY;
+
+            gizmo.style.left = `${Math.round(domX)}px`;
+            gizmo.style.top = `${Math.round(domY)}px`;
+            gizmo.classList.remove('hidden');
+
+            const titleEl = document.getElementById('sbGizmoTitle');
+            if (titleEl) titleEl.textContent = builderSelectedProp.name || 'Prop';
+            const sizeEl = document.getElementById('sbGizmoSizeText');
+            if (sizeEl) sizeEl.textContent = `${builderSelectedProp.w}x${builderSelectedProp.h}`;
+
+            const colLbl = document.getElementById('sbGizmoCollisionLabel');
+            const colBtn = document.getElementById('sbGizmoCollision');
+            if (colLbl) colLbl.textContent = builderSelectedProp.hasCollision ? '🧱 Solid: ON' : '💨 Passable';
+            if (colBtn) {
+                if (builderSelectedProp.hasCollision) {
+                    colBtn.className = 'retro-btn px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-1 shadow';
+                } else {
+                    colBtn.className = 'retro-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold flex items-center gap-1';
+                }
+            }
+        } else {
+            gizmo.classList.add('hidden');
+        }
+    }
+
     function renderSceneBuilderOverlay(ctx, w, h) {
         if (appState !== 'BUILDER') return;
         ctx.save();
@@ -14164,6 +14516,52 @@ const MAPS = [
                 }
             }
         }
+        // Selected Prop Visual Highlight & Collision Box in Builder Mode
+        if (builderMode === 'interior' && currentInterior && builderSelectedProp && currentInterior.props && currentInterior.props.includes(builderSelectedProp)) {
+            const roomW = currentInterior.roomW || 760;
+            const roomH = currentInterior.roomH || 580;
+            const offX = Math.floor((w - roomW) / 2);
+            const offY = Math.floor((h - roomH) / 2);
+            const p = builderSelectedProp;
+            const px = offX + p.x;
+            const py = offY + p.y;
+
+            // Animated pulsating cyan selection rectangle
+            ctx.save();
+            ctx.strokeStyle = '#22d3ee';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.lineDashOffset = -performance.now() / 80;
+            ctx.strokeRect(px - 3, py - 3, p.w + 6, p.h + 6);
+            ctx.setLineDash([]);
+
+            // Collision boundary preview
+            if (p.hasCollision) {
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
+                ctx.fillRect(px, py + Math.floor(p.h * 0.4), p.w, Math.ceil(p.h * 0.6));
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(px, py + Math.floor(p.h * 0.4), p.w, Math.ceil(p.h * 0.6));
+            }
+
+            // Corner grip brackets
+            ctx.fillStyle = '#22d3ee';
+            ctx.fillRect(px - 5, py - 5, 5, 5);
+            ctx.fillRect(px + p.w, py - 5, 5, 5);
+            ctx.fillRect(px - 5, py + p.h, 5, 5);
+            ctx.fillRect(px + p.w, py + p.h, 5, 5);
+
+            // Information tag below
+            ctx.font = 'bold 9px monospace';
+            ctx.fillStyle = '#22d3ee';
+            ctx.textAlign = 'center';
+            const colTag = p.hasCollision ? ' | SOLID' : ' | PASSABLE';
+            ctx.fillText(`${p.w}x${p.h}${colTag}`, px + p.w / 2, py + p.h + 14);
+            ctx.restore();
+        }
+
+        updateFloatingGizmoUI();
+
         ctx.restore();
     }
 
@@ -14305,23 +14703,27 @@ const MAPS = [
     });
 
     function useQuickTonic() {
-        let tonic = player.inventory.find(i => i.id === 'tonic' && i.count > 0);
-        let tonicBlue = player.inventory.find(i => i.id === 'tonic_blue' && i.count > 0);
-        if (!tonic && !tonicBlue) {
+        let redIdx = player.inventory.findIndex(i => i.id === 'tonic' && i.count > 0);
+        let blueIdx = player.inventory.findIndex(i => i.id === 'tonic_blue' && i.count > 0);
+        if (redIdx === -1 && blueIdx === -1) {
             addFloatText(player.x, player.y - 24, 'No Potions Left!', '#fb7185');
             return;
         }
-        if (tonic) {
-            tonic.count--;
+        if (redIdx !== -1) {
+            const item = player.inventory[redIdx];
+            item.count--;
             player.hp = Math.min(getTotalMaxHp(), player.hp + 60);
             audio.sfxCure();
             addFloatText(player.x, player.y - 24, '+60 HP (Red Tonic)', '#f87171');
-        } else if (tonicBlue) {
-            tonicBlue.count--;
+            if (item.count <= 0) player.inventory.splice(redIdx, 1);
+        } else if (blueIdx !== -1) {
+            const item = player.inventory[blueIdx];
+            item.count--;
             player.hp = Math.min(getTotalMaxHp(), player.hp + 100);
             player.cdE = 0; player.cdR = 0; player.cdF = 0;
             audio.sfxCure();
             addFloatText(player.x, player.y - 24, '+100 HP & Cooldowns Reset! (Blue Elixir)', '#38bdf8');
+            if (item.count <= 0) player.inventory.splice(blueIdx, 1);
         }
         updateAllHud();
     }
@@ -14382,8 +14784,11 @@ const MAPS = [
                     name: builderSelected.name
                 };
                 pushBuilderUndo();
+                newProp.hasCollision = (builderSelected.type === 'furniture' || builderSelected.hasCollision || false);
                 currentInterior.props.push(newProp);
+                builderSelectedProp = newProp;
                 saveCurrentInterior();
+                updateFloatingGizmoUI();
                 addFloatText(player.x, player.y - 20, `Placed: ${builderSelected.name}`, '#10b981');
             } else if (builderTool === 'move' && isClick) {
                 for (let i = currentInterior.props.length - 1; i >= 0; i--) {
@@ -14494,24 +14899,113 @@ const MAPS = [
                 coordPill.textContent = `Col: ${builderMouse.col}, Row: ${builderMouse.row} (x: ${Math.round(builderMouse.rx)}, y: ${Math.round(builderMouse.ry)})`;
             }
 
-            // Dragging an existing prop in builder mode
+            // Dragging an existing prop in builder mode (LIVE Real-Time Update)
             if (appState === 'BUILDER') {
                 if (builderDraggedProp) {
                     const snap = builderSnapSize || 1;
-                    const sx = Math.floor(builderMouse.rx / snap) * snap;
-                    const sy = Math.floor(builderMouse.ry / snap) * snap;
-                    builderDraggedProp.x = Math.round(sx - builderDraggedProp.w / 2);
-                    builderDraggedProp.y = Math.round(sy - builderDraggedProp.h / 2);
+                    const targetX = builderMouse.rx - builderDragOffsetX;
+                    const targetY = builderMouse.ry - builderDragOffsetY;
+                    builderDraggedProp.x = Math.round(targetX / snap) * snap;
+                    builderDraggedProp.y = Math.round(targetY / snap) * snap;
+                    updateFloatingGizmoUI();
                 } else if (builderIsMouseDown) {
                     handleBuilderAction(false);
                 }
             }
         });
 
+        // HTML5 Drag-and-Drop from Palette onto Canvas
+        canvas.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX;
+            const my = (e.clientY - rect.top) * scaleY;
+            builderMouse.x = mx;
+            builderMouse.y = my;
+            if (currentInterior) {
+                const roomW = currentInterior.roomW || 760;
+                const roomH = currentInterior.roomH || 580;
+                const offX = Math.floor((canvas.width - roomW) / 2);
+                const offY = Math.floor((canvas.height - roomH) / 2);
+                builderMouse.rx = mx - offX;
+                builderMouse.ry = my - offY;
+            }
+        });
+
+        canvas.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (appState !== 'BUILDER' || !currentInterior) return;
+            try {
+                const raw = e.dataTransfer.getData('application/json');
+                if (!raw) return;
+                const item = JSON.parse(raw);
+                if (item.type === 'floor') {
+                    pushBuilderUndo();
+                    currentInterior.floorType = item.id;
+                    saveCurrentInterior();
+                    addFloatText(player.x, player.y - 20, `Applied Floor: ${item.name}`, '#10b981');
+                } else if (item.type === 'wall') {
+                    pushBuilderUndo();
+                    currentInterior.wallType = item.id;
+                    saveCurrentInterior();
+                    addFloatText(player.x, player.y - 20, `Applied Wall: ${item.name}`, '#10b981');
+                } else {
+                    const snap = builderSnapSize || 1;
+                    const sx = Math.floor(builderMouse.rx / snap) * snap;
+                    const sy = Math.floor(builderMouse.ry / snap) * snap;
+                    const pw = item.w || 48;
+                    const ph = item.h || 48;
+                    const newProp = {
+                        id: 'prop_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                        assetId: item.id,
+                        x: Math.round(sx - pw / 2),
+                        y: Math.round(sy - ph / 2),
+                        w: pw,
+                        h: ph,
+                        name: item.name,
+                        hasCollision: (item.type === 'furniture' || item.hasCollision || false)
+                    };
+                    pushBuilderUndo();
+                    if (!currentInterior.props) currentInterior.props = [];
+                    currentInterior.props.push(newProp);
+                    builderSelectedProp = newProp;
+                    saveCurrentInterior();
+                    updateFloatingGizmoUI();
+                    addFloatText(player.x, player.y - 20, `Placed: ${item.name}`, '#10b981');
+                }
+            } catch (err) {}
+        });
+
         canvas.addEventListener('mousedown', (e) => {
             if (appState !== 'BUILDER') return;
             e.preventDefault();
             builderIsMouseDown = true;
+
+            // Check if clicking directly on an existing prop in currentInterior
+            if (builderMode === 'interior' && currentInterior && currentInterior.props) {
+                let clickedProp = null;
+                for (let i = currentInterior.props.length - 1; i >= 0; i--) {
+                    const p = currentInterior.props[i];
+                    if (builderMouse.rx >= p.x && builderMouse.rx <= p.x + p.w &&
+                        builderMouse.ry >= p.y && builderMouse.ry <= p.y + p.h) {
+                        clickedProp = p;
+                        break;
+                    }
+                }
+
+                if (clickedProp) {
+                    pushBuilderUndo();
+                    builderSelectedProp = clickedProp;
+                    builderDraggedProp = clickedProp;
+                    builderDragOffsetX = builderMouse.rx - clickedProp.x;
+                    builderDragOffsetY = builderMouse.ry - clickedProp.y;
+                    updateFloatingGizmoUI();
+                    return;
+                }
+            }
+
             handleBuilderAction(true);
         });
 
@@ -14520,6 +15014,7 @@ const MAPS = [
             if (builderDraggedProp) {
                 saveCurrentInterior();
                 builderDraggedProp = null;
+                updateFloatingGizmoUI();
             }
         });
 
@@ -14954,6 +15449,31 @@ const MAPS = [
             <span id="sbHoverItemText">Selected: None</span>
         </div>
 
+        
+        <!-- Floating Contextual Prop Gizmo Toolbar -->
+        <div id="sbFloatingGizmo" class="pointer-events-auto fixed hidden -translate-x-1/2 -translate-y-full mb-3 bg-slate-950/95 border-2 border-cyan-400 shadow-[0_0_22px_rgba(34,211,238,0.45)] rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 backdrop-blur-md z-60 text-[10px]">
+            <span id="sbGizmoTitle" class="font-extrabold text-cyan-300 px-1 border-r border-slate-700">Prop</span>
+            <button id="sbGizmoMove" type="button" class="retro-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold flex items-center gap-1" title="Click & Drag object to move">
+                <span>✋ Move</span>
+            </button>
+            <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                <span class="text-slate-400 text-[9px]">Size:</span>
+                <button id="sbGizmoResizeDown" type="button" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 font-black" title="Scale Down (-16px)">−</button>
+                <span id="sbGizmoSizeText" class="mono-font text-white font-bold text-[9px]">48x48</span>
+                <button id="sbGizmoResizeUp" type="button" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 font-black" title="Scale Up (+16px)">+</button>
+            </div>
+            <button id="sbGizmoCollision" type="button" class="retro-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 font-bold flex items-center gap-1" title="Toggle Physical Obstacle Collision">
+                <span id="sbGizmoCollisionLabel">🧱 Solid: OFF</span>
+            </button>
+            <button id="sbGizmoLayer" type="button" class="retro-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold" title="Bring to Front Layer">
+                <span>⬆️ Front</span>
+            </button>
+            <button id="sbGizmoDelete" type="button" class="retro-btn px-2 py-0.5 rounded bg-rose-950 hover:bg-rose-900 border border-rose-700 text-rose-300 font-bold flex items-center gap-1" title="Delete Prop">
+                <span>🗑️</span>
+            </button>
+            <button id="sbGizmoClose" type="button" class="px-1 text-slate-400 hover:text-white font-bold" title="Deselect">✕</button>
+        </div>
+
         <!-- Bottom Palette Drawer -->
         <div class="pointer-events-auto absolute bottom-3 left-1/2 -translate-x-1/2 max-w-4xl w-[94vw] bg-slate-950/95 border-2 border-slate-700 shadow-2xl rounded-2xl p-3 flex flex-col gap-2 backdrop-blur-md">
             <!-- Palette Category Tabs -->
@@ -14961,6 +15481,7 @@ const MAPS = [
                 <button data-cat="interiors" type="button" class="sb-tab-btn active px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold">🏠 Floors & Walls</button>
                 <button data-cat="furniture" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🛋️ Furniture</button>
                 <button data-cat="decor" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🪴 Decor & Props</button>
+                <button data-cat="items" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🔮 Items & Pickups</button>
                 <button data-cat="terrain" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🌲 Overworld Terrain</button>
                 <button data-cat="entities" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">⚔️ Entities & NPCs</button>
             </div>

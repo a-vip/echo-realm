@@ -112,6 +112,13 @@ function loadGameEnvironment() {
         get builderSnapSize() { return (typeof builderSnapSize !== 'undefined') ? builderSnapSize : 24; },
         set builderSnapSize(v) { builderSnapSize = v; },
         get builderMouse() { return (typeof builderMouse !== 'undefined') ? builderMouse : {}; },
+        get builderSelectedProp() { return (typeof builderSelectedProp !== 'undefined') ? builderSelectedProp : null; },
+        set builderSelectedProp(v) { builderSelectedProp = v; },
+        get BUILDER_CATALOG() { return (typeof BUILDER_CATALOG !== 'undefined') ? BUILDER_CATALOG : {}; },
+        drawTrainingDummySprite,
+        updateFloatingGizmoUI,
+        handleEnemyLiberated,
+        wireSceneBuilderUI,
         handleBuilderAction,
         undoBuilderAction,
         clearCurrentInteriorProps,
@@ -124,6 +131,7 @@ function loadGameEnvironment() {
         const classSet = new Set();
         return {
             id,
+            getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600 }),
             getContext: () => ({
                 clearRect: () => {}, fillRect: () => {}, strokeRect: () => {}, beginPath: () => {}, arc: () => {},
                 fill: () => {}, stroke: () => {}, drawImage: () => {}, save: () => {},
