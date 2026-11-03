@@ -125,14 +125,20 @@ function loadGameEnvironment() {
         toggleBaseDecor,
         cycleSnapSize,
         setBuilderTool,
+        mainLoop,
+        renderSceneBuilderOverlay,
+        get activeCamera() { return (typeof activeCamera !== "undefined") ? activeCamera : null; },
         };`;
 
     function createMockElement(id = '') {
         const classSet = new Set();
+        let mockCtx = null;
         return {
             id,
             getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600 }),
-            getContext: () => ({
+            getContext: () => {
+                if (!mockCtx) {
+                    mockCtx = {
                 clearRect: () => {}, fillRect: () => {}, strokeRect: () => {}, beginPath: () => {}, arc: () => {},
                 fill: () => {}, stroke: () => {}, drawImage: () => {}, save: () => {},
                 restore: () => {}, translate: () => {}, scale: () => {}, rotate: () => {}, fillText: () => {},
@@ -143,7 +149,10 @@ function loadGameEnvironment() {
                 measureText: () => ({ width: 50 }),
                 createLinearGradient: () => ({ addColorStop: () => {} }),
                 createRadialGradient: () => ({ addColorStop: () => {} })
-            }),
+                    };
+                }
+                return mockCtx;
+            },
             classList: {
                 add: (c) => classSet.add(c),
                 remove: (c) => classSet.delete(c),

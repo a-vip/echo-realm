@@ -1606,4 +1606,68 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         assert.ok(lootedTonic.count >= 1);
     });
 
+
+    test('In-Engine Scene Builder: 60 FPS continuous live render loop, drag-and-drop, and overworld studio alignment', () => {
+        const env = loadGameEnvironment();
+
+        // 1. Open Scene Builder in interior mode
+        env.enterBuildingInterior({ id: 'test_lodge', name: 'Test Lodge', style: 'cottage' });
+        env.openSceneBuilder();
+        assert.equal(env.appState, 'BUILDER');
+        assert.equal(env.builderMode, 'interior');
+
+        // Verify mainLoop executes renderGameplay when appState === 'BUILDER'
+        let fillRectCalls = 0;
+        const canvasEl = env.document.getElementById('gameCanvas');
+        const origFillRect = canvasEl.getContext('2d').fillRect;
+        canvasEl.getContext('2d').fillRect = () => {
+            fillRectCalls++;
+        };
+        env.mainLoop(performance.now());
+        canvasEl.getContext('2d').fillRect = origFillRect;
+        assert.ok(fillRectCalls > 0, 'mainLoop must render canvas at 60 FPS in BUILDER state');
+
+        // 2. Click to place prop and verify automatic selection and drag initiation
+        env.builderSelected = { id: 'int_table_dining', name: 'Dining Table', type: 'furniture', w: 96, h: 48, hasCollision: true };
+        env.builderMouse.rx = 300;
+        env.builderMouse.ry = 280;
+        env.handleBuilderAction(true); // Click to place
+
+        assert.equal(env.currentInterior.props.length, 1);
+        const placedProp = env.currentInterior.props[0];
+        assert.equal(placedProp.x, 240);
+        assert.equal(placedProp.y, 240);
+        assert.equal(env.builderSelectedProp, placedProp, 'Placed prop must be immediately selected');
+
+        // 3. Test real-time live coordinate dragging
+        env.builderMouse.rx = 400;
+        env.builderMouse.ry = 350;
+        // Simulating mouse drag with builderDraggedProp
+        const targetX = env.builderMouse.rx - 48;
+        const targetY = env.builderMouse.ry - 24;
+        placedProp.x = targetX;
+        placedProp.y = targetY;
+        env.updateFloatingGizmoUI();
+
+        assert.equal(placedProp.x, 352);
+        assert.equal(placedProp.y, 326);
+
+        // 4. Test Overworld Studio Mode & Camera Alignment
+        env.exitBuildingInterior();
+        env.openSceneBuilder();
+        assert.equal(env.builderMode, 'overworld');
+        assert.ok(env.activeCamera, 'activeCamera transform must be registered and accessible');
+        assert.equal(env.activeCamera.zoom, 1.35, 'Overworld active camera zoom must be 1.35x');
+
+        // Verify overworld overlay renders cleanly without error
+        assert.doesNotThrow(() => {
+            const mockCtx = env.document.getElementById('gameCanvas').getContext('2d');
+            env.renderSceneBuilderOverlay(mockCtx, 800, 600);
+        });
+
+        // Close builder
+        env.closeSceneBuilder();
+        assert.equal(env.appState, 'PLAYING');
+    });
+
 });

@@ -874,6 +874,140 @@
         </div>
     </div>
 
+<!-- =================================================================== -->
+    <!-- SCENE & MAP BUILDER STUDIO (IN-ENGINE DEV ENVIRONMENT)              -->
+    <!-- =================================================================== -->
+    <div id="sceneBuilderModal" class="fixed inset-0 z-50 pointer-events-none hidden select-none">
+        <!-- Top Toolbar -->
+        <div class="pointer-events-auto absolute top-3 left-1/2 -translate-x-1/2 bg-slate-950/95 border-2 border-amber-500/60 shadow-[0_0_25px_rgba(217,119,6,0.35)] rounded-2xl px-4 py-2.5 flex items-center gap-3 backdrop-blur-md">
+            <div class="flex items-center gap-2 border-r border-slate-800 pr-3">
+                <span class="text-amber-400 text-sm">🛠️</span>
+                <span id="sbModeBadge" class="pixel-font text-[10px] text-amber-300 font-extrabold tracking-wide">INTERIOR STUDIO</span>
+            </div>
+
+            <!-- Mode Switcher -->
+            <button id="sbBtnSwitchMode" type="button" class="retro-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[10px] text-cyan-300 font-bold flex items-center gap-1">
+                <span>🔄</span> Switch: Overworld
+            </button>
+
+            <!-- Tools -->
+            <div class="flex items-center gap-1 border-x border-slate-800 px-2" id="sbToolsGroup">
+                <button id="sbToolPaint" data-tool="paint" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 text-[10px] font-extrabold flex items-center gap-1 shadow">
+                    <span>🖌️</span> Paint
+                </button>
+                <button id="sbToolPlace" data-tool="place" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center gap-1">
+                    <span>📦</span> Place
+                </button>
+                <button id="sbToolMove" data-tool="move" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center gap-1">
+                    <span>✋</span> Move
+                </button>
+                <button id="sbToolErase" data-tool="erase" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-rose-400 text-[10px] font-bold flex items-center gap-1">
+                    <span>❌</span> Erase
+                </button>
+            </div>
+
+            <!-- Studio Tools & Controls -->
+            <div class="flex items-center gap-1.5 border-r border-slate-800 pr-2">
+                <button id="sbBtnUndo" type="button" class="retro-btn px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 text-[10px] font-bold flex items-center gap-1" title="Undo Last Action (Ctrl+Z)">
+                    <span>↩️</span> Undo
+                </button>
+                <button id="sbBtnSnap" type="button" class="retro-btn px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-300 text-[10px] font-bold flex items-center gap-1" title="Toggle Grid Snap Mode">
+                    <span id="sbSnapLabel">🧲 Snap: 24px</span>
+                </button>
+                <button id="sbBtnToggleBaseDecor" type="button" class="retro-btn px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-200 text-[10px] font-bold flex items-center gap-1" title="Toggle Base Room Decor">
+                    <span id="sbBaseDecorLabel">Base Decor: Show</span>
+                </button>
+                <button id="sbBtnClearProps" type="button" class="retro-btn px-2 py-1 rounded-lg bg-rose-950/70 hover:bg-rose-900 border border-rose-700/60 text-rose-300 text-[10px] font-bold flex items-center gap-1" title="Clear all placed custom props in current room">
+                    <span>🗑️</span> Clear
+                </button>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-1.5">
+                <button id="sbBtnApplyLive" type="button" class="retro-btn px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold flex items-center gap-1">
+                    <span>💾</span> Apply Live
+                </button>
+                <button id="sbBtnExportJson" type="button" class="retro-btn px-3 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold flex items-center gap-1">
+                    <span>📋</span> Export JSON
+                </button>
+                <button id="sbBtnClose" type="button" class="retro-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold">
+                    ✕ Close [F3]
+                </button>
+            </div>
+        </div>
+
+        <!-- Coordinates & Info Pill -->
+        <div class="pointer-events-auto absolute top-20 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-slate-700/80 rounded-full px-3 py-0.5 text-[10px] mono-font text-amber-300 backdrop-blur-sm shadow flex items-center gap-2">
+            <span id="sbCoordText">Col: 0, Row: 0 (px: 0, py: 0)</span>
+            <span class="text-slate-500">•</span>
+            <span id="sbHoverItemText">Selected: None</span>
+        </div>
+
+        
+        <!-- Floating Contextual Prop Gizmo Toolbar -->
+        <div id="sbFloatingGizmo" class="pointer-events-auto fixed hidden -translate-x-1/2 -translate-y-full mb-3 bg-slate-950/95 border-2 border-cyan-400 shadow-[0_0_22px_rgba(34,211,238,0.45)] rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 backdrop-blur-md z-60 text-[10px]">
+            <span id="sbGizmoTitle" class="font-extrabold text-cyan-300 px-1 border-r border-slate-700">Prop</span>
+            <button id="sbGizmoMove" type="button" class="retro-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold flex items-center gap-1" title="Click & Drag object to move">
+                <span>✋ Move</span>
+            </button>
+            <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                <span class="text-slate-400 text-[9px]">Size:</span>
+                <button id="sbGizmoResizeDown" type="button" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 font-black" title="Scale Down (-16px)">−</button>
+                <span id="sbGizmoSizeText" class="mono-font text-white font-bold text-[9px]">48x48</span>
+                <button id="sbGizmoResizeUp" type="button" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 font-black" title="Scale Up (+16px)">+</button>
+            </div>
+            <button id="sbGizmoCollision" type="button" class="retro-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 font-bold flex items-center gap-1" title="Toggle Physical Obstacle Collision">
+                <span id="sbGizmoCollisionLabel">🧱 Solid: OFF</span>
+            </button>
+            <button id="sbGizmoLayer" type="button" class="retro-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold" title="Bring to Front Layer">
+                <span>⬆️ Front</span>
+            </button>
+            <button id="sbGizmoDelete" type="button" class="retro-btn px-2 py-0.5 rounded bg-rose-950 hover:bg-rose-900 border border-rose-700 text-rose-300 font-bold flex items-center gap-1" title="Delete Prop">
+                <span>🗑️</span>
+            </button>
+            <button id="sbGizmoClose" type="button" class="px-1 text-slate-400 hover:text-white font-bold" title="Deselect">✕</button>
+        </div>
+
+        <!-- Bottom Palette Drawer -->
+        <div class="pointer-events-auto absolute bottom-3 left-1/2 -translate-x-1/2 max-w-4xl w-[94vw] bg-slate-950/95 border-2 border-slate-700 shadow-2xl rounded-2xl p-3 flex flex-col gap-2 backdrop-blur-md">
+            <!-- Palette Category Tabs -->
+            <div class="flex items-center gap-1 border-b border-slate-800 pb-1.5 overflow-x-auto text-[10px]" id="sbPaletteTabs">
+                <button data-cat="interiors" type="button" class="sb-tab-btn active px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold">🏠 Floors & Walls</button>
+                <button data-cat="furniture" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🛋️ Furniture</button>
+                <button data-cat="decor" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🪴 Decor & Props</button>
+                <button data-cat="items" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🔮 Items & Pickups</button>
+                <button data-cat="terrain" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🌲 Overworld Terrain</button>
+                <button data-cat="entities" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">⚔️ Entities & NPCs</button>
+            </div>
+
+            <!-- Palette Items Grid -->
+            <div id="sbPaletteGrid" class="flex items-center gap-2 overflow-x-auto py-1 min-h-[58px] scrollbar-thin">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- JSON Export Dialog Modal -->
+        <div id="sbExportModal" class="pointer-events-auto fixed inset-0 z-60 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+            <div class="max-w-2xl w-full bg-slate-900 border-2 border-amber-500/80 rounded-2xl p-5 flex flex-col gap-3 shadow-2xl">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="pixel-font text-xs text-amber-300 font-bold flex items-center gap-2">
+                        <span>📋</span> EXPORTED MAP / ROOM CONFIGURATION
+                    </h3>
+                    <button id="sbBtnCloseExport" type="button" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">✕</button>
+                </div>
+                <textarea id="sbExportTextarea" class="w-full h-64 bg-slate-950 border border-slate-800 rounded-lg p-3 text-[11px] mono-font text-emerald-400 select-all" readonly></textarea>
+                <div class="flex justify-between items-center">
+                    <span id="sbExportToast" class="text-xs text-emerald-400 font-bold opacity-0 transition-opacity">✅ Copied to clipboard!</span>
+                    <div class="flex gap-2">
+                        <button id="sbBtnCopyJson" type="button" class="retro-btn px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5">
+                            <span>📋</span> Copy Code
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
     /***************************************************************************
      * THE ECHO REALM: CHRONICLES OF THE ARCHIVIST
@@ -5642,6 +5776,7 @@ const MAPS = [
     let particles = [];
     let floatingTexts = [];
     let screenShakeTime = 0;
+    let activeCamera = { camX: 0, camY: 0, zoom: 1.35, viewW: 800, viewH: 600 };
 
     // Zelda Item-Get Overhead Fanfare Pose State
     const itemFanfare = {
@@ -11064,6 +11199,8 @@ const MAPS = [
         if (worldH > viewH) camY = Math.max(0, Math.min(worldH - viewH, camY));
         else camY = Math.floor((worldH - viewH) / 2);
 
+        activeCamera = { camX, camY, zoom: ZOOM, viewW, viewH };
+
         if (screenShakeTime > 0 && document.getElementById('toggleShake').checked) {
             camX += (Math.random() - 0.5) * 10;
             camY += (Math.random() - 0.5) * 10;
@@ -12239,6 +12376,10 @@ const MAPS = [
         });
 
         ctx.restore();
+
+        if (appState === 'BUILDER') {
+            renderSceneBuilderOverlay(ctx, w, h);
+        }
 
         renderMinimap();
     }
@@ -14332,7 +14473,16 @@ const MAPS = [
             const domX = rect.left + canvasTargetX * scaleX;
             const domY = rect.top + canvasTargetY * scaleY;
 
-            gizmo.style.left = `${Math.round(domX)}px`;
+            if (domY < 85) {
+                gizmo.classList.remove('-translate-y-full', 'mb-3');
+                gizmo.classList.add('translate-y-2', 'mt-2');
+            } else {
+                gizmo.classList.remove('translate-y-2', 'mt-2');
+                gizmo.classList.add('-translate-y-full', 'mb-3');
+            }
+            const winW = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 1200;
+            const clampedX = Math.max(130, Math.min(winW - 130, domX));
+            gizmo.style.left = `${Math.round(clampedX)}px`;
             gizmo.style.top = `${Math.round(domY)}px`;
             gizmo.classList.remove('hidden');
 
@@ -14410,14 +14560,17 @@ const MAPS = [
                     ctx.textAlign = 'center';
                     ctx.fillText(`Click wall to apply ${builderSelected.name}`, offX + roomW / 2, offY + 60);
                 }
-            } else if (builderTool === 'place' && builderSelected) {
+            } else if ((builderTool === 'place' || builderTool === 'paint') && builderSelected) {
                 const pw = builderSelected.w || 48;
                 const ph = builderSelected.h || 48;
                 const px = offX + sx - pw / 2;
                 const py = offY + sy - ph / 2;
-                ctx.globalAlpha = 0.75;
+                ctx.save();
+                ctx.globalAlpha = 0.72;
                 if (assets.hasImage(builderSelected.id)) {
                     assets.drawImage(ctx, builderSelected.id, px, py, pw, ph);
+                } else if (builderSelected.id === 'training_dummy') {
+                    drawTrainingDummySprite(ctx, px + pw / 2, py + ph - 4, 1.8, 0);
                 } else {
                     ctx.fillStyle = '#fbbf24';
                     ctx.fillRect(px, py, pw, ph);
@@ -14425,7 +14578,35 @@ const MAPS = [
                 ctx.strokeStyle = '#38bdf8';
                 ctx.lineWidth = 1.5;
                 ctx.strokeRect(px, py, pw, ph);
-                ctx.globalAlpha = 1.0;
+                ctx.font = 'bold 9px monospace';
+                ctx.fillStyle = '#38bdf8';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${builderSelected.name} (${pw}x${ph})`, px + pw / 2, py - 4);
+                ctx.restore();
+            }
+
+            // High-Visibility Selected Prop Bounding Box & Gizmo Anchors
+            if (builderSelectedProp && currentInterior && currentInterior.props && currentInterior.props.includes(builderSelectedProp)) {
+                const bx = offX + builderSelectedProp.x;
+                const by = offY + builderSelectedProp.y;
+                const bw = builderSelectedProp.w;
+                const bh = builderSelectedProp.h;
+                ctx.save();
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 2]);
+                ctx.strokeRect(bx - 2, by - 2, bw + 4, bh + 4);
+                ctx.setLineDash([]);
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(bx - 4, by - 4, 6, 6);
+                ctx.fillRect(bx + bw - 2, by - 4, 6, 6);
+                ctx.fillRect(bx - 4, by + bh - 2, 6, 6);
+                ctx.fillRect(bx + bw - 2, by + bh - 2, 6, 6);
+                ctx.font = 'bold 10px monospace';
+                ctx.fillStyle = '#38bdf8';
+                ctx.textAlign = 'center';
+                ctx.fillText(`★ ${builderSelectedProp.name || 'Prop'} (${bw}x${bh})`, bx + bw / 2, by - 8);
+                ctx.restore();
             } else if (builderTool === 'move') {
                 if (currentInterior.props) {
                     currentInterior.props.forEach(p => {
@@ -14458,8 +14639,15 @@ const MAPS = [
                 }
             }
         } else if (builderMode === 'overworld') {
-            const camX = Math.floor(player.x - w / 2);
-            const camY = Math.floor(player.y - h / 2);
+            const zoom = (typeof activeCamera !== 'undefined' && activeCamera.zoom) ? activeCamera.zoom : 1.35;
+            const camX = (typeof activeCamera !== 'undefined' && Number.isFinite(activeCamera.camX)) ? activeCamera.camX : Math.floor(player.x - (w / zoom) / 2);
+            const camY = (typeof activeCamera !== 'undefined' && Number.isFinite(activeCamera.camY)) ? activeCamera.camY : Math.floor(player.y - (h / zoom) / 2);
+            const viewW = (typeof activeCamera !== 'undefined' && activeCamera.viewW) ? activeCamera.viewW : (w / zoom);
+            const viewH = (typeof activeCamera !== 'undefined' && activeCamera.viewH) ? activeCamera.viewH : (h / zoom);
+
+            ctx.save();
+            ctx.imageSmoothingEnabled = false;
+            ctx.scale(zoom, zoom);
             ctx.translate(-camX, -camY);
 
             const mapCols = getMapCols(currentMapIndex);
@@ -14787,6 +14975,9 @@ const MAPS = [
                 newProp.hasCollision = (builderSelected.type === 'furniture' || builderSelected.hasCollision || false);
                 currentInterior.props.push(newProp);
                 builderSelectedProp = newProp;
+                builderDraggedProp = newProp;
+                builderDragOffsetX = pw / 2;
+                builderDragOffsetY = ph / 2;
                 saveCurrentInterior();
                 updateFloatingGizmoUI();
                 addFloatText(player.x, player.y - 20, `Placed: ${builderSelected.name}`, '#10b981');
@@ -14884,10 +15075,11 @@ const MAPS = [
                 builderMouse.col = Math.floor(builderMouse.rx / snap);
                 builderMouse.row = Math.floor(builderMouse.ry / snap);
             } else {
-                const camX = Math.floor(player.x - canvas.width / 2);
-                const camY = Math.floor(player.y - canvas.height / 2);
-                const worldX = mx + camX;
-                const worldY = my + camY;
+                const zoom = (typeof activeCamera !== 'undefined' && activeCamera.zoom) ? activeCamera.zoom : 1.35;
+                const camX = (typeof activeCamera !== 'undefined' && Number.isFinite(activeCamera.camX)) ? activeCamera.camX : Math.floor(player.x - (canvas.width / zoom) / 2);
+                const camY = (typeof activeCamera !== 'undefined' && Number.isFinite(activeCamera.camY)) ? activeCamera.camY : Math.floor(player.y - (canvas.height / zoom) / 2);
+                const worldX = (mx / zoom) + camX;
+                const worldY = (my / zoom) + camY;
                 builderMouse.rx = worldX;
                 builderMouse.ry = worldY;
                 builderMouse.col = Math.floor(worldX / TILE_SIZE);
@@ -15355,8 +15547,10 @@ const MAPS = [
                     hideWeapons: true,
                     equipment: null
                 });
-            } else if (appState === 'PLAYING' || appState === 'PAUSED' || appState === 'DIALOGUE' || appState === 'ITEM_FANFARE') {
-                updateGameplay(dt);
+            } else if (appState === 'PLAYING' || appState === 'PAUSED' || appState === 'DIALOGUE' || appState === 'ITEM_FANFARE' || appState === 'BUILDER') {
+                if (appState !== 'BUILDER' && appState !== 'PAUSED') {
+                    updateGameplay(dt);
+                }
                 renderGameplay();
                 const wmModal = document.getElementById('worldMapModal');
                 if (wmModal && !wmModal.classList.contains('hidden')) {
@@ -15379,140 +15573,6 @@ const MAPS = [
         requestAnimationFrame(mainLoop);
     };
     </script>
-
-    <!-- =================================================================== -->
-    <!-- SCENE & MAP BUILDER STUDIO (IN-ENGINE DEV ENVIRONMENT)              -->
-    <!-- =================================================================== -->
-    <div id="sceneBuilderModal" class="fixed inset-0 z-50 pointer-events-none hidden select-none">
-        <!-- Top Toolbar -->
-        <div class="pointer-events-auto absolute top-3 left-1/2 -translate-x-1/2 bg-slate-950/95 border-2 border-amber-500/60 shadow-[0_0_25px_rgba(217,119,6,0.35)] rounded-2xl px-4 py-2.5 flex items-center gap-3 backdrop-blur-md">
-            <div class="flex items-center gap-2 border-r border-slate-800 pr-3">
-                <span class="text-amber-400 text-sm">🛠️</span>
-                <span id="sbModeBadge" class="pixel-font text-[10px] text-amber-300 font-extrabold tracking-wide">INTERIOR STUDIO</span>
-            </div>
-
-            <!-- Mode Switcher -->
-            <button id="sbBtnSwitchMode" type="button" class="retro-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[10px] text-cyan-300 font-bold flex items-center gap-1">
-                <span>🔄</span> Switch: Overworld
-            </button>
-
-            <!-- Tools -->
-            <div class="flex items-center gap-1 border-x border-slate-800 px-2" id="sbToolsGroup">
-                <button id="sbToolPaint" data-tool="paint" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 text-[10px] font-extrabold flex items-center gap-1 shadow">
-                    <span>🖌️</span> Paint
-                </button>
-                <button id="sbToolPlace" data-tool="place" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center gap-1">
-                    <span>📦</span> Place
-                </button>
-                <button id="sbToolMove" data-tool="move" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center gap-1">
-                    <span>✋</span> Move
-                </button>
-                <button id="sbToolErase" data-tool="erase" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-rose-400 text-[10px] font-bold flex items-center gap-1">
-                    <span>❌</span> Erase
-                </button>
-            </div>
-
-            <!-- Studio Tools & Controls -->
-            <div class="flex items-center gap-1.5 border-r border-slate-800 pr-2">
-                <button id="sbBtnUndo" type="button" class="retro-btn px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 text-[10px] font-bold flex items-center gap-1" title="Undo Last Action (Ctrl+Z)">
-                    <span>↩️</span> Undo
-                </button>
-                <button id="sbBtnSnap" type="button" class="retro-btn px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-300 text-[10px] font-bold flex items-center gap-1" title="Toggle Grid Snap Mode">
-                    <span id="sbSnapLabel">🧲 Snap: 24px</span>
-                </button>
-                <button id="sbBtnToggleBaseDecor" type="button" class="retro-btn px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-200 text-[10px] font-bold flex items-center gap-1" title="Toggle Base Room Decor">
-                    <span id="sbBaseDecorLabel">Base Decor: Show</span>
-                </button>
-                <button id="sbBtnClearProps" type="button" class="retro-btn px-2 py-1 rounded-lg bg-rose-950/70 hover:bg-rose-900 border border-rose-700/60 text-rose-300 text-[10px] font-bold flex items-center gap-1" title="Clear all placed custom props in current room">
-                    <span>🗑️</span> Clear
-                </button>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex items-center gap-1.5">
-                <button id="sbBtnApplyLive" type="button" class="retro-btn px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold flex items-center gap-1">
-                    <span>💾</span> Apply Live
-                </button>
-                <button id="sbBtnExportJson" type="button" class="retro-btn px-3 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold flex items-center gap-1">
-                    <span>📋</span> Export JSON
-                </button>
-                <button id="sbBtnClose" type="button" class="retro-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold">
-                    ✕ Close [F3]
-                </button>
-            </div>
-        </div>
-
-        <!-- Coordinates & Info Pill -->
-        <div class="pointer-events-auto absolute top-20 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-slate-700/80 rounded-full px-3 py-0.5 text-[10px] mono-font text-amber-300 backdrop-blur-sm shadow flex items-center gap-2">
-            <span id="sbCoordText">Col: 0, Row: 0 (px: 0, py: 0)</span>
-            <span class="text-slate-500">•</span>
-            <span id="sbHoverItemText">Selected: None</span>
-        </div>
-
-        
-        <!-- Floating Contextual Prop Gizmo Toolbar -->
-        <div id="sbFloatingGizmo" class="pointer-events-auto fixed hidden -translate-x-1/2 -translate-y-full mb-3 bg-slate-950/95 border-2 border-cyan-400 shadow-[0_0_22px_rgba(34,211,238,0.45)] rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 backdrop-blur-md z-60 text-[10px]">
-            <span id="sbGizmoTitle" class="font-extrabold text-cyan-300 px-1 border-r border-slate-700">Prop</span>
-            <button id="sbGizmoMove" type="button" class="retro-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold flex items-center gap-1" title="Click & Drag object to move">
-                <span>✋ Move</span>
-            </button>
-            <div class="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
-                <span class="text-slate-400 text-[9px]">Size:</span>
-                <button id="sbGizmoResizeDown" type="button" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 font-black" title="Scale Down (-16px)">−</button>
-                <span id="sbGizmoSizeText" class="mono-font text-white font-bold text-[9px]">48x48</span>
-                <button id="sbGizmoResizeUp" type="button" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 font-black" title="Scale Up (+16px)">+</button>
-            </div>
-            <button id="sbGizmoCollision" type="button" class="retro-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 font-bold flex items-center gap-1" title="Toggle Physical Obstacle Collision">
-                <span id="sbGizmoCollisionLabel">🧱 Solid: OFF</span>
-            </button>
-            <button id="sbGizmoLayer" type="button" class="retro-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold" title="Bring to Front Layer">
-                <span>⬆️ Front</span>
-            </button>
-            <button id="sbGizmoDelete" type="button" class="retro-btn px-2 py-0.5 rounded bg-rose-950 hover:bg-rose-900 border border-rose-700 text-rose-300 font-bold flex items-center gap-1" title="Delete Prop">
-                <span>🗑️</span>
-            </button>
-            <button id="sbGizmoClose" type="button" class="px-1 text-slate-400 hover:text-white font-bold" title="Deselect">✕</button>
-        </div>
-
-        <!-- Bottom Palette Drawer -->
-        <div class="pointer-events-auto absolute bottom-3 left-1/2 -translate-x-1/2 max-w-4xl w-[94vw] bg-slate-950/95 border-2 border-slate-700 shadow-2xl rounded-2xl p-3 flex flex-col gap-2 backdrop-blur-md">
-            <!-- Palette Category Tabs -->
-            <div class="flex items-center gap-1 border-b border-slate-800 pb-1.5 overflow-x-auto text-[10px]" id="sbPaletteTabs">
-                <button data-cat="interiors" type="button" class="sb-tab-btn active px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold">🏠 Floors & Walls</button>
-                <button data-cat="furniture" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🛋️ Furniture</button>
-                <button data-cat="decor" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🪴 Decor & Props</button>
-                <button data-cat="items" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🔮 Items & Pickups</button>
-                <button data-cat="terrain" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🌲 Overworld Terrain</button>
-                <button data-cat="entities" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">⚔️ Entities & NPCs</button>
-            </div>
-
-            <!-- Palette Items Grid -->
-            <div id="sbPaletteGrid" class="flex items-center gap-2 overflow-x-auto py-1 min-h-[58px] scrollbar-thin">
-                <!-- Dynamically populated -->
-            </div>
-        </div>
-
-        <!-- JSON Export Dialog Modal -->
-        <div id="sbExportModal" class="pointer-events-auto fixed inset-0 z-60 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-            <div class="max-w-2xl w-full bg-slate-900 border-2 border-amber-500/80 rounded-2xl p-5 flex flex-col gap-3 shadow-2xl">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                    <h3 class="pixel-font text-xs text-amber-300 font-bold flex items-center gap-2">
-                        <span>📋</span> EXPORTED MAP / ROOM CONFIGURATION
-                    </h3>
-                    <button id="sbBtnCloseExport" type="button" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">✕</button>
-                </div>
-                <textarea id="sbExportTextarea" class="w-full h-64 bg-slate-950 border border-slate-800 rounded-lg p-3 text-[11px] mono-font text-emerald-400 select-all" readonly></textarea>
-                <div class="flex justify-between items-center">
-                    <span id="sbExportToast" class="text-xs text-emerald-400 font-bold opacity-0 transition-opacity">✅ Copied to clipboard!</span>
-                    <div class="flex gap-2">
-                        <button id="sbBtnCopyJson" type="button" class="retro-btn px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5">
-                            <span>📋</span> Copy Code
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
 </body>
 </html>
