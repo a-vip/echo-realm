@@ -98,12 +98,12 @@ def make_centered_portrait(im_single_char, scale_factor=None, size=64):
 
 
 def build_player_male():
-    """Replaces kneeling farmer (idx 0) with standing blue-tunic Heroic Adventurer (TownsPeople2 idx 11)."""
-    with zipfile.ZipFile(os.path.join(ASSETS_DIR, "TownsPeople2.zip")) as z:
-        anim = Image.open(io.BytesIO(z.read("TownsPeople2_Animations.png"))).convert("RGBA")
-        trainers = Image.open(io.BytesIO(z.read("TownsPeople2_Trainers.png"))).convert("RGBA")
+    """Builds standing Heroic Adventurer in Blue Tunic (Townspeople idx 0)."""
+    with zipfile.ZipFile(os.path.join(ASSETS_DIR, "Townspeople.zip")) as z:
+        anim = Image.open(io.BytesIO(z.read("Townspeople_Animations.png"))).convert("RGBA")
+        trainers = Image.open(io.BytesIO(z.read("Townspeople_Trainers.png"))).convert("RGBA")
 
-    idx = 11  # Row 2, Col 3: Standing Adventurer in Blue Tunic
+    idx = 0  # Row 0, Col 0: Protagonist Heroic Adventurer in Blue Tunic
     col, row = idx % 4, idx // 4
     base_x, base_y = col * 54, row * 104
     grid = anim.crop((base_x, base_y, base_x + 54, base_y + 104))
@@ -333,3 +333,4 @@ if __name__ == "__main__":
     build_clown_demagogue()
     build_peacock_assets()
     print("All assets built and verified successfully!")
+
