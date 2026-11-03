@@ -1996,6 +1996,10 @@
     assets.registerImage('int_window', 'assets/ingame/environment/interiors/decor/window_curtain.png');
     assets.registerImage('int_plant_fern', 'assets/ingame/environment/interiors/decor/potted_plant_fern.png');
     assets.registerImage('int_plant_flower', 'assets/ingame/environment/interiors/decor/potted_plant_flowering.png');
+    assets.registerImage('int_pot_clay', 'assets/ingame/environment/interiors/decor/pot_clay.png');
+    assets.registerImage('int_pot_amphora', 'assets/ingame/environment/interiors/decor/pot_amphora.png');
+    assets.registerImage('int_pot_cauldron', 'assets/ingame/environment/interiors/decor/pot_cauldron.png');
+    assets.registerImage('int_barrel_wood', 'assets/ingame/environment/interiors/decor/barrel_wood.png');
 
     // =========================================================================
     // CITY & URBAN TILESETS, PROPS & CIVIC BUILDINGS
@@ -9443,6 +9447,18 @@ const MAPS = [
             w: 120, h: 80
         };
 
+        let savedInterior = building.customInterior;
+        if (!savedInterior && typeof localStorage !== 'undefined') {
+            try {
+                const raw = localStorage.getItem('echo_realm_custom_interior_' + building.id);
+                if (raw) savedInterior = JSON.parse(raw);
+            } catch (e) {}
+        }
+        const props = savedInterior && Array.isArray(savedInterior.props) ? JSON.parse(JSON.stringify(savedInterior.props)) : [];
+        const floorType = (savedInterior && savedInterior.floorType) || 'int_floor_wood';
+        const wallType = (savedInterior && savedInterior.wallType) || 'int_wall_wood';
+        const hideDefaultDecor = savedInterior ? !!savedInterior.hideDefaultDecor : false;
+
         currentInterior = {
             building,
             buildingId: building.id,
@@ -9456,6 +9472,10 @@ const MAPS = [
             chest,
             prop,
             pots: [],
+            props,
+            floorType,
+            wallType,
+            hideDefaultDecor,
             returnX: player.x,
             returnY: player.y,
             mapIndex: currentMapIndex,
@@ -10253,16 +10273,17 @@ const MAPS = [
         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
         ctx.fillRect(offX - 10, offY - 10, roomW + 20, roomH + 20);
 
-        // 2. Authentic Pixel-Art Hardwood Flooring (Tiled 48x48 oak plank boards)
+        // 2. Authentic Pixel-Art Hardwood Flooring (Tiled 48x48 plank boards with dynamic room style)
         const floorY = offY + 110;
         const floorH = roomH - 110;
         const tileSz = 48;
-        if (assets.hasImage('int_floor_wood')) {
+        const floorSprite = (currentInterior && currentInterior.floorType) || 'int_floor_wood';
+        if (assets.hasImage(floorSprite)) {
             for (let fy = floorY; fy < offY + roomH; fy += tileSz) {
                 const dh = Math.min(tileSz, offY + roomH - fy);
                 for (let fx = offX; fx < offX + roomW; fx += tileSz) {
                     const dw = Math.min(tileSz, offX + roomW - fx);
-                    assets.drawImage(ctx, 'int_floor_wood', 0, 0, dw, dh, fx, fy, dw, dh);
+                    assets.drawImage(ctx, floorSprite, 0, 0, dw, dh, fx, fy, dw, dh);
                 }
             }
         } else {
@@ -10277,12 +10298,13 @@ const MAPS = [
             }
         }
 
-        // 3. Back Wall: Authentic Pixel-Art Wainscot Wood Paneling
+        // 3. Back Wall: Authentic Pixel-Art Paneling with dynamic room wall style
         const wallH = 110;
-        if (assets.hasImage('int_wall_wood')) {
+        const wallSprite = (currentInterior && currentInterior.wallType) || 'int_wall_wood';
+        if (assets.hasImage(wallSprite)) {
             for (let wx = offX; wx < offX + roomW; wx += 48) {
                 const dw = Math.min(48, offX + roomW - wx);
-                assets.drawImage(ctx, 'int_wall_wood', 0, 0, dw, 96, wx, offY + 14, dw, 96);
+                assets.drawImage(ctx, wallSprite, 0, 0, dw, 96, wx, offY + 14, dw, 96);
             }
             // Crown moulding header at ceiling top
             ctx.fillStyle = '#3e1e0d';
@@ -10294,123 +10316,116 @@ const MAPS = [
             ctx.fillRect(offX, offY, roomW, wallH);
         }
 
-        // Framed Authentic Pixel-Art Wall Art (Pixel-Perfect 48x48)
-        if (assets.hasImage('int_painting_landscape')) {
-            assets.drawImage(ctx, 'int_painting_landscape', offX + 175, offY + 28, 48, 48);
-        }
-        if (assets.hasImage('int_painting_portrait')) {
-            assets.drawImage(ctx, 'int_painting_portrait', offX + roomW - 225, offY + 28, 48, 48);
-        }
-
-        // 4. Authentic Pixel-Art Curtain Windows with Gentle Sunbeams (Pixel-Perfect 64x64)
-        const winPositions = [offX + 80, offX + roomW - 150];
-        winPositions.forEach((wx, wIdx) => {
-            if (assets.hasImage('int_window')) {
-                assets.drawImage(ctx, 'int_window', wx, offY + 20, 64, 64);
+        // Base Default Room Decor & Furniture (Can be toggled via Scene Builder)
+        if (!currentInterior.hideDefaultDecor) {
+            // Framed Authentic Pixel-Art Wall Art (Pixel-Perfect 48x48)
+            if (assets.hasImage('int_painting_landscape')) {
+                assets.drawImage(ctx, 'int_painting_landscape', offX + 175, offY + 28, 48, 48);
             }
-            // Gentle warm sunbeam projecting downward onto the floor
-            const sunGrad = ctx.createLinearGradient(wx + 32, offY + 80, wx + (wIdx === 0 ? 80 : -40), floorY + 200);
-            sunGrad.addColorStop(0, 'rgba(254, 240, 138, 0.16)');
-            sunGrad.addColorStop(0.7, 'rgba(254, 240, 138, 0.04)');
-            sunGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
-            ctx.fillStyle = sunGrad;
+            if (assets.hasImage('int_painting_portrait')) {
+                assets.drawImage(ctx, 'int_painting_portrait', offX + roomW - 225, offY + 28, 48, 48);
+            }
+
+            // 4. Authentic Pixel-Art Curtain Windows with Gentle Sunbeams (Pixel-Perfect 64x64)
+            const winPositions = [offX + 80, offX + roomW - 150];
+            winPositions.forEach((wx, wIdx) => {
+                if (assets.hasImage('int_window')) {
+                    assets.drawImage(ctx, 'int_window', wx, offY + 20, 64, 64);
+                }
+                const sunGrad = ctx.createLinearGradient(wx + 32, offY + 80, wx + (wIdx === 0 ? 80 : -40), floorY + 200);
+                sunGrad.addColorStop(0, 'rgba(254, 240, 138, 0.16)');
+                sunGrad.addColorStop(0.7, 'rgba(254, 240, 138, 0.04)');
+                sunGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+                ctx.fillStyle = sunGrad;
+                ctx.beginPath();
+                ctx.moveTo(wx + 8, offY + 84);
+                ctx.lineTo(wx + 56, offY + 84);
+                ctx.lineTo(wx + (wIdx === 0 ? 140 : 0), floorY + 200);
+                ctx.lineTo(wx + (wIdx === 0 ? 30 : -110), floorY + 200);
+                ctx.closePath();
+                ctx.fill();
+            });
+
+            // 5. Central Stone Fireplace with Real 8-Frame Pixel-Art Fire Animation! (Pixel-Perfect 48x48)
+            const fpW = 48;
+            const fpH = 48;
+            const fpX = offX + Math.floor(roomW / 2) - Math.floor(fpW / 2);
+            const fpY = offY + 36;
+
+            const hearthGlow = ctx.createRadialGradient(fpX + fpW / 2, fpY + fpH - 6, 6, fpX + fpW / 2, fpY + fpH - 6, 75);
+            hearthGlow.addColorStop(0, 'rgba(254, 215, 170, 0.35)');
+            hearthGlow.addColorStop(0.5, 'rgba(249, 115, 22, 0.14)');
+            hearthGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = hearthGlow;
             ctx.beginPath();
-            ctx.moveTo(wx + 8, offY + 84);
-            ctx.lineTo(wx + 56, offY + 84);
-            ctx.lineTo(wx + (wIdx === 0 ? 140 : 0), floorY + 200);
-            ctx.lineTo(wx + (wIdx === 0 ? 30 : -110), floorY + 200);
-            ctx.closePath();
+            ctx.arc(fpX + fpW / 2, fpY + fpH - 6, 75, 0, Math.PI * 2);
             ctx.fill();
-        });
 
-        // 5. Central Stone Fireplace with Real 8-Frame Pixel-Art Fire Animation! (Pixel-Perfect 48x48)
-        const fpW = 48;
-        const fpH = 48;
-        const fpX = offX + Math.floor(roomW / 2) - Math.floor(fpW / 2);
-        const fpY = offY + 36;
+            if (assets.hasImage('int_fireplace_anim')) {
+                const fpFrame = Math.floor(performance.now() / 120) % 8;
+                assets.drawImage(ctx, 'int_fireplace_anim', fpFrame * 48, 0, 48, 48, fpX, fpY, fpW, fpH);
+            } else if (assets.hasImage('int_fireplace_brick')) {
+                assets.drawImage(ctx, 'int_fireplace_brick', fpX, fpY, fpW, fpH);
+            }
 
-        // Warm radial ambient hearth glow
-        const hearthGlow = ctx.createRadialGradient(fpX + fpW / 2, fpY + fpH - 6, 6, fpX + fpW / 2, fpY + fpH - 6, 75);
-        hearthGlow.addColorStop(0, 'rgba(254, 215, 170, 0.35)');
-        hearthGlow.addColorStop(0.5, 'rgba(249, 115, 22, 0.14)');
-        hearthGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = hearthGlow;
-        ctx.beginPath();
-        ctx.arc(fpX + fpW / 2, fpY + fpH - 6, 75, 0, Math.PI * 2);
-        ctx.fill();
+            // 6. Luxurious Real Pixel-Art Area Rug in Center of Living Room (Pixel-Perfect 192x192)
+            const rugW = 192;
+            const rugH = 192;
+            const rugX = offX + Math.floor((roomW - rugW) / 2);
+            const rugY = floorY + 40;
+            if (assets.hasImage('int_rug_large')) {
+                ctx.fillStyle = 'rgba(15, 10, 6, 0.35)';
+                ctx.fillRect(rugX - 4, rugY - 4, rugW + 8, rugH + 8);
+                assets.drawImage(ctx, 'int_rug_large', rugX, rugY, rugW, rugH);
+            }
 
-        if (assets.hasImage('int_fireplace_anim')) {
-            const fpFrame = Math.floor(performance.now() / 120) % 8;
-            assets.drawImage(ctx, 'int_fireplace_anim', fpFrame * 48, 0, 48, 48, fpX, fpY, fpW, fpH);
-        } else if (assets.hasImage('int_fireplace_brick')) {
-            assets.drawImage(ctx, 'int_fireplace_brick', fpX, fpY, fpW, fpH);
-        }
+            // 7. Authentic Pixel-Art Bookshelves on Left Wall
+            const bsX = offX + 16;
+            const bsY = floorY + 10;
+            if (assets.hasImage('int_bookshelf_wide')) {
+                assets.drawImage(ctx, 'int_bookshelf_wide', bsX, bsY, 96, 96);
+            } else if (assets.hasImage('int_bookshelf_tall')) {
+                assets.drawImage(ctx, 'int_bookshelf_tall', bsX, bsY, 48, 96);
+            }
 
-        // 6. Luxurious Real Pixel-Art Area Rug in Center of Living Room (Pixel-Perfect 192x192)
-        const rugW = 192;
-        const rugH = 192;
-        const rugX = offX + Math.floor((roomW - rugW) / 2);
-        const rugY = floorY + 40;
-        if (assets.hasImage('int_rug_large')) {
-            ctx.fillStyle = 'rgba(15, 10, 6, 0.35)';
-            ctx.fillRect(rugX - 4, rugY - 4, rugW + 8, rugH + 8);
-            assets.drawImage(ctx, 'int_rug_large', rugX, rugY, rugW, rugH);
-        } else {
-            ctx.fillStyle = '#7f1d1d';
-            ctx.fillRect(rugX, rugY, rugW, rugH);
-            ctx.strokeStyle = '#fbbf24';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(rugX + 8, rugY + 8, rugW - 16, rugH - 16);
-        }
+            // 8. Study Desk & Chair on Left
+            const deskX = offX + 30;
+            const deskY = floorY + 120;
+            if (assets.hasImage('int_chair_study')) {
+                assets.drawImage(ctx, 'int_chair_study', deskX + 8, deskY - 24, 48, 48);
+            }
+            if (assets.hasImage('int_desk_scholar')) {
+                assets.drawImage(ctx, 'int_desk_scholar', deskX, deskY, 64, 48);
+            }
 
-        // 7. Authentic Pixel-Art Bookshelves on Left Wall (Pixel-Perfect 96x96 High-Res Modern Bookshelf)
-        const bsX = offX + 16;
-        const bsY = floorY + 10;
-        if (assets.hasImage('int_bookshelf_wide')) {
-            assets.drawImage(ctx, 'int_bookshelf_wide', bsX, bsY, 96, 96);
-        } else if (assets.hasImage('int_bookshelf_tall')) {
-            assets.drawImage(ctx, 'int_bookshelf_tall', bsX, bsY, 48, 96);
-        }
+            // 9. Dining Table & High-Backed Armchairs
+            const tblW = 96;
+            const tblH = 48;
+            const tblX = rugX + Math.floor((rugW - tblW) / 2);
+            const tblY = rugY + 70;
 
-        // 8. Study Desk & Chair on Left (Pixel-Perfect 64x48 Desk & 48x48 Chair)
-        const deskX = offX + 30;
-        const deskY = floorY + 120;
-        if (assets.hasImage('int_chair_study')) {
-            assets.drawImage(ctx, 'int_chair_study', deskX + 8, deskY - 24, 48, 48);
-        }
-        if (assets.hasImage('int_desk_scholar')) {
-            assets.drawImage(ctx, 'int_desk_scholar', deskX, deskY, 64, 48);
-        }
+            if (assets.hasImage('int_chair_armchair')) {
+                assets.drawImage(ctx, 'int_chair_armchair', tblX - 44, tblY, 48, 48);
+                assets.drawImage(ctx, 'int_chair_armchair', tblX + tblW - 4, tblY, 48, 48);
+            }
 
-        // 9. Dining Table & High-Backed Armchairs (Placed symmetrically on the carpet - Pixel-Perfect 96x48 & 48x48)
-        const tblW = 96;
-        const tblH = 48;
-        const tblX = rugX + Math.floor((rugW - tblW) / 2);
-        const tblY = rugY + 70;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.fillRect(tblX + 4, tblY + tblH - 4, tblW - 8, 8);
 
-        // Flanking Armchairs
-        if (assets.hasImage('int_chair_armchair')) {
-            assets.drawImage(ctx, 'int_chair_armchair', tblX - 44, tblY, 48, 48);
-            assets.drawImage(ctx, 'int_chair_armchair', tblX + tblW - 4, tblY, 48, 48);
-        }
+            if (assets.hasImage('int_table_dining')) {
+                assets.drawImage(ctx, 'int_table_dining', tblX, tblY, tblW, tblH);
+            } else if (assets.hasImage('int_table_coffee')) {
+                assets.drawImage(ctx, 'int_table_coffee', tblX, tblY, tblW, tblH);
+            }
 
-        // Tabletop Drop Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-        ctx.fillRect(tblX + 4, tblY + tblH - 4, tblW - 8, 8);
-
-        if (assets.hasImage('int_table_dining')) {
-            assets.drawImage(ctx, 'int_table_dining', tblX, tblY, tblW, tblH);
-        } else if (assets.hasImage('int_table_coffee')) {
-            assets.drawImage(ctx, 'int_table_coffee', tblX, tblY, tblW, tblH);
-        }
-
-        // 10. Lush Potted Ferns & Plants in the Room Corners (Pixel-Perfect 48x48)
-        if (assets.hasImage('int_plant_fern')) {
-            assets.drawImage(ctx, 'int_plant_fern', offX + 24, offY + roomH - 90, 48, 48);
-            assets.drawImage(ctx, 'int_plant_fern', offX + roomW - 72, offY + roomH - 90, 48, 48);
-        }
-        if (assets.hasImage('int_plant_flower')) {
-            assets.drawImage(ctx, 'int_plant_flower', offX + roomW - 120, floorY + 20, 48, 48);
+            // 10. Lush Potted Ferns & Plants in the Room Corners
+            if (assets.hasImage('int_plant_fern')) {
+                assets.drawImage(ctx, 'int_plant_fern', offX + 24, offY + roomH - 90, 48, 48);
+                assets.drawImage(ctx, 'int_plant_fern', offX + roomW - 72, offY + roomH - 90, 48, 48);
+            }
+            if (assets.hasImage('int_plant_flower')) {
+                assets.drawImage(ctx, 'int_plant_flower', offX + roomW - 120, floorY + 20, 48, 48);
+            }
         }
 
         // Render Custom Scene Builder Placed Props in Room Interior
@@ -13611,6 +13626,9 @@ const MAPS = [
     let builderTool = 'place';    // 'paint', 'place', 'move', 'erase'
     let builderSelected = null;
     let builderDraggedProp = null;
+    let builderSnapSize = 24;     // 48, 24, or 0 (Free)
+    let builderIsMouseDown = false;
+    let builderUndoStack = [];
     let builderMouse = { x: 0, y: 0, col: 0, row: 0, rx: 0, ry: 0 };
 
     const BUILDER_CATALOG = {
@@ -13628,20 +13646,26 @@ const MAPS = [
             { id: 'int_bookshelf_medium', name: 'Medium Half Shelf', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_medium.png' },
             { id: 'int_table_dining', name: 'Dining Table', type: 'prop', w: 96, h: 48, preview: 'assets/ingame/environment/interiors/tables/table_dining.png' },
             { id: 'int_desk_scholar', name: 'Scholar Desk', type: 'prop', w: 64, h: 48, preview: 'assets/ingame/environment/interiors/tables/desk_scholar.png' },
-            { id: 'int_table_coffee', name: 'Coffee Table', type: 'prop', w: 96, h: 72, preview: 'assets/ingame/environment/interiors/tables/table_coffee.png' },
+            { id: 'int_table_coffee', name: 'Coffee Table', type: 'prop', w: 96, h: 64, preview: 'assets/ingame/environment/interiors/tables/table_coffee.png' },
             { id: 'int_chair_armchair', name: 'Armchair', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/chairs/chair_armchair.png' },
             { id: 'int_chair_study', name: 'Study Chair', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/chairs/chair_study.png' },
             { id: 'int_fireplace_anim', name: 'Animated Chimney', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/fireplaces/fireplace_brick.png' },
             { id: 'int_fireplace_brick', name: 'Brick Fireplace', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/fireplaces/fireplace_brick.png' },
-            { id: 'int_rug_large', name: 'Ornate Persian Rug', type: 'prop', w: 192, h: 192, preview: 'assets/ingame/environment/interiors/carpets/rug_ornate_large.png' }
+            { id: 'int_rug_large', name: 'Ornate Persian Rug', type: 'prop', w: 192, h: 192, preview: 'assets/ingame/environment/interiors/carpets/rug_ornate_large.png' },
+            { id: 'int_rug_runner', name: 'Runner Rug', type: 'prop', w: 64, h: 64, preview: 'assets/ingame/environment/interiors/carpets/rug_runner.png' }
         ],
         decor: [
             { id: 'int_window', name: 'Curtain Window', type: 'prop', w: 64, h: 64, preview: 'assets/ingame/environment/interiors/decor/window_curtain.png' },
-            { id: 'int_painting_landscape', name: 'Landscape Painting', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/decor/painting_landscape.png' },
-            { id: 'int_painting_portrait', name: 'Portrait Painting', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/decor/painting_portrait.png' },
+            { id: 'int_painting_landscape', name: 'Landscape Art', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/decor/painting_landscape.png' },
+            { id: 'int_painting_portrait', name: 'Portrait Art', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/decor/painting_portrait.png' },
+            { id: 'int_painting_classic', name: 'Classic Art', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/decor/painting_classic.png' },
             { id: 'int_plant_fern', name: 'Potted Fern', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/decor/potted_plant_fern.png' },
             { id: 'int_plant_flower', name: 'Potted Flower', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/decor/potted_plant_flowering.png' },
-            { id: 'alttp_chest_lone', name: 'Treasure Chest', type: 'prop', w: 44, h: 44, preview: 'assets/ingame/environment/interiors/decor/potted_plant_fern.png' }
+            { id: 'int_pot_clay', name: 'Clay Urn', type: 'prop', w: 32, h: 32, preview: 'assets/ingame/environment/interiors/decor/pot_clay.png' },
+            { id: 'int_pot_amphora', name: 'Ceramic Amphora', type: 'prop', w: 32, h: 32, preview: 'assets/ingame/environment/interiors/decor/pot_amphora.png' },
+            { id: 'int_pot_cauldron', name: 'Iron Cauldron', type: 'prop', w: 32, h: 32, preview: 'assets/ingame/environment/interiors/decor/pot_cauldron.png' },
+            { id: 'int_barrel_wood', name: 'Wooden Barrel', type: 'prop', w: 32, h: 32, preview: 'assets/ingame/environment/interiors/decor/barrel_wood.png' },
+            { id: 'alttp_chest_lone', name: 'Treasure Chest', type: 'prop', w: 44, h: 44, preview: 'assets/sprites/alttp_chest_lone.png' }
         ],
         terrain: [
             { id: 'tile_0', name: 'Grass Ground', type: 'tile', tileId: 0, w: 32, h: 32 },
@@ -13660,10 +13684,107 @@ const MAPS = [
         ]
     };
 
+    function setBuilderTool(tool) {
+        builderTool = tool;
+        if (typeof document !== 'undefined') {
+            document.querySelectorAll('.sb-tool-btn').forEach(b => {
+                if (b.dataset.tool === tool) {
+                    b.classList.remove('bg-slate-900', 'text-slate-300', 'font-bold');
+                    b.classList.add('bg-amber-500', 'text-slate-950', 'font-extrabold', 'shadow');
+                } else {
+                    b.classList.remove('bg-amber-500', 'text-slate-950', 'font-extrabold', 'shadow');
+                    b.classList.add('bg-slate-900', 'text-slate-300', 'font-bold');
+                }
+            });
+        }
+    }
+
+    function pushBuilderUndo() {
+        if (builderMode === 'interior' && currentInterior) {
+            builderUndoStack.push({
+                mode: 'interior',
+                buildingId: currentInterior.building?.id,
+                props: JSON.parse(JSON.stringify(currentInterior.props || [])),
+                floorType: currentInterior.floorType,
+                wallType: currentInterior.wallType,
+                hideDefaultDecor: currentInterior.hideDefaultDecor
+            });
+        } else if (builderMode === 'overworld') {
+            builderUndoStack.push({
+                mode: 'overworld',
+                mapIndex: currentMapIndex,
+                grid: mapGrid.map(row => row.slice())
+            });
+        }
+        if (builderUndoStack.length > 30) builderUndoStack.shift();
+    }
+
+    function undoBuilderAction() {
+        if (builderUndoStack.length === 0) {
+            addFloatText(player.x, player.y - 20, 'Nothing to Undo', '#94a3b8');
+            return;
+        }
+        const state = builderUndoStack.pop();
+        if (state.mode === 'interior' && currentInterior) {
+            currentInterior.props = state.props;
+            currentInterior.floorType = state.floorType;
+            currentInterior.wallType = state.wallType;
+            currentInterior.hideDefaultDecor = state.hideDefaultDecor;
+            saveCurrentInterior();
+            addFloatText(player.x, player.y - 20, '↩️ Reverted Room Edit', '#38bdf8');
+        } else if (state.mode === 'overworld') {
+            mapGrid = state.grid.map(row => row.slice());
+            addFloatText(player.x, player.y - 20, '↩️ Reverted Map Edit', '#38bdf8');
+        }
+    }
+
+    function saveCurrentInterior() {
+        if (!currentInterior || !currentInterior.building) return;
+        const b = currentInterior.building;
+        b.customInterior = {
+            props: currentInterior.props || [],
+            floorType: currentInterior.floorType || 'int_floor_wood',
+            wallType: currentInterior.wallType || 'int_wall_wood',
+            hideDefaultDecor: !!currentInterior.hideDefaultDecor
+        };
+        if (typeof localStorage !== 'undefined') {
+            try {
+                localStorage.setItem('echo_realm_custom_interior_' + b.id, JSON.stringify(b.customInterior));
+            } catch (e) {}
+        }
+    }
+
+    function clearCurrentInteriorProps() {
+        if (!currentInterior) return;
+        pushBuilderUndo();
+        currentInterior.props = [];
+        saveCurrentInterior();
+        addFloatText(player.x, player.y - 20, '🗑️ Cleared All Placed Props', '#f43f5e');
+    }
+
+    function toggleBaseDecor() {
+        if (!currentInterior) return;
+        pushBuilderUndo();
+        currentInterior.hideDefaultDecor = !currentInterior.hideDefaultDecor;
+        saveCurrentInterior();
+        const lbl = document.getElementById('sbBaseDecorLabel');
+        if (lbl) lbl.textContent = currentInterior.hideDefaultDecor ? 'Base Decor: Hidden' : 'Base Decor: Shown';
+        addFloatText(player.x, player.y - 20, currentInterior.hideDefaultDecor ? 'Hidden Base Decor' : 'Restored Base Decor', '#fbbf24');
+    }
+
+    function cycleSnapSize() {
+        if (builderSnapSize === 24) builderSnapSize = 48;
+        else if (builderSnapSize === 48) builderSnapSize = 0;
+        else builderSnapSize = 24;
+        const lbl = document.getElementById('sbSnapLabel');
+        if (lbl) lbl.textContent = builderSnapSize === 0 ? '🧲 Snap: Free' : `🧲 Snap: ${builderSnapSize}px`;
+        addFloatText(player.x, player.y - 20, builderSnapSize === 0 ? 'Snap: Free (Smooth)' : `Snap: ${builderSnapSize}px Grid`, '#38bdf8');
+    }
+
     function initSceneBuilderPalette() {
         const grid = document.getElementById('sbPaletteGrid');
         if (!grid) return;
-        let activeCat = 'furniture';
+        let activeCat = builderMode === 'interior' ? 'furniture' : 'terrain';
         if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
             const activeTab = document.querySelector('.sb-tab-btn.active');
             if (activeTab && activeTab.dataset && activeTab.dataset.cat) {
@@ -13691,6 +13812,11 @@ const MAPS = [
                 builderSelected = item;
                 const info = document.getElementById('sbHoverItemText');
                 if (info) info.textContent = `Selected: ${item.name} (${item.w}x${item.h || item.w})`;
+                if (item.type === 'floor' || item.type === 'wall' || item.type === 'tile') {
+                    setBuilderTool('paint');
+                } else if (item.type === 'prop' || item.type === 'entity') {
+                    setBuilderTool('place');
+                }
                 initSceneBuilderPalette();
             };
             grid.appendChild(btn);
@@ -13718,6 +13844,7 @@ const MAPS = [
         builderMode = currentInterior ? 'interior' : 'overworld';
         updateSceneBuilderModeUI();
         initSceneBuilderPalette();
+        setBuilderTool(builderSelected && (builderSelected.type === 'floor' || builderSelected.type === 'tile') ? 'paint' : 'place');
         const modal = document.getElementById('sceneBuilderModal');
         if (modal) modal.classList.remove('hidden');
         addFloatText(player.x, player.y - 20, '🛠️ SCENE BUILDER ACTIVE [F3]', '#f59e0b');
@@ -13725,6 +13852,8 @@ const MAPS = [
 
     function closeSceneBuilder() {
         builderOpen = false;
+        builderIsMouseDown = false;
+        builderDraggedProp = null;
         const modal = document.getElementById('sceneBuilderModal');
         if (modal) modal.classList.add('hidden');
         appState = 'PLAYING';
@@ -13735,6 +13864,10 @@ const MAPS = [
         const swBtn = document.getElementById('sbBtnSwitchMode');
         if (badge) badge.textContent = builderMode === 'interior' ? 'INTERIOR STUDIO' : 'OVERWORLD STUDIO';
         if (swBtn) swBtn.innerHTML = `<span>🔄</span> Switch: ${builderMode === 'interior' ? 'Overworld' : 'Interior'}`;
+        const lbl = document.getElementById('sbBaseDecorLabel');
+        if (lbl && currentInterior) {
+            lbl.textContent = currentInterior.hideDefaultDecor ? 'Base Decor: Hidden' : 'Base Decor: Shown';
+        }
     }
 
     // Wire Scene Builder Tool Buttons & Palette Tabs
@@ -13748,6 +13881,9 @@ const MAPS = [
                 });
                 tab.classList.add('active', 'bg-amber-500', 'text-slate-950');
                 tab.classList.remove('bg-slate-900', 'text-slate-300');
+                const cat = tab.dataset.cat;
+                if (cat === 'interiors' || cat === 'terrain') setBuilderTool('paint');
+                else if (cat === 'furniture' || cat === 'decor' || cat === 'entities') setBuilderTool('place');
                 initSceneBuilderPalette();
             };
         });
@@ -13755,13 +13891,7 @@ const MAPS = [
         // Tool buttons
         document.querySelectorAll('.sb-tool-btn').forEach(btn => {
             btn.onclick = () => {
-                builderTool = btn.dataset.tool;
-                document.querySelectorAll('.sb-tool-btn').forEach(b => {
-                    b.classList.remove('bg-amber-500', 'text-slate-950', 'font-extrabold', 'shadow');
-                    b.classList.add('bg-slate-900', 'text-slate-300', 'font-bold');
-                });
-                btn.classList.add('bg-amber-500', 'text-slate-950', 'font-extrabold', 'shadow');
-                btn.classList.remove('bg-slate-900', 'text-slate-300', 'font-bold');
+                setBuilderTool(btn.dataset.tool);
             };
         });
 
@@ -13771,8 +13901,22 @@ const MAPS = [
             swBtn.onclick = () => {
                 builderMode = builderMode === 'interior' ? 'overworld' : 'interior';
                 updateSceneBuilderModeUI();
+                initSceneBuilderPalette();
             };
         }
+
+        // Toolbar actions
+        const btnUndo = document.getElementById('sbBtnUndo');
+        if (btnUndo) btnUndo.onclick = undoBuilderAction;
+
+        const btnSnap = document.getElementById('sbBtnSnap');
+        if (btnSnap) btnSnap.onclick = cycleSnapSize;
+
+        const btnClear = document.getElementById('sbBtnClearProps');
+        if (btnClear) btnClear.onclick = clearCurrentInteriorProps;
+
+        const btnToggleBase = document.getElementById('sbBtnToggleBaseDecor');
+        if (btnToggleBase) btnToggleBase.onclick = toggleBaseDecor;
 
         // Close button
         const closeBtn = document.getElementById('sbBtnClose');
@@ -13782,7 +13926,8 @@ const MAPS = [
         const applyBtn = document.getElementById('sbBtnApplyLive');
         if (applyBtn) {
             applyBtn.onclick = () => {
-                addFloatText(player.x, player.y - 30, '💾 Map & Scene Applied Live!', '#10b981');
+                saveCurrentInterior();
+                addFloatText(player.x, player.y - 30, '💾 Map & Scene Saved Live!', '#10b981');
             };
         }
 
@@ -13802,6 +13947,9 @@ const MAPS = [
                         buildingId: currentInterior.building?.id || 'cottage',
                         roomW: currentInterior.roomW || 760,
                         roomH: currentInterior.roomH || 580,
+                        floorType: currentInterior.floorType || 'int_floor_wood',
+                        wallType: currentInterior.wallType || 'int_wall_wood',
+                        hideDefaultDecor: !!currentInterior.hideDefaultDecor,
                         props: currentInterior.props || []
                     };
                 } else {
@@ -13882,21 +14030,39 @@ const MAPS = [
                 ctx.stroke();
             }
 
-            // Hovered tile indicator
-            const snapX = offX + Math.floor((builderMouse.rx || 0) / 48) * 48;
-            const snapY = offY + Math.floor((builderMouse.ry || 0) / 48) * 48;
-            ctx.fillStyle = 'rgba(251, 191, 36, 0.20)';
-            ctx.fillRect(snapX, snapY, 48, 48);
-            ctx.strokeStyle = '#fbbf24';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(snapX, snapY, 48, 48);
+            // Snap calculation
+            const snap = builderSnapSize || 1;
+            const sx = Math.floor(builderMouse.rx / snap) * snap;
+            const sy = Math.floor(builderMouse.ry / snap) * snap;
 
-            // Live Prop Cursor Preview when Place tool active
-            if (builderTool === 'place' && builderSelected) {
+            // Hover indicator
+            if (builderTool === 'paint' && builderSelected) {
+                if (builderSelected.type === 'floor') {
+                    ctx.fillStyle = 'rgba(16, 185, 129, 0.12)';
+                    ctx.fillRect(offX, offY + 110, roomW, roomH - 110);
+                    ctx.strokeStyle = '#10b981';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(offX, offY + 110, roomW, roomH - 110);
+                    ctx.font = 'bold 12px monospace';
+                    ctx.fillStyle = '#10b981';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`Click room to apply ${builderSelected.name}`, offX + roomW / 2, offY + roomH / 2);
+                } else if (builderSelected.type === 'wall') {
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+                    ctx.fillRect(offX, offY, roomW, 110);
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(offX, offY, roomW, 110);
+                    ctx.font = 'bold 12px monospace';
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`Click wall to apply ${builderSelected.name}`, offX + roomW / 2, offY + 60);
+                }
+            } else if (builderTool === 'place' && builderSelected) {
                 const pw = builderSelected.w || 48;
                 const ph = builderSelected.h || 48;
-                const px = offX + builderMouse.rx - pw / 2;
-                const py = offY + builderMouse.ry - ph / 2;
+                const px = offX + sx - pw / 2;
+                const py = offY + sy - ph / 2;
                 ctx.globalAlpha = 0.75;
                 if (assets.hasImage(builderSelected.id)) {
                     assets.drawImage(ctx, builderSelected.id, px, py, pw, ph);
@@ -13905,9 +14071,97 @@ const MAPS = [
                     ctx.fillRect(px, py, pw, ph);
                 }
                 ctx.strokeStyle = '#38bdf8';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 1.5;
                 ctx.strokeRect(px, py, pw, ph);
                 ctx.globalAlpha = 1.0;
+            } else if (builderTool === 'move') {
+                if (currentInterior.props) {
+                    currentInterior.props.forEach(p => {
+                        if (builderMouse.rx >= p.x && builderMouse.rx <= p.x + p.w &&
+                            builderMouse.ry >= p.y && builderMouse.ry <= p.y + p.h) {
+                            ctx.strokeStyle = '#38bdf8';
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(offX + p.x - 2, offY + p.y - 2, p.w + 4, p.h + 4);
+                            ctx.font = 'bold 10px monospace';
+                            ctx.fillStyle = '#38bdf8';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(`✋ ${p.name || 'Prop'} (Drag to move)`, offX + p.x + p.w / 2, offY + p.y - 6);
+                        }
+                    });
+                }
+            } else if (builderTool === 'erase') {
+                if (currentInterior.props) {
+                    currentInterior.props.forEach(p => {
+                        if (builderMouse.rx >= p.x && builderMouse.rx <= p.x + p.w &&
+                            builderMouse.ry >= p.y && builderMouse.ry <= p.y + p.h) {
+                            ctx.strokeStyle = '#f43f5e';
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(offX + p.x - 2, offY + p.y - 2, p.w + 4, p.h + 4);
+                            ctx.font = 'bold 10px monospace';
+                            ctx.fillStyle = '#f43f5e';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(`❌ Click to Remove`, offX + p.x + p.w / 2, offY + p.y - 6);
+                        }
+                    });
+                }
+            }
+        } else if (builderMode === 'overworld') {
+            const camX = Math.floor(player.x - w / 2);
+            const camY = Math.floor(player.y - h / 2);
+            ctx.translate(-camX, -camY);
+
+            const mapCols = getMapCols(currentMapIndex);
+            const mapRows = getMapRows(currentMapIndex);
+            const minCol = Math.max(0, Math.floor(camX / TILE_SIZE));
+            const maxCol = Math.min(mapCols, Math.ceil((camX + w) / TILE_SIZE) + 1);
+            const minRow = Math.max(0, Math.floor(camY / TILE_SIZE));
+            const maxRow = Math.min(mapRows, Math.ceil((camY + h) / TILE_SIZE) + 1);
+
+            // Subtle yellow grid lines over the terrain
+            ctx.strokeStyle = 'rgba(251, 191, 36, 0.15)';
+            ctx.lineWidth = 1;
+            for (let c = minCol; c <= maxCol; c++) {
+                ctx.beginPath();
+                ctx.moveTo(c * TILE_SIZE, minRow * TILE_SIZE);
+                ctx.lineTo(c * TILE_SIZE, maxRow * TILE_SIZE);
+                ctx.stroke();
+            }
+            for (let r = minRow; r <= maxRow; r++) {
+                ctx.beginPath();
+                ctx.moveTo(minCol * TILE_SIZE, r * TILE_SIZE);
+                ctx.lineTo(maxCol * TILE_SIZE, r * TILE_SIZE);
+                ctx.stroke();
+            }
+
+            // Hovered cell indicator
+            const hCol = builderMouse.col;
+            const hRow = builderMouse.row;
+            if (hCol >= 0 && hCol < mapCols && hRow >= 0 && hRow < mapRows) {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.22)';
+                ctx.fillRect(hCol * TILE_SIZE, hRow * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(hCol * TILE_SIZE, hRow * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+                // Show preview of selected tile or entity
+                if (builderTool === 'paint' && builderSelected && builderSelected.tileId !== undefined) {
+                    ctx.globalAlpha = 0.65;
+                    drawTile(ctx, builderSelected.tileId, hCol * TILE_SIZE, hRow * TILE_SIZE);
+                    ctx.globalAlpha = 1.0;
+                } else if (builderTool === 'place' && builderSelected) {
+                    ctx.globalAlpha = 0.75;
+                    const ew = builderSelected.w || 32;
+                    const eh = builderSelected.h || 32;
+                    const ex = hCol * TILE_SIZE + 16 - ew / 2;
+                    const ey = hRow * TILE_SIZE + 16 - eh / 2;
+                    if (assets.hasImage(builderSelected.id)) {
+                        assets.drawImage(ctx, builderSelected.id, ex, ey, ew, eh);
+                    } else {
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.fillRect(ex, ey, ew, eh);
+                    }
+                    ctx.globalAlpha = 1.0;
+                }
             }
         }
         ctx.restore();
@@ -13978,6 +14232,11 @@ const MAPS = [
             return;
         }
         if (appState === 'BUILDER') {
+            if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+                e.preventDefault();
+                undoBuilderAction();
+                return;
+            }
             if (e.code === 'Escape') {
                 e.preventDefault();
                 closeSceneBuilder();
@@ -14074,6 +14333,131 @@ const MAPS = [
             if (appState === 'INTRO') advanceCutsceneScene();
         };
     }
+    function handleBuilderAction(isClick) {
+        if (appState !== 'BUILDER') return;
+        if (builderMode === 'interior' && currentInterior) {
+            if (!currentInterior.props) currentInterior.props = [];
+            const offX = Math.floor((canvas.width - (currentInterior.roomW || 760)) / 2);
+            const offY = Math.floor((canvas.height - (currentInterior.roomH || 580)) / 2);
+
+            if (builderTool === 'paint' && builderSelected) {
+                if (builderSelected.type === 'floor') {
+                    pushBuilderUndo();
+                    currentInterior.floorType = builderSelected.id;
+                    saveCurrentInterior();
+                    addFloatText(player.x, player.y - 20, `Applied Floor: ${builderSelected.name}`, '#10b981');
+                } else if (builderSelected.type === 'wall') {
+                    pushBuilderUndo();
+                    currentInterior.wallType = builderSelected.id;
+                    saveCurrentInterior();
+                    addFloatText(player.x, player.y - 20, `Applied Wall: ${builderSelected.name}`, '#10b981');
+                }
+            } else if (builderTool === 'place' && builderSelected && isClick) {
+                if (builderSelected.type === 'floor') {
+                    pushBuilderUndo();
+                    currentInterior.floorType = builderSelected.id;
+                    saveCurrentInterior();
+                    addFloatText(player.x, player.y - 20, `Applied Floor: ${builderSelected.name}`, '#10b981');
+                    return;
+                }
+                if (builderSelected.type === 'wall') {
+                    pushBuilderUndo();
+                    currentInterior.wallType = builderSelected.id;
+                    saveCurrentInterior();
+                    addFloatText(player.x, player.y - 20, `Applied Wall: ${builderSelected.name}`, '#10b981');
+                    return;
+                }
+                const snap = builderSnapSize || 1;
+                const sx = Math.floor(builderMouse.rx / snap) * snap;
+                const sy = Math.floor(builderMouse.ry / snap) * snap;
+                const pw = builderSelected.w || 48;
+                const ph = builderSelected.h || 48;
+                const newProp = {
+                    id: 'prop_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                    assetId: builderSelected.id,
+                    x: Math.round(sx - pw / 2),
+                    y: Math.round(sy - ph / 2),
+                    w: pw,
+                    h: ph,
+                    name: builderSelected.name
+                };
+                pushBuilderUndo();
+                currentInterior.props.push(newProp);
+                saveCurrentInterior();
+                addFloatText(player.x, player.y - 20, `Placed: ${builderSelected.name}`, '#10b981');
+            } else if (builderTool === 'move' && isClick) {
+                for (let i = currentInterior.props.length - 1; i >= 0; i--) {
+                    const p = currentInterior.props[i];
+                    if (builderMouse.rx >= p.x && builderMouse.rx <= p.x + p.w &&
+                        builderMouse.ry >= p.y && builderMouse.ry <= p.y + p.h) {
+                        pushBuilderUndo();
+                        builderDraggedProp = p;
+                        break;
+                    }
+                }
+            } else if (builderTool === 'erase' && isClick) {
+                for (let i = currentInterior.props.length - 1; i >= 0; i--) {
+                    const p = currentInterior.props[i];
+                    if (builderMouse.rx >= p.x && builderMouse.rx <= p.x + p.w &&
+                        builderMouse.ry >= p.y && builderMouse.ry <= p.y + p.h) {
+                        pushBuilderUndo();
+                        currentInterior.props.splice(i, 1);
+                        saveCurrentInterior();
+                        addFloatText(player.x, player.y - 20, 'Removed Prop', '#f43f5e');
+                        break;
+                    }
+                }
+            }
+        } else if (builderMode === 'overworld') {
+            const r = builderMouse.row;
+            const c = builderMouse.col;
+            const maxR = getMapRows(currentMapIndex);
+            const maxC = getMapCols(currentMapIndex);
+            if (r < 0 || r >= maxR || c < 0 || c >= maxC) return;
+
+            if (builderTool === 'paint' && builderSelected && builderSelected.tileId !== undefined) {
+                if (mapGrid[r] && mapGrid[r][c] !== builderSelected.tileId) {
+                    if (isClick) pushBuilderUndo();
+                    mapGrid[r][c] = builderSelected.tileId;
+                }
+            } else if (builderTool === 'erase') {
+                if (mapGrid[r] && mapGrid[r][c] !== 0) {
+                    if (isClick) pushBuilderUndo();
+                    mapGrid[r][c] = 0;
+                }
+            } else if (builderTool === 'place' && builderSelected && isClick) {
+                if (builderSelected.id === 'entity_peacock') {
+                    pushBuilderUndo();
+                    critters.push({
+                        type: 'peacock',
+                        x: c * TILE_SIZE + 16,
+                        y: r * TILE_SIZE + 16,
+                        vx: 0,
+                        vy: 0,
+                        dir: 'left',
+                        state: 'idle',
+                        timer: 2.0,
+                        animTimer: 0
+                    });
+                    addFloatText(c * TILE_SIZE + 16, r * TILE_SIZE - 10, 'Placed Peacock!', '#10b981');
+                } else if (builderSelected.id === 'alttp_chest_lone') {
+                    pushBuilderUndo();
+                    mapGrid[r][c] = 1;
+                    addFloatText(c * TILE_SIZE + 16, r * TILE_SIZE - 10, 'Placed Chest!', '#fbbf24');
+                } else if (builderSelected.id === 'entity_sign') {
+                    pushBuilderUndo();
+                    signposts.push({
+                        x: c * TILE_SIZE + 16,
+                        y: r * TILE_SIZE + 16,
+                        title: 'ARCHIVIST WAYMARK',
+                        text: 'A scholar waypost inscribed with words of historical inquiry.'
+                    });
+                    addFloatText(c * TILE_SIZE + 16, r * TILE_SIZE - 10, 'Placed Signpost!', '#38bdf8');
+                }
+            }
+        }
+    }
+
     if (canvas) {
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
@@ -14091,13 +14475,18 @@ const MAPS = [
                 const offY = Math.floor((canvas.height - roomH) / 2);
                 builderMouse.rx = mx - offX;
                 builderMouse.ry = my - offY;
-                builderMouse.col = Math.floor(builderMouse.rx / 48);
-                builderMouse.row = Math.floor(builderMouse.ry / 48);
+                const snap = builderSnapSize || 48;
+                builderMouse.col = Math.floor(builderMouse.rx / snap);
+                builderMouse.row = Math.floor(builderMouse.ry / snap);
             } else {
-                builderMouse.rx = mx;
-                builderMouse.ry = my;
-                builderMouse.col = Math.floor(mx / TILE_SIZE);
-                builderMouse.row = Math.floor(my / TILE_SIZE);
+                const camX = Math.floor(player.x - canvas.width / 2);
+                const camY = Math.floor(player.y - canvas.height / 2);
+                const worldX = mx + camX;
+                const worldY = my + camY;
+                builderMouse.rx = worldX;
+                builderMouse.ry = worldY;
+                builderMouse.col = Math.floor(worldX / TILE_SIZE);
+                builderMouse.row = Math.floor(worldY / TILE_SIZE);
             }
 
             const coordPill = document.getElementById('sbCoordText');
@@ -14106,73 +14495,32 @@ const MAPS = [
             }
 
             // Dragging an existing prop in builder mode
-            if (appState === 'BUILDER' && builderDraggedProp) {
-                builderDraggedProp.x = Math.round(builderMouse.rx - builderDraggedProp.w / 2);
-                builderDraggedProp.y = Math.round(builderMouse.ry - builderDraggedProp.h / 2);
+            if (appState === 'BUILDER') {
+                if (builderDraggedProp) {
+                    const snap = builderSnapSize || 1;
+                    const sx = Math.floor(builderMouse.rx / snap) * snap;
+                    const sy = Math.floor(builderMouse.ry / snap) * snap;
+                    builderDraggedProp.x = Math.round(sx - builderDraggedProp.w / 2);
+                    builderDraggedProp.y = Math.round(sy - builderDraggedProp.h / 2);
+                } else if (builderIsMouseDown) {
+                    handleBuilderAction(false);
+                }
             }
         });
 
         canvas.addEventListener('mousedown', (e) => {
             if (appState !== 'BUILDER') return;
             e.preventDefault();
-            if (builderMode === 'interior' && currentInterior) {
-                if (!currentInterior.props) currentInterior.props = [];
-
-                if (builderTool === 'place' && builderSelected) {
-                    const pw = builderSelected.w || 48;
-                    const ph = builderSelected.h || 48;
-                    const newProp = {
-                        id: 'prop_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-                        assetId: builderSelected.id,
-                        x: Math.round(builderMouse.rx - pw / 2),
-                        y: Math.round(builderMouse.ry - ph / 2),
-                        w: pw,
-                        h: ph,
-                        name: builderSelected.name
-                    };
-                    currentInterior.props.push(newProp);
-                    addFloatText(player.x, player.y - 20, `Placed: ${builderSelected.name}`, '#10b981');
-                } else if (builderTool === 'move') {
-                    // Find closest prop under cursor
-                    for (let i = currentInterior.props.length - 1; i >= 0; i--) {
-                        const p = currentInterior.props[i];
-                        if (builderMouse.rx >= p.x && builderMouse.rx <= p.x + p.w &&
-                            builderMouse.ry >= p.y && builderMouse.ry <= p.y + p.h) {
-                            builderDraggedProp = p;
-                            break;
-                        }
-                    }
-                } else if (builderTool === 'erase') {
-                    // Erase closest prop under cursor
-                    for (let i = currentInterior.props.length - 1; i >= 0; i--) {
-                        const p = currentInterior.props[i];
-                        if (builderMouse.rx >= p.x && builderMouse.rx <= p.x + p.w &&
-                            builderMouse.ry >= p.y && builderMouse.ry <= p.y + p.h) {
-                            currentInterior.props.splice(i, 1);
-                            addFloatText(player.x, player.y - 20, 'Removed Prop', '#f43f5e');
-                            break;
-                        }
-                    }
-                }
-            } else if (builderMode === 'overworld') {
-                if (builderTool === 'paint' && builderSelected && builderSelected.tileId !== undefined) {
-                    const r = builderMouse.row;
-                    const c = builderMouse.col;
-                    if (mapGrid[r] && mapGrid[r][c] !== undefined) {
-                        mapGrid[r][c] = builderSelected.tileId;
-                    }
-                } else if (builderTool === 'erase') {
-                    const r = builderMouse.row;
-                    const c = builderMouse.col;
-                    if (mapGrid[r] && mapGrid[r][c] !== undefined) {
-                        mapGrid[r][c] = 0; // reset to grass
-                    }
-                }
-            }
+            builderIsMouseDown = true;
+            handleBuilderAction(true);
         });
 
         window.addEventListener('mouseup', () => {
-            builderDraggedProp = null;
+            builderIsMouseDown = false;
+            if (builderDraggedProp) {
+                saveCurrentInterior();
+                builderDraggedProp = null;
+            }
         });
 
         canvas.onclick = () => {
@@ -14566,6 +14914,22 @@ const MAPS = [
                 </button>
                 <button id="sbToolErase" data-tool="erase" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-rose-400 text-[10px] font-bold flex items-center gap-1">
                     <span>❌</span> Erase
+                </button>
+            </div>
+
+            <!-- Studio Tools & Controls -->
+            <div class="flex items-center gap-1.5 border-r border-slate-800 pr-2">
+                <button id="sbBtnUndo" type="button" class="retro-btn px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 text-[10px] font-bold flex items-center gap-1" title="Undo Last Action (Ctrl+Z)">
+                    <span>↩️</span> Undo
+                </button>
+                <button id="sbBtnSnap" type="button" class="retro-btn px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-300 text-[10px] font-bold flex items-center gap-1" title="Toggle Grid Snap Mode">
+                    <span id="sbSnapLabel">🧲 Snap: 24px</span>
+                </button>
+                <button id="sbBtnToggleBaseDecor" type="button" class="retro-btn px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-200 text-[10px] font-bold flex items-center gap-1" title="Toggle Base Room Decor">
+                    <span id="sbBaseDecorLabel">Base Decor: Show</span>
+                </button>
+                <button id="sbBtnClearProps" type="button" class="retro-btn px-2 py-1 rounded-lg bg-rose-950/70 hover:bg-rose-900 border border-rose-700/60 text-rose-300 text-[10px] font-bold flex items-center gap-1" title="Clear all placed custom props in current room">
+                    <span>🗑️</span> Clear
                 </button>
             </div>
 

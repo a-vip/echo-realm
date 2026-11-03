@@ -103,6 +103,21 @@ function loadGameEnvironment() {
         openSceneBuilder,
         toggleSceneBuilder,
         closeSceneBuilder,
+        get builderMode() { return (typeof builderMode !== 'undefined') ? builderMode : 'interior'; },
+        set builderMode(v) { builderMode = v; },
+        get builderTool() { return (typeof builderTool !== 'undefined') ? builderTool : 'place'; },
+        set builderTool(v) { builderTool = v; },
+        get builderSelected() { return (typeof builderSelected !== 'undefined') ? builderSelected : null; },
+        set builderSelected(v) { builderSelected = v; },
+        get builderSnapSize() { return (typeof builderSnapSize !== 'undefined') ? builderSnapSize : 24; },
+        set builderSnapSize(v) { builderSnapSize = v; },
+        get builderMouse() { return (typeof builderMouse !== 'undefined') ? builderMouse : {}; },
+        handleBuilderAction,
+        undoBuilderAction,
+        clearCurrentInteriorProps,
+        toggleBaseDecor,
+        cycleSnapSize,
+        setBuilderTool,
         };`;
 
     function createMockElement(id = '') {

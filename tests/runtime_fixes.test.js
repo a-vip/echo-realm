@@ -1399,4 +1399,78 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         });
     });
 
+
+    test('Modular interior pixel-art assets on disk exist and are valid non-corrupted images', () => {
+        const requiredAssets = [
+            'assets/ingame/environment/interiors/floors/floor_wood_plank.png',
+            'assets/ingame/environment/interiors/floors/floor_oak_parquet.png',
+            'assets/ingame/environment/interiors/floors/floor_stone_slate.png',
+            'assets/ingame/environment/interiors/walls/wall_wood_panel.png',
+            'assets/ingame/environment/interiors/walls/wall_stone_slate.png',
+            'assets/ingame/environment/interiors/bookshelves/bookshelf_grand.png',
+            'assets/ingame/environment/interiors/bookshelves/bookshelf_wide.png',
+            'assets/ingame/environment/interiors/bookshelves/bookshelf_tall.png',
+            'assets/ingame/environment/interiors/bookshelves/bookshelf_medium.png',
+            'assets/ingame/environment/interiors/tables/table_dining.png',
+            'assets/ingame/environment/interiors/tables/desk_scholar.png',
+            'assets/ingame/environment/interiors/tables/table_coffee.png',
+            'assets/ingame/environment/interiors/chairs/chair_armchair.png',
+            'assets/ingame/environment/interiors/chairs/chair_study.png',
+            'assets/ingame/environment/interiors/fireplaces/fireplace_brick.png',
+            'assets/ingame/environment/interiors/carpets/rug_ornate_large.png',
+            'assets/ingame/environment/interiors/decor/pot_clay.png',
+            'assets/ingame/environment/interiors/decor/barrel_wood.png',
+            'assets/ingame/environment/interiors/decor/window_curtain.png'
+        ];
+        requiredAssets.forEach(rel => {
+            const fullPath = path.resolve(__dirname, '..', rel);
+            assert.ok(fs.existsSync(fullPath), 'Asset file must exist: ' + rel);
+            const stat = fs.statSync(fullPath);
+            assert.ok(stat.size > 50, 'Asset file must not be empty: ' + rel);
+        });
+    });
+
+    test('In-Engine Scene Builder supports interactive prop placement, undo stack, snap modes, and style changes', () => {
+        const env = loadGameEnvironment();
+
+        // Enter an interior building
+        env.enterBuildingInterior({ id: 'test_lodge', name: 'Test Lodge', style: 'cottage' });
+        assert.ok(env.currentInterior, 'Interior should be active');
+        assert.equal(env.currentInterior.floorType, 'int_floor_wood');
+        assert.equal(env.currentInterior.wallType, 'int_wall_wood');
+
+        // Open scene builder
+        env.openSceneBuilder();
+        assert.equal(env.appState, 'BUILDER');
+        assert.equal(env.builderMode, 'interior');
+
+        // Apply oak parquet floor
+        env.builderSelected = { id: 'int_floor_oak', name: 'Oak Parquet Floor', type: 'floor' };
+        env.setBuilderTool('paint');
+        env.handleBuilderAction(true);
+        assert.equal(env.currentInterior.floorType, 'int_floor_oak');
+
+        // Place a grand bookshelf
+        env.builderSelected = { id: 'int_bookshelf_grand', name: 'Grand Double Bookcase', type: 'prop', w: 96, h: 96 };
+        env.setBuilderTool('place');
+        env.builderMouse.rx = 120;
+        env.builderMouse.ry = 140;
+        env.handleBuilderAction(true);
+        assert.equal(env.currentInterior.props.length, 1);
+        assert.equal(env.currentInterior.props[0].assetId, 'int_bookshelf_grand');
+
+        // Test Undo
+        env.undoBuilderAction();
+        assert.equal(env.currentInterior.props.length, 0, 'Prop should be removed by undo');
+
+        // Test Snap cycling
+        const initialSnap = env.builderSnapSize;
+        env.cycleSnapSize();
+        assert.notEqual(env.builderSnapSize, initialSnap, 'Snap size should change on cycle');
+
+        // Test Clear props
+        env.currentInterior.props = [{ id: 'p1', assetId: 'int_table_dining', x: 50, y: 50, w: 96, h: 48 }];
+        env.clearCurrentInteriorProps();
+        assert.equal(env.currentInterior.props.length, 0, 'Props should be cleared');
+    });
 });
