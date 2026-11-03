@@ -100,6 +100,9 @@ function loadGameEnvironment() {
         selectRosterCharacter,
         renderInterior,
         renderGrandArchiveTowerInterior,
+        openSceneBuilder,
+        toggleSceneBuilder,
+        closeSceneBuilder,
         };`;
 
     function createMockElement(id = '') {
@@ -173,6 +176,7 @@ function loadGameEnvironment() {
                 return elemRegistry[id];
             },
             createElement: (tag) => createMockElement(tag),
+            querySelector: (sel) => null,
             querySelectorAll: () => [],
             addEventListener: () => {}
         },

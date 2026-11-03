@@ -428,6 +428,9 @@
                     </button>
                     <!-- Quick Actions Flyout on Hover / Focus -->
                     <div class="absolute right-0 top-full mt-1.5 bg-slate-950/95 border-2 border-slate-700 rounded-xl p-1.5 shadow-2xl hidden group-hover:flex flex-col gap-1 z-30 min-w-[130px]">
+                        <button id="btnHudSceneBuilder" class="retro-btn bg-slate-900 hover:bg-slate-800 border border-amber-600/40 text-[10px] font-bold px-2 py-1 rounded text-amber-300 text-left flex items-center gap-1.5" title="Scene & Map Builder [F3]">
+                            <span>🛠️</span> Builder [F3]
+                        </button>
                         <button id="btnHudMap" class="retro-btn bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[10px] font-bold px-2 py-1 rounded text-emerald-300 text-left flex items-center gap-1.5" title="View Full World Map [M]">
                             <span>🗺️</span> Map [M]
                         </button>
@@ -789,6 +792,9 @@
                 <button onclick="openMenu('codexModal')" class="retro-btn py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold text-xs border border-slate-700">
                     📖 Field Codex [J]
                 </button>
+                <button id="btnPauseSceneBuilder" type="button" class="retro-btn py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs border border-amber-500/50 flex items-center justify-center gap-2">
+                    <span>🛠️</span> Scene & Map Builder <span class="mono-font text-[9px] text-amber-400/80">[F3 / `]</span>
+                </button>
                 <button onclick="openMenu('settingsModal')" class="retro-btn py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700">
                     ⚙️ Audio & Display Settings
                 </button>
@@ -827,6 +833,20 @@
                 <div class="flex justify-between items-center py-2 border-t border-slate-800">
                     <span class="font-bold text-slate-300">Combat Screen Shake</span>
                     <input id="toggleShake" type="checkbox" checked class="w-4 h-4 accent-cyan-400" />
+                </div>
+
+                <!-- DEV MODE & SCENE BUILDER CONTROLS -->
+                <div class="pt-3 border-t-2 border-slate-700/80 flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-amber-400">🛠️ Developer Mode [F2]</span>
+                        <button id="btnToggleDevModeSettings" type="button" class="px-2.5 py-1 rounded-lg text-xs font-bold border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20">
+                            Toggle Dev Mode
+                        </button>
+                    </div>
+                    <button id="btnOpenSceneEditor" type="button" class="w-full retro-btn py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-extrabold text-xs pixel-font flex items-center justify-center gap-2 shadow-lg cursor-pointer">
+                        <span>🗺️</span> OPEN SCENE & MAP BUILDER <span class="mono-font text-[9px] bg-slate-900/80 text-amber-300 px-1.5 py-0.5 rounded">[F3 / `]</span>
+                    </button>
+                    <p class="text-[10px] text-slate-400">Configure interior rooms, furniture, exterior terrain, paths, objects, and export live code.</p>
                 </div>
             </div>
         </div>
@@ -7927,6 +7947,7 @@ const MAPS = [
 
         unlockRiverBridgeIfReady();
         updateAllHud();
+        wireSceneBuilderUI();
     }
 
     function unlockRiverBridgeIfReady() {
@@ -9058,9 +9079,16 @@ const MAPS = [
                 }
             });
 
-            // Channeling [Q] Prism Beam dispels environmental hazard vents within beam cone!
-            for (let r = 0; r < curRows; r++) {
-                for (let c = 0; c < curCols; c++) {
+            // Channeling [Q] Prism Beam dispels environmental hazard vents within beam cone (bounded radius for performance)!
+            const pCol = Math.floor(player.x / TILE_SIZE);
+            const pRow = Math.floor(player.y / TILE_SIZE);
+            const beamTileR = Math.ceil(beamRange / TILE_SIZE) + 1;
+            const minR = Math.max(0, pRow - beamTileR);
+            const maxR = Math.min(curRows, pRow + beamTileR + 1);
+            const minC = Math.max(0, pCol - beamTileR);
+            const maxC = Math.min(curCols, pCol + beamTileR + 1);
+            for (let r = minR; r < maxR; r++) {
+                for (let c = minC; c < maxC; c++) {
                     const t = mapGrid[r][c];
                     if (t === 10 || t === 11) {
                         const hx = (c + 0.5) * TILE_SIZE;
@@ -9600,51 +9628,61 @@ const MAPS = [
         ctx.strokeStyle = '#38bdf8';
         ctx.stroke();
 
-        // 5. Grand Library Bookshelves along the North Wall (Authentic Pixel-Art Assets!)
+        // 5. Grand Library Bookshelves along North Wall (Pixel-Perfect 96x96 High-Res Assets)
         if (assets.hasImage('int_bookshelf_grand')) {
-            const grandW = 160;
-            const grandH = 100;
-            assets.drawImage(ctx, 'int_bookshelf_grand', offX + 40, offY + 10, grandW, grandH);
-            assets.drawImage(ctx, 'int_bookshelf_grand', offX + Math.floor(roomW / 2) - grandW / 2, offY + 10, grandW, grandH);
-            assets.drawImage(ctx, 'int_bookshelf_grand', offX + roomW - grandW - 40, offY + 10, grandW, grandH);
+            const grandW = 96;
+            const grandH = 96;
+            assets.drawImage(ctx, 'int_bookshelf_grand', offX + 40, offY + 14, grandW, grandH);
+            assets.drawImage(ctx, 'int_bookshelf_grand', offX + 145, offY + 14, grandW, grandH);
+            assets.drawImage(ctx, 'int_bookshelf_grand', offX + roomW - 241, offY + 14, grandW, grandH);
+            assets.drawImage(ctx, 'int_bookshelf_grand', offX + roomW - 136, offY + 14, grandW, grandH);
         } else if (assets.hasImage('int_bookshelf_wide')) {
-            for (let bx = offX + 30; bx < offX + roomW - 100; bx += 110) {
-                assets.drawImage(ctx, 'int_bookshelf_wide', bx, offY + 18, 96, 92);
+            for (let bx = offX + 30; bx < offX + roomW - 100; bx += 105) {
+                assets.drawImage(ctx, 'int_bookshelf_wide', bx, offY + 14, 96, 96);
             }
         }
 
-        // 6. Side Wall Bookshelves (Authentic Tall Modular Bookcases)
+        // 6. Side Wall Bookshelves (Pixel-Perfect 48x96 Tall Modular Bookcases)
         if (assets.hasImage('int_bookshelf_tall')) {
-            assets.drawImage(ctx, 'int_bookshelf_tall', offX + 16, floorY + 30, 48, 140);
-            assets.drawImage(ctx, 'int_bookshelf_tall', offX + 16, floorY + 180, 48, 140);
-            assets.drawImage(ctx, 'int_bookshelf_tall', offX + roomW - 64, floorY + 30, 48, 140);
-            assets.drawImage(ctx, 'int_bookshelf_tall', offX + roomW - 64, floorY + 180, 48, 140);
+            assets.drawImage(ctx, 'int_bookshelf_tall', offX + 16, floorY + 30, 48, 96);
+            assets.drawImage(ctx, 'int_bookshelf_tall', offX + 16, floorY + 150, 48, 96);
+            assets.drawImage(ctx, 'int_bookshelf_tall', offX + roomW - 64, floorY + 30, 48, 96);
+            assets.drawImage(ctx, 'int_bookshelf_tall', offX + roomW - 64, floorY + 150, 48, 96);
         }
 
-        // 7. Left Study Alcove: Scholar Study Desk & High-Backed Chair
+        // 7. Left Study Alcove: Scholar Study Desk & High-Backed Chair (Pixel-Perfect 64x48 & 48x48)
         const deskX = offX + 85;
         const deskY = floorY + 80;
         if (assets.hasImage('int_chair_study')) {
-            assets.drawImage(ctx, 'int_chair_study', deskX + 30, deskY - 30, 36, 42);
+            assets.drawImage(ctx, 'int_chair_study', deskX + 10, deskY - 26, 48, 48);
         }
         if (assets.hasImage('int_desk_scholar')) {
-            assets.drawImage(ctx, 'int_desk_scholar', deskX, deskY, 96, 52);
+            assets.drawImage(ctx, 'int_desk_scholar', deskX, deskY, 64, 48);
         }
 
-        // 8. Right Study Alcove: Matching Study Desk & Chair
-        const rightDeskX = offX + roomW - 195;
+        // 8. Right Study Alcove: Matching Study Desk & Chair (Pixel-Perfect 64x48 & 48x48)
+        const rightDeskX = offX + roomW - 165;
         const rightDeskY = floorY + 80;
         if (assets.hasImage('int_chair_study')) {
-            assets.drawImage(ctx, 'int_chair_study', rightDeskX + 30, rightDeskY - 30, 36, 42);
+            assets.drawImage(ctx, 'int_chair_study', rightDeskX + 10, rightDeskY - 26, 48, 48);
         }
         if (assets.hasImage('int_desk_scholar')) {
-            assets.drawImage(ctx, 'int_desk_scholar', rightDeskX, rightDeskY, 96, 52);
+            assets.drawImage(ctx, 'int_desk_scholar', rightDeskX, rightDeskY, 64, 48);
         }
 
-        // 9. Potted Decor & Ferns
+        // 9. Potted Decor & Ferns (Pixel-Perfect 48x48)
         if (assets.hasImage('int_plant_fern')) {
-            assets.drawImage(ctx, 'int_plant_fern', offX + 70, offY + roomH - 90, 42, 54);
-            assets.drawImage(ctx, 'int_plant_fern', offX + roomW - 110, offY + roomH - 90, 42, 54);
+            assets.drawImage(ctx, 'int_plant_fern', offX + 60, offY + roomH - 74, 48, 48);
+            assets.drawImage(ctx, 'int_plant_fern', offX + roomW - 108, offY + roomH - 74, 48, 48);
+        }
+
+        // Render Custom Scene Builder Placed Props in Grand Archive
+        if (currentInterior.props && Array.isArray(currentInterior.props)) {
+            currentInterior.props.forEach(p => {
+                if (assets.hasImage(p.assetId)) {
+                    assets.drawImage(ctx, p.assetId, offX + p.x, offY + p.y, p.w, p.h);
+                }
+            });
         }
         // 10. Interactive Treasure Chest in Upper Alcove
         if (currentInterior.chest) {
@@ -10256,49 +10294,49 @@ const MAPS = [
             ctx.fillRect(offX, offY, roomW, wallH);
         }
 
-        // Framed Authentic Pixel-Art Wall Art
+        // Framed Authentic Pixel-Art Wall Art (Pixel-Perfect 48x48)
         if (assets.hasImage('int_painting_landscape')) {
-            assets.drawImage(ctx, 'int_painting_landscape', offX + 175, offY + 28, 42, 51);
+            assets.drawImage(ctx, 'int_painting_landscape', offX + 175, offY + 28, 48, 48);
         }
         if (assets.hasImage('int_painting_portrait')) {
-            assets.drawImage(ctx, 'int_painting_portrait', offX + roomW - 225, offY + 28, 42, 51);
+            assets.drawImage(ctx, 'int_painting_portrait', offX + roomW - 225, offY + 28, 48, 48);
         }
 
-        // 4. Authentic Pixel-Art Curtain Windows with Gentle Sunbeams
-        const winPositions = [offX + 80, offX + roomW - 160];
+        // 4. Authentic Pixel-Art Curtain Windows with Gentle Sunbeams (Pixel-Perfect 64x64)
+        const winPositions = [offX + 80, offX + roomW - 150];
         winPositions.forEach((wx, wIdx) => {
             if (assets.hasImage('int_window')) {
-                assets.drawImage(ctx, 'int_window', wx, offY + 18, 72, 80);
+                assets.drawImage(ctx, 'int_window', wx, offY + 20, 64, 64);
             }
             // Gentle warm sunbeam projecting downward onto the floor
-            const sunGrad = ctx.createLinearGradient(wx + 36, offY + 80, wx + (wIdx === 0 ? 80 : -40), floorY + 220);
-            sunGrad.addColorStop(0, 'rgba(254, 240, 138, 0.18)');
-            sunGrad.addColorStop(0.6, 'rgba(254, 240, 138, 0.06)');
+            const sunGrad = ctx.createLinearGradient(wx + 32, offY + 80, wx + (wIdx === 0 ? 80 : -40), floorY + 200);
+            sunGrad.addColorStop(0, 'rgba(254, 240, 138, 0.16)');
+            sunGrad.addColorStop(0.7, 'rgba(254, 240, 138, 0.04)');
             sunGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
             ctx.fillStyle = sunGrad;
             ctx.beginPath();
-            ctx.moveTo(wx + 8, offY + 95);
-            ctx.lineTo(wx + 64, offY + 95);
-            ctx.lineTo(wx + (wIdx === 0 ? 150 : 0), floorY + 220);
-            ctx.lineTo(wx + (wIdx === 0 ? 30 : -120), floorY + 220);
+            ctx.moveTo(wx + 8, offY + 84);
+            ctx.lineTo(wx + 56, offY + 84);
+            ctx.lineTo(wx + (wIdx === 0 ? 140 : 0), floorY + 200);
+            ctx.lineTo(wx + (wIdx === 0 ? 30 : -110), floorY + 200);
             ctx.closePath();
             ctx.fill();
         });
 
-        // 5. Central Stone Fireplace with Real 8-Frame Pixel-Art Fire Animation!
-        const fpW = 96;
-        const fpH = 96;
+        // 5. Central Stone Fireplace with Real 8-Frame Pixel-Art Fire Animation! (Pixel-Perfect 48x48)
+        const fpW = 48;
+        const fpH = 48;
         const fpX = offX + Math.floor(roomW / 2) - Math.floor(fpW / 2);
-        const fpY = offY + 14;
+        const fpY = offY + 36;
 
         // Warm radial ambient hearth glow
-        const hearthGlow = ctx.createRadialGradient(fpX + fpW / 2, fpY + fpH - 10, 8, fpX + fpW / 2, fpY + fpH - 10, 85);
-        hearthGlow.addColorStop(0, 'rgba(254, 215, 170, 0.40)');
-        hearthGlow.addColorStop(0.45, 'rgba(249, 115, 22, 0.18)');
+        const hearthGlow = ctx.createRadialGradient(fpX + fpW / 2, fpY + fpH - 6, 6, fpX + fpW / 2, fpY + fpH - 6, 75);
+        hearthGlow.addColorStop(0, 'rgba(254, 215, 170, 0.35)');
+        hearthGlow.addColorStop(0.5, 'rgba(249, 115, 22, 0.14)');
         hearthGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = hearthGlow;
         ctx.beginPath();
-        ctx.arc(fpX + fpW / 2, fpY + fpH - 10, 85, 0, Math.PI * 2);
+        ctx.arc(fpX + fpW / 2, fpY + fpH - 6, 75, 0, Math.PI * 2);
         ctx.fill();
 
         if (assets.hasImage('int_fireplace_anim')) {
@@ -10308,13 +10346,12 @@ const MAPS = [
             assets.drawImage(ctx, 'int_fireplace_brick', fpX, fpY, fpW, fpH);
         }
 
-        // 6. Luxurious Real Pixel-Art Area Rug in Center of Living Room
-        const rugW = 420;
-        const rugH = 216;
+        // 6. Luxurious Real Pixel-Art Area Rug in Center of Living Room (Pixel-Perfect 192x192)
+        const rugW = 192;
+        const rugH = 192;
         const rugX = offX + Math.floor((roomW - rugW) / 2);
-        const rugY = floorY + Math.floor((floorH - rugH) / 2) - 10;
+        const rugY = floorY + 40;
         if (assets.hasImage('int_rug_large')) {
-            // Ambient rug contact shadow
             ctx.fillStyle = 'rgba(15, 10, 6, 0.35)';
             ctx.fillRect(rugX - 4, rugY - 4, rugW + 8, rugH + 8);
             assets.drawImage(ctx, 'int_rug_large', rugX, rugY, rugW, rugH);
@@ -10326,35 +10363,35 @@ const MAPS = [
             ctx.strokeRect(rugX + 8, rugY + 8, rugW - 16, rugH - 16);
         }
 
-        // 7. Authentic Pixel-Art Bookshelves on Left Wall
+        // 7. Authentic Pixel-Art Bookshelves on Left Wall (Pixel-Perfect 96x96 High-Res Modern Bookshelf)
         const bsX = offX + 16;
         const bsY = floorY + 10;
         if (assets.hasImage('int_bookshelf_wide')) {
-            assets.drawImage(ctx, 'int_bookshelf_wide', bsX, bsY, 96, 92);
+            assets.drawImage(ctx, 'int_bookshelf_wide', bsX, bsY, 96, 96);
         } else if (assets.hasImage('int_bookshelf_tall')) {
-            assets.drawImage(ctx, 'int_bookshelf_tall', bsX, bsY, 56, 110);
+            assets.drawImage(ctx, 'int_bookshelf_tall', bsX, bsY, 48, 96);
         }
 
-        // 8. Study Desk & Chair on Left
+        // 8. Study Desk & Chair on Left (Pixel-Perfect 64x48 Desk & 48x48 Chair)
         const deskX = offX + 30;
-        const deskY = floorY + 130;
+        const deskY = floorY + 120;
         if (assets.hasImage('int_chair_study')) {
-            assets.drawImage(ctx, 'int_chair_study', deskX + 28, deskY - 26, 30, 46);
+            assets.drawImage(ctx, 'int_chair_study', deskX + 8, deskY - 24, 48, 48);
         }
         if (assets.hasImage('int_desk_scholar')) {
-            assets.drawImage(ctx, 'int_desk_scholar', deskX, deskY, 84, 46);
+            assets.drawImage(ctx, 'int_desk_scholar', deskX, deskY, 64, 48);
         }
 
-        // 9. Dining Table & High-Backed Armchairs (Placed symmetrically on the carpet)
-        const tblW = 120;
-        const tblH = 56;
-        const tblX = rugX + Math.floor(rugW / 2) - Math.floor(tblW / 2);
-        const tblY = rugY + Math.floor(rugH / 2) - Math.floor(tblH / 2);
+        // 9. Dining Table & High-Backed Armchairs (Placed symmetrically on the carpet - Pixel-Perfect 96x48 & 48x48)
+        const tblW = 96;
+        const tblH = 48;
+        const tblX = rugX + Math.floor((rugW - tblW) / 2);
+        const tblY = rugY + 70;
 
         // Flanking Armchairs
         if (assets.hasImage('int_chair_armchair')) {
-            assets.drawImage(ctx, 'int_chair_armchair', tblX - 32, tblY + 2, 28, 54);
-            assets.drawImage(ctx, 'int_chair_armchair', tblX + tblW + 4, tblY + 2, 28, 54);
+            assets.drawImage(ctx, 'int_chair_armchair', tblX - 44, tblY, 48, 48);
+            assets.drawImage(ctx, 'int_chair_armchair', tblX + tblW - 4, tblY, 48, 48);
         }
 
         // Tabletop Drop Shadow
@@ -10367,35 +10404,22 @@ const MAPS = [
             assets.drawImage(ctx, 'int_table_coffee', tblX, tblY, tblW, tblH);
         }
 
-        // Detailed Tabletop Props: Open Manuscript, Scholar Inkwell & Quill
-        ctx.fillStyle = '#fef3c7';
-        ctx.fillRect(tblX + 22, tblY + 14, 28, 18);
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(tblX + 35, tblY + 14, 2, 18);
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(tblX + 24, tblY + 18, 9, 1.5);
-        ctx.fillRect(tblX + 24, tblY + 22, 9, 1.5);
-        ctx.fillRect(tblX + 38, tblY + 18, 9, 1.5);
-        ctx.fillRect(tblX + 38, tblY + 22, 9, 1.5);
-
-        // Inkwell with feather quill
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(tblX + 58, tblY + 16, 6, 8);
-        ctx.fillStyle = '#f8fafc';
-        ctx.beginPath();
-        ctx.moveTo(tblX + 61, tblY + 16);
-        ctx.lineTo(tblX + 68, tblY + 6);
-        ctx.lineTo(tblX + 70, tblY + 7);
-        ctx.lineTo(tblX + 63, tblY + 18);
-        ctx.fill();
-
-        // 10. Lush Potted Ferns & Plants in the Room Corners
+        // 10. Lush Potted Ferns & Plants in the Room Corners (Pixel-Perfect 48x48)
         if (assets.hasImage('int_plant_fern')) {
-            assets.drawImage(ctx, 'int_plant_fern', offX + 24, offY + roomH - 110, 36, 58);
-            assets.drawImage(ctx, 'int_plant_fern', offX + roomW - 70, offY + roomH - 110, 36, 58);
+            assets.drawImage(ctx, 'int_plant_fern', offX + 24, offY + roomH - 90, 48, 48);
+            assets.drawImage(ctx, 'int_plant_fern', offX + roomW - 72, offY + roomH - 90, 48, 48);
         }
         if (assets.hasImage('int_plant_flower')) {
-            assets.drawImage(ctx, 'int_plant_flower', offX + roomW - 120, floorY + 20, 22, 46);
+            assets.drawImage(ctx, 'int_plant_flower', offX + roomW - 120, floorY + 20, 48, 48);
+        }
+
+        // Render Custom Scene Builder Placed Props in Room Interior
+        if (currentInterior.props && Array.isArray(currentInterior.props)) {
+            currentInterior.props.forEach(p => {
+                if (assets.hasImage(p.assetId)) {
+                    assets.drawImage(ctx, p.assetId, offX + p.x, offY + p.y, p.w, p.h);
+                }
+            });
         }
 
         // 11. Physical Lone Treasure Chest in Alcove
@@ -10439,6 +10463,11 @@ const MAPS = [
             skinColor: player.skinColor || '#fdba74',
             holdingItemOverhead: itemFanfare.active
         });
+
+        // In-Engine Scene Builder Overlay inside interior rooms
+        if (appState === 'BUILDER') {
+            renderSceneBuilderOverlay(ctx, w, h);
+        }
 
         // Item Fanfare Sunburst when looting chest inside room!
         if (itemFanfare.active && itemFanfare.item) {
@@ -10842,11 +10871,17 @@ const MAPS = [
         ctx.scale(ZOOM, ZOOM);
         ctx.translate(-camX, -camY);
 
+        // Fast view-frustum culling bounds for silky smooth 60 FPS performance
+        const minCol = Math.max(0, Math.floor(camX / TILE_SIZE) - 2);
+        const maxCol = Math.min(curCols, Math.ceil((camX + viewW) / TILE_SIZE) + 2);
+        const minRow = Math.max(0, Math.floor(camY / TILE_SIZE) - 2);
+        const maxRow = Math.min(curRows, Math.ceil((camY + viewH) / TILE_SIZE) + 2);
+
         // PASS 1: GROUND TILES ONLY (Background terrain - autotiled, blended & organic)
         const nowMs = performance.now();
         const isGreenZone = mapMeta.isBrightAlttpZone || currentMapIndex === 0 || currentMapIndex === 1 || currentMapIndex === 3 || currentMapIndex === 6;
-        for (let r = 0; r < curRows; r++) {
-            for (let c = 0; c < curCols; c++) {
+        for (let r = minRow; r < maxRow; r++) {
+            for (let c = minCol; c < maxCol; c++) {
                 const tx = c * TILE_SIZE;
                 const ty = r * TILE_SIZE;
                 const t = mapGrid[r] ? mapGrid[r][c] : 0;
@@ -11423,8 +11458,8 @@ const MAPS = [
 
         // PASS 2: Y-SORTED FOREGROUND ENTITIES & PHYSICAL OBJECTS (Depth sorting)
         // 1. Trees as physical objects (Grounded directly onto terrain without floating shadow)
-        for (let r = 0; r < curRows; r++) {
-            for (let c = 0; c < curCols; c++) {
+        for (let r = minRow; r < maxRow; r++) {
+            for (let c = minCol; c < maxCol; c++) {
                 if (mapGrid[r] && mapGrid[r][c] === 3) {
                     const tx = c * TILE_SIZE;
                     const ty = r * TILE_SIZE;
@@ -13567,6 +13602,317 @@ const MAPS = [
     // =========================================================================
     // 17. EVENT LISTENERS & CHARACTER CREATOR WIRING
     // =========================================================================
+    
+    // =========================================================================
+    // SCENE & MAP BUILDER STUDIO (Interactive In-Engine Dev Tool)
+    // =========================================================================
+    let builderOpen = false;
+    let builderMode = 'interior'; // 'interior' or 'overworld'
+    let builderTool = 'place';    // 'paint', 'place', 'move', 'erase'
+    let builderSelected = null;
+    let builderDraggedProp = null;
+    let builderMouse = { x: 0, y: 0, col: 0, row: 0, rx: 0, ry: 0 };
+
+    const BUILDER_CATALOG = {
+        interiors: [
+            { id: 'int_floor_wood', name: 'Wood Plank Floor', type: 'floor', tileId: 101, w: 48, h: 48, preview: 'assets/ingame/environment/interiors/floors/floor_wood_plank.png' },
+            { id: 'int_floor_oak', name: 'Oak Parquet Floor', type: 'floor', tileId: 102, w: 48, h: 48, preview: 'assets/ingame/environment/interiors/floors/floor_oak_parquet.png' },
+            { id: 'int_floor_stone', name: 'Stone Slate Floor', type: 'floor', tileId: 103, w: 48, h: 48, preview: 'assets/ingame/environment/interiors/floors/floor_stone_slate.png' },
+            { id: 'int_wall_wood', name: 'Wood Panel Wall', type: 'wall', tileId: 104, w: 48, h: 96, preview: 'assets/ingame/environment/interiors/walls/wall_wood_panel.png' },
+            { id: 'int_wall_stone', name: 'Stone Slate Wall', type: 'wall', tileId: 105, w: 48, h: 96, preview: 'assets/ingame/environment/interiors/walls/wall_stone_slate.png' }
+        ],
+        furniture: [
+            { id: 'int_bookshelf_grand', name: 'Grand Double Bookcase', type: 'prop', w: 96, h: 96, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_grand.png' },
+            { id: 'int_bookshelf_wide', name: 'Wide Library Shelf', type: 'prop', w: 96, h: 96, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_wide.png' },
+            { id: 'int_bookshelf_tall', name: 'Tall Modular Shelf', type: 'prop', w: 48, h: 96, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_tall.png' },
+            { id: 'int_bookshelf_medium', name: 'Medium Half Shelf', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_medium.png' },
+            { id: 'int_table_dining', name: 'Dining Table', type: 'prop', w: 96, h: 48, preview: 'assets/ingame/environment/interiors/tables/table_dining.png' },
+            { id: 'int_desk_scholar', name: 'Scholar Desk', type: 'prop', w: 64, h: 48, preview: 'assets/ingame/environment/interiors/tables/desk_scholar.png' },
+            { id: 'int_table_coffee', name: 'Coffee Table', type: 'prop', w: 96, h: 72, preview: 'assets/ingame/environment/interiors/tables/table_coffee.png' },
+            { id: 'int_chair_armchair', name: 'Armchair', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/chairs/chair_armchair.png' },
+            { id: 'int_chair_study', name: 'Study Chair', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/chairs/chair_study.png' },
+            { id: 'int_fireplace_anim', name: 'Animated Chimney', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/fireplaces/fireplace_brick.png' },
+            { id: 'int_fireplace_brick', name: 'Brick Fireplace', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/fireplaces/fireplace_brick.png' },
+            { id: 'int_rug_large', name: 'Ornate Persian Rug', type: 'prop', w: 192, h: 192, preview: 'assets/ingame/environment/interiors/carpets/rug_ornate_large.png' }
+        ],
+        decor: [
+            { id: 'int_window', name: 'Curtain Window', type: 'prop', w: 64, h: 64, preview: 'assets/ingame/environment/interiors/decor/window_curtain.png' },
+            { id: 'int_painting_landscape', name: 'Landscape Painting', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/decor/painting_landscape.png' },
+            { id: 'int_painting_portrait', name: 'Portrait Painting', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/decor/painting_portrait.png' },
+            { id: 'int_plant_fern', name: 'Potted Fern', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/decor/potted_plant_fern.png' },
+            { id: 'int_plant_flower', name: 'Potted Flower', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/decor/potted_plant_flowering.png' },
+            { id: 'alttp_chest_lone', name: 'Treasure Chest', type: 'prop', w: 44, h: 44, preview: 'assets/ingame/environment/interiors/decor/potted_plant_fern.png' }
+        ],
+        terrain: [
+            { id: 'tile_0', name: 'Grass Ground', type: 'tile', tileId: 0, w: 32, h: 32 },
+            { id: 'tile_1', name: 'Cobblestone Road', type: 'tile', tileId: 1, w: 32, h: 32 },
+            { id: 'tile_2', name: 'Boundary Wall', type: 'tile', tileId: 2, w: 32, h: 32 },
+            { id: 'tile_3', name: 'Forest Tree', type: 'tile', tileId: 3, w: 32, h: 32 },
+            { id: 'tile_4', name: 'Animated Water', type: 'tile', tileId: 4, w: 32, h: 32 },
+            { id: 'tile_5', name: 'River Bridge', type: 'tile', tileId: 5, w: 32, h: 32 },
+            { id: 'tile_10', name: 'Outrage Vent', type: 'tile', tileId: 10, w: 32, h: 32 }
+        ],
+        entities: [
+            { id: 'entity_mentor', name: 'Zone Mentor NPC', type: 'entity', w: 32, h: 48 },
+            { id: 'entity_inquisitor', name: 'Purity Inquisitor', type: 'entity', w: 32, h: 48 },
+            { id: 'entity_peacock', name: 'Peacock Creature', type: 'entity', w: 48, h: 48 },
+            { id: 'entity_sign', name: 'Signpost', type: 'entity', w: 32, h: 32 }
+        ]
+    };
+
+    function initSceneBuilderPalette() {
+        const grid = document.getElementById('sbPaletteGrid');
+        if (!grid) return;
+        let activeCat = 'furniture';
+        if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
+            const activeTab = document.querySelector('.sb-tab-btn.active');
+            if (activeTab && activeTab.dataset && activeTab.dataset.cat) {
+                activeCat = activeTab.dataset.cat;
+            }
+        }
+        const items = BUILDER_CATALOG[activeCat] || [];
+        grid.innerHTML = '';
+        items.forEach((item, idx) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `shrink-0 p-1.5 rounded-xl border flex flex-col items-center gap-1 transition-all ${
+                builderSelected && builderSelected.id === item.id 
+                    ? 'border-amber-400 bg-amber-500/25 ring-2 ring-amber-400/40 text-amber-200' 
+                    : 'border-slate-800 bg-slate-900/90 hover:bg-slate-800 text-slate-300'
+            }`;
+            btn.innerHTML = `
+                <div class="w-9 h-9 bg-slate-950 rounded-lg flex items-center justify-center overflow-hidden border border-slate-800">
+                    ${item.preview ? `<img src="${item.preview}" class="max-w-full max-h-full object-contain" />` : `<span class="pixel-font text-[9px] text-amber-400 font-bold">${item.name.slice(0, 3)}</span>`}
+                </div>
+                <span class="text-[9px] font-bold truncate max-w-[70px]">${item.name}</span>
+                <span class="text-[8px] mono-font text-slate-400">${item.w}x${item.h || item.w}</span>
+            `;
+            btn.onclick = () => {
+                builderSelected = item;
+                const info = document.getElementById('sbHoverItemText');
+                if (info) info.textContent = `Selected: ${item.name} (${item.w}x${item.h || item.w})`;
+                initSceneBuilderPalette();
+            };
+            grid.appendChild(btn);
+        });
+        if (!builderSelected && items.length > 0) {
+            builderSelected = items[0];
+            const info = document.getElementById('sbHoverItemText');
+            if (info) info.textContent = `Selected: ${builderSelected.name}`;
+        }
+    }
+
+    function toggleSceneBuilder() {
+        if (appState === 'BUILDER') {
+            closeSceneBuilder();
+        } else {
+            openSceneBuilder();
+        }
+    }
+
+    function openSceneBuilder() {
+        closeAllMenus(true);
+        appState = 'BUILDER';
+        builderOpen = true;
+        if (!devMode) toggleDevMode();
+        builderMode = currentInterior ? 'interior' : 'overworld';
+        updateSceneBuilderModeUI();
+        initSceneBuilderPalette();
+        const modal = document.getElementById('sceneBuilderModal');
+        if (modal) modal.classList.remove('hidden');
+        addFloatText(player.x, player.y - 20, '🛠️ SCENE BUILDER ACTIVE [F3]', '#f59e0b');
+    }
+
+    function closeSceneBuilder() {
+        builderOpen = false;
+        const modal = document.getElementById('sceneBuilderModal');
+        if (modal) modal.classList.add('hidden');
+        appState = 'PLAYING';
+    }
+
+    function updateSceneBuilderModeUI() {
+        const badge = document.getElementById('sbModeBadge');
+        const swBtn = document.getElementById('sbBtnSwitchMode');
+        if (badge) badge.textContent = builderMode === 'interior' ? 'INTERIOR STUDIO' : 'OVERWORLD STUDIO';
+        if (swBtn) swBtn.innerHTML = `<span>🔄</span> Switch: ${builderMode === 'interior' ? 'Overworld' : 'Interior'}`;
+    }
+
+    // Wire Scene Builder Tool Buttons & Palette Tabs
+    function wireSceneBuilderUI() {
+        // Tab buttons
+        document.querySelectorAll('.sb-tab-btn').forEach(tab => {
+            tab.onclick = () => {
+                document.querySelectorAll('.sb-tab-btn').forEach(t => {
+                    t.classList.remove('active', 'bg-amber-500', 'text-slate-950');
+                    t.classList.add('bg-slate-900', 'text-slate-300');
+                });
+                tab.classList.add('active', 'bg-amber-500', 'text-slate-950');
+                tab.classList.remove('bg-slate-900', 'text-slate-300');
+                initSceneBuilderPalette();
+            };
+        });
+
+        // Tool buttons
+        document.querySelectorAll('.sb-tool-btn').forEach(btn => {
+            btn.onclick = () => {
+                builderTool = btn.dataset.tool;
+                document.querySelectorAll('.sb-tool-btn').forEach(b => {
+                    b.classList.remove('bg-amber-500', 'text-slate-950', 'font-extrabold', 'shadow');
+                    b.classList.add('bg-slate-900', 'text-slate-300', 'font-bold');
+                });
+                btn.classList.add('bg-amber-500', 'text-slate-950', 'font-extrabold', 'shadow');
+                btn.classList.remove('bg-slate-900', 'text-slate-300', 'font-bold');
+            };
+        });
+
+        // Switch mode button
+        const swBtn = document.getElementById('sbBtnSwitchMode');
+        if (swBtn) {
+            swBtn.onclick = () => {
+                builderMode = builderMode === 'interior' ? 'overworld' : 'interior';
+                updateSceneBuilderModeUI();
+            };
+        }
+
+        // Close button
+        const closeBtn = document.getElementById('sbBtnClose');
+        if (closeBtn) closeBtn.onclick = closeSceneBuilder;
+
+        // Apply Live button
+        const applyBtn = document.getElementById('sbBtnApplyLive');
+        if (applyBtn) {
+            applyBtn.onclick = () => {
+                addFloatText(player.x, player.y - 30, '💾 Map & Scene Applied Live!', '#10b981');
+            };
+        }
+
+        // Export JSON button
+        const exportBtn = document.getElementById('sbBtnExportJson');
+        const exportModal = document.getElementById('sbExportModal');
+        const exportTextarea = document.getElementById('sbExportTextarea');
+        const exportCloseBtn = document.getElementById('sbBtnCloseExport');
+        const copyJsonBtn = document.getElementById('sbBtnCopyJson');
+        const exportToast = document.getElementById('sbExportToast');
+
+        if (exportBtn && exportModal && exportTextarea) {
+            exportBtn.onclick = () => {
+                let exportedData;
+                if (builderMode === 'interior' && currentInterior) {
+                    exportedData = {
+                        buildingId: currentInterior.building?.id || 'cottage',
+                        roomW: currentInterior.roomW || 760,
+                        roomH: currentInterior.roomH || 580,
+                        props: currentInterior.props || []
+                    };
+                } else {
+                    exportedData = {
+                        mapIndex: currentMapIndex,
+                        mapName: MAPS[currentMapIndex]?.name,
+                        cols: getMapCols(currentMapIndex),
+                        rows: getMapRows(currentMapIndex),
+                        grid: mapGrid
+                    };
+                }
+                const jsonStr = JSON.stringify(exportedData, null, 2);
+                exportTextarea.value = jsonStr;
+                exportModal.classList.remove('hidden');
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(jsonStr).then(() => {
+                        if (exportToast) {
+                            exportToast.style.opacity = '1';
+                            setTimeout(() => { exportToast.style.opacity = '0'; }, 2200);
+                        }
+                    }).catch(() => {});
+                }
+            };
+        }
+        if (exportCloseBtn && exportModal) {
+            exportCloseBtn.onclick = () => exportModal.classList.add('hidden');
+        }
+        if (copyJsonBtn && exportTextarea) {
+            copyJsonBtn.onclick = () => {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(exportTextarea.value);
+                    if (exportToast) {
+                        exportToast.style.opacity = '1';
+                        setTimeout(() => { exportToast.style.opacity = '0'; }, 2200);
+                    }
+                }
+            };
+        }
+
+        // Setting & Pause buttons
+        const btnOpenSceneEditor = document.getElementById('btnOpenSceneEditor');
+        if (btnOpenSceneEditor) btnOpenSceneEditor.onclick = openSceneBuilder;
+
+        const btnPauseSceneBuilder = document.getElementById('btnPauseSceneBuilder');
+        if (btnPauseSceneBuilder) btnPauseSceneBuilder.onclick = openSceneBuilder;
+
+        const btnHudSceneBuilder = document.getElementById('btnHudSceneBuilder');
+        if (btnHudSceneBuilder) btnHudSceneBuilder.onclick = openSceneBuilder;
+
+        const btnToggleDevModeSettings = document.getElementById('btnToggleDevModeSettings');
+        if (btnToggleDevModeSettings) btnToggleDevModeSettings.onclick = toggleDevMode;
+    }
+
+    // Render In-Engine Scene Builder Grid, Highlight & Live Cursor Preview
+    function renderSceneBuilderOverlay(ctx, w, h) {
+        if (appState !== 'BUILDER') return;
+        ctx.save();
+
+        if (builderMode === 'interior' && currentInterior) {
+            const roomW = currentInterior.roomW || 760;
+            const roomH = currentInterior.roomH || 580;
+            const offX = Math.floor((w - roomW) / 2);
+            const offY = Math.floor((h - roomH) / 2);
+
+            // Grid lines across the interior floor (48x48)
+            ctx.strokeStyle = 'rgba(251, 191, 36, 0.12)';
+            ctx.lineWidth = 1;
+            for (let x = offX; x <= offX + roomW; x += 48) {
+                ctx.beginPath();
+                ctx.moveTo(x, offY);
+                ctx.lineTo(x, offY + roomH);
+                ctx.stroke();
+            }
+            for (let y = offY; y <= offY + roomH; y += 48) {
+                ctx.beginPath();
+                ctx.moveTo(offX, y);
+                ctx.lineTo(offX + roomW, y);
+                ctx.stroke();
+            }
+
+            // Hovered tile indicator
+            const snapX = offX + Math.floor((builderMouse.rx || 0) / 48) * 48;
+            const snapY = offY + Math.floor((builderMouse.ry || 0) / 48) * 48;
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.20)';
+            ctx.fillRect(snapX, snapY, 48, 48);
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(snapX, snapY, 48, 48);
+
+            // Live Prop Cursor Preview when Place tool active
+            if (builderTool === 'place' && builderSelected) {
+                const pw = builderSelected.w || 48;
+                const ph = builderSelected.h || 48;
+                const px = offX + builderMouse.rx - pw / 2;
+                const py = offY + builderMouse.ry - ph / 2;
+                ctx.globalAlpha = 0.75;
+                if (assets.hasImage(builderSelected.id)) {
+                    assets.drawImage(ctx, builderSelected.id, px, py, pw, ph);
+                } else {
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillRect(px, py, pw, ph);
+                }
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(px, py, pw, ph);
+                ctx.globalAlpha = 1.0;
+            }
+        }
+        ctx.restore();
+    }
+
     window.addEventListener('keydown', (e) => {
         // Socratic Inoculation Duel Priority Controls ([Q], [E], [R] or [1], [2], [3])
         const duelModal = document.getElementById('socraticDuelModal');
@@ -13625,6 +13971,18 @@ const MAPS = [
             e.preventDefault();
             toggleDevMode();
             return;
+        }
+        if (e.code === 'F3' || e.code === 'Backquote' || (devMode && e.code === 'KeyB' && appState !== 'PLAYING')) {
+            e.preventDefault();
+            toggleSceneBuilder();
+            return;
+        }
+        if (appState === 'BUILDER') {
+            if (e.code === 'Escape') {
+                e.preventDefault();
+                closeSceneBuilder();
+                return;
+            }
         }
         if (appState === 'PLAYING') {
             if (e.code === 'KeyE') castAxiomStrikeE();
@@ -13717,6 +14075,106 @@ const MAPS = [
         };
     }
     if (canvas) {
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX;
+            const my = (e.clientY - rect.top) * scaleY;
+            builderMouse.x = mx;
+            builderMouse.y = my;
+
+            if (currentInterior) {
+                const roomW = currentInterior.roomW || 760;
+                const roomH = currentInterior.roomH || 580;
+                const offX = Math.floor((canvas.width - roomW) / 2);
+                const offY = Math.floor((canvas.height - roomH) / 2);
+                builderMouse.rx = mx - offX;
+                builderMouse.ry = my - offY;
+                builderMouse.col = Math.floor(builderMouse.rx / 48);
+                builderMouse.row = Math.floor(builderMouse.ry / 48);
+            } else {
+                builderMouse.rx = mx;
+                builderMouse.ry = my;
+                builderMouse.col = Math.floor(mx / TILE_SIZE);
+                builderMouse.row = Math.floor(my / TILE_SIZE);
+            }
+
+            const coordPill = document.getElementById('sbCoordText');
+            if (coordPill) {
+                coordPill.textContent = `Col: ${builderMouse.col}, Row: ${builderMouse.row} (x: ${Math.round(builderMouse.rx)}, y: ${Math.round(builderMouse.ry)})`;
+            }
+
+            // Dragging an existing prop in builder mode
+            if (appState === 'BUILDER' && builderDraggedProp) {
+                builderDraggedProp.x = Math.round(builderMouse.rx - builderDraggedProp.w / 2);
+                builderDraggedProp.y = Math.round(builderMouse.ry - builderDraggedProp.h / 2);
+            }
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (appState !== 'BUILDER') return;
+            e.preventDefault();
+            if (builderMode === 'interior' && currentInterior) {
+                if (!currentInterior.props) currentInterior.props = [];
+
+                if (builderTool === 'place' && builderSelected) {
+                    const pw = builderSelected.w || 48;
+                    const ph = builderSelected.h || 48;
+                    const newProp = {
+                        id: 'prop_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                        assetId: builderSelected.id,
+                        x: Math.round(builderMouse.rx - pw / 2),
+                        y: Math.round(builderMouse.ry - ph / 2),
+                        w: pw,
+                        h: ph,
+                        name: builderSelected.name
+                    };
+                    currentInterior.props.push(newProp);
+                    addFloatText(player.x, player.y - 20, `Placed: ${builderSelected.name}`, '#10b981');
+                } else if (builderTool === 'move') {
+                    // Find closest prop under cursor
+                    for (let i = currentInterior.props.length - 1; i >= 0; i--) {
+                        const p = currentInterior.props[i];
+                        if (builderMouse.rx >= p.x && builderMouse.rx <= p.x + p.w &&
+                            builderMouse.ry >= p.y && builderMouse.ry <= p.y + p.h) {
+                            builderDraggedProp = p;
+                            break;
+                        }
+                    }
+                } else if (builderTool === 'erase') {
+                    // Erase closest prop under cursor
+                    for (let i = currentInterior.props.length - 1; i >= 0; i--) {
+                        const p = currentInterior.props[i];
+                        if (builderMouse.rx >= p.x && builderMouse.rx <= p.x + p.w &&
+                            builderMouse.ry >= p.y && builderMouse.ry <= p.y + p.h) {
+                            currentInterior.props.splice(i, 1);
+                            addFloatText(player.x, player.y - 20, 'Removed Prop', '#f43f5e');
+                            break;
+                        }
+                    }
+                }
+            } else if (builderMode === 'overworld') {
+                if (builderTool === 'paint' && builderSelected && builderSelected.tileId !== undefined) {
+                    const r = builderMouse.row;
+                    const c = builderMouse.col;
+                    if (mapGrid[r] && mapGrid[r][c] !== undefined) {
+                        mapGrid[r][c] = builderSelected.tileId;
+                    }
+                } else if (builderTool === 'erase') {
+                    const r = builderMouse.row;
+                    const c = builderMouse.col;
+                    if (mapGrid[r] && mapGrid[r][c] !== undefined) {
+                        mapGrid[r][c] = 0; // reset to grass
+                    }
+                }
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            builderDraggedProp = null;
+        });
+
         canvas.onclick = () => {
             if (appState === 'INTRO') advanceCutsceneScene();
         };
@@ -14078,5 +14536,98 @@ const MAPS = [
         requestAnimationFrame(mainLoop);
     };
     </script>
+
+    <!-- =================================================================== -->
+    <!-- SCENE & MAP BUILDER STUDIO (IN-ENGINE DEV ENVIRONMENT)              -->
+    <!-- =================================================================== -->
+    <div id="sceneBuilderModal" class="fixed inset-0 z-50 pointer-events-none hidden select-none">
+        <!-- Top Toolbar -->
+        <div class="pointer-events-auto absolute top-3 left-1/2 -translate-x-1/2 bg-slate-950/95 border-2 border-amber-500/60 shadow-[0_0_25px_rgba(217,119,6,0.35)] rounded-2xl px-4 py-2.5 flex items-center gap-3 backdrop-blur-md">
+            <div class="flex items-center gap-2 border-r border-slate-800 pr-3">
+                <span class="text-amber-400 text-sm">🛠️</span>
+                <span id="sbModeBadge" class="pixel-font text-[10px] text-amber-300 font-extrabold tracking-wide">INTERIOR STUDIO</span>
+            </div>
+
+            <!-- Mode Switcher -->
+            <button id="sbBtnSwitchMode" type="button" class="retro-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[10px] text-cyan-300 font-bold flex items-center gap-1">
+                <span>🔄</span> Switch: Overworld
+            </button>
+
+            <!-- Tools -->
+            <div class="flex items-center gap-1 border-x border-slate-800 px-2" id="sbToolsGroup">
+                <button id="sbToolPaint" data-tool="paint" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 text-[10px] font-extrabold flex items-center gap-1 shadow">
+                    <span>🖌️</span> Paint
+                </button>
+                <button id="sbToolPlace" data-tool="place" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center gap-1">
+                    <span>📦</span> Place
+                </button>
+                <button id="sbToolMove" data-tool="move" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center gap-1">
+                    <span>✋</span> Move
+                </button>
+                <button id="sbToolErase" data-tool="erase" type="button" class="sb-tool-btn px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-rose-400 text-[10px] font-bold flex items-center gap-1">
+                    <span>❌</span> Erase
+                </button>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-1.5">
+                <button id="sbBtnApplyLive" type="button" class="retro-btn px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold flex items-center gap-1">
+                    <span>💾</span> Apply Live
+                </button>
+                <button id="sbBtnExportJson" type="button" class="retro-btn px-3 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold flex items-center gap-1">
+                    <span>📋</span> Export JSON
+                </button>
+                <button id="sbBtnClose" type="button" class="retro-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold">
+                    ✕ Close [F3]
+                </button>
+            </div>
+        </div>
+
+        <!-- Coordinates & Info Pill -->
+        <div class="pointer-events-auto absolute top-20 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-slate-700/80 rounded-full px-3 py-0.5 text-[10px] mono-font text-amber-300 backdrop-blur-sm shadow flex items-center gap-2">
+            <span id="sbCoordText">Col: 0, Row: 0 (px: 0, py: 0)</span>
+            <span class="text-slate-500">•</span>
+            <span id="sbHoverItemText">Selected: None</span>
+        </div>
+
+        <!-- Bottom Palette Drawer -->
+        <div class="pointer-events-auto absolute bottom-3 left-1/2 -translate-x-1/2 max-w-4xl w-[94vw] bg-slate-950/95 border-2 border-slate-700 shadow-2xl rounded-2xl p-3 flex flex-col gap-2 backdrop-blur-md">
+            <!-- Palette Category Tabs -->
+            <div class="flex items-center gap-1 border-b border-slate-800 pb-1.5 overflow-x-auto text-[10px]" id="sbPaletteTabs">
+                <button data-cat="interiors" type="button" class="sb-tab-btn active px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold">🏠 Floors & Walls</button>
+                <button data-cat="furniture" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🛋️ Furniture</button>
+                <button data-cat="decor" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🪴 Decor & Props</button>
+                <button data-cat="terrain" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">🌲 Overworld Terrain</button>
+                <button data-cat="entities" type="button" class="sb-tab-btn px-3 py-1 rounded-lg bg-slate-900 text-slate-300 hover:bg-slate-800 font-bold">⚔️ Entities & NPCs</button>
+            </div>
+
+            <!-- Palette Items Grid -->
+            <div id="sbPaletteGrid" class="flex items-center gap-2 overflow-x-auto py-1 min-h-[58px] scrollbar-thin">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- JSON Export Dialog Modal -->
+        <div id="sbExportModal" class="pointer-events-auto fixed inset-0 z-60 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+            <div class="max-w-2xl w-full bg-slate-900 border-2 border-amber-500/80 rounded-2xl p-5 flex flex-col gap-3 shadow-2xl">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                    <h3 class="pixel-font text-xs text-amber-300 font-bold flex items-center gap-2">
+                        <span>📋</span> EXPORTED MAP / ROOM CONFIGURATION
+                    </h3>
+                    <button id="sbBtnCloseExport" type="button" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">✕</button>
+                </div>
+                <textarea id="sbExportTextarea" class="w-full h-64 bg-slate-950 border border-slate-800 rounded-lg p-3 text-[11px] mono-font text-emerald-400 select-all" readonly></textarea>
+                <div class="flex justify-between items-center">
+                    <span id="sbExportToast" class="text-xs text-emerald-400 font-bold opacity-0 transition-opacity">✅ Copied to clipboard!</span>
+                    <div class="flex gap-2">
+                        <button id="sbBtnCopyJson" type="button" class="retro-btn px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5">
+                            <span>📋</span> Copy Code
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

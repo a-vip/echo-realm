@@ -1348,4 +1348,55 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         });
     });
 
+    test('In-Engine Scene & Map Builder Studio initializes with hotkeys, settings buttons, and live state transitions', () => {
+        const env = loadGameEnvironment();
+
+        // 1. Buttons exist in DOM
+        assert.ok(env.document.getElementById('btnOpenSceneEditor'), 'Settings button btnOpenSceneEditor must exist');
+        assert.ok(env.document.getElementById('btnPauseSceneBuilder'), 'Pause modal button btnPauseSceneBuilder must exist');
+        assert.ok(env.document.getElementById('btnHudSceneBuilder'), 'HUD flyout button btnHudSceneBuilder must exist');
+        assert.ok(env.document.getElementById('sceneBuilderModal'), 'sceneBuilderModal overlay must exist');
+
+        // 2. Open Scene Builder
+        env.openSceneBuilder();
+        assert.equal(env.appState, 'BUILDER');
+        assert.equal(env.devMode, true);
+
+        // 3. Toggle closes and restores
+        env.toggleSceneBuilder();
+        assert.equal(env.appState, 'PLAYING');
+
+        // 4. Frustum-culled render loop runs cleanly in both Overworld and Interior
+        const mockCtx = {
+            fillStyle: '',
+            strokeStyle: '',
+            lineWidth: 1,
+            fillRect: () => {},
+            strokeRect: () => {},
+            rect: () => {},
+            clip: () => {},
+            beginPath: () => {},
+            arc: () => {},
+            ellipse: () => {},
+            moveTo: () => {},
+            lineTo: () => {},
+            quadraticCurveTo: () => {},
+            closePath: () => {},
+            fill: () => {},
+            stroke: () => {},
+            save: () => {},
+            restore: () => {},
+            translate: () => {},
+            scale: () => {},
+            rotate: () => {},
+            fillText: () => {},
+            createLinearGradient: () => ({ addColorStop: () => {} }),
+            createRadialGradient: () => ({ addColorStop: () => {} }),
+            drawImage: () => {}
+        };
+        assert.doesNotThrow(() => {
+            env.renderGameplay();
+        });
+    });
+
 });

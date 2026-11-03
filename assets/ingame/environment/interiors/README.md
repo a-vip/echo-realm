@@ -59,3 +59,4 @@ assets/ingame/environment/interiors/
      ```javascript
      assets.drawImage(ctx, 'clock_grandfather', x, y, width, height);
      ```
+
