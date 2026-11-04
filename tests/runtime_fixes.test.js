@@ -1670,4 +1670,110 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         assert.equal(env.appState, 'PLAYING');
     });
 
+    test('Building Doorways: Walking into doorway automatically transitions into building interior', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(0);
+        env.appState = 'PLAYING';
+        assert.equal(env.currentInterior, null, 'Should be in overworld');
+
+        const scriptoria = env.MAPS[0].buildings.find(b => b.id === 'archive_scriptoria');
+        assert.ok(scriptoria, 'Scribe scriptoria building must exist');
+
+        const doorX = (scriptoria.col + scriptoria.wCols / 2) * env.TILE_SIZE;
+        const doorY = (scriptoria.row + scriptoria.hRows) * env.TILE_SIZE;
+
+        // Position player south of doorway facing north (walking up)
+        env.player.x = doorX;
+        env.player.y = doorY + 6;
+        env.player.dir = 1;
+        env.player.isMoving = true;
+
+        // Simulate walking north into the doorway
+        env.moveEntityWithCollision(env.player, 0, -10);
+
+        assert.ok(env.currentInterior, 'Stepping into doorway must automatically enter interior');
+        assert.equal(env.currentInterior.buildingId, 'archive_scriptoria');
+
+        // Test exiting
+        env.exitBuildingInterior();
+        assert.equal(env.currentInterior, null, 'Exiting clears currentInterior');
+
+        // Position player near door and press Space (triggerInteraction)
+        env.player.x = doorX;
+        env.player.y = doorY + 25;
+        const interactable = env.findNearestInteractable();
+        assert.ok(interactable, 'Should find nearest interactable near door');
+        assert.equal(interactable.type, 'door');
+        env.triggerInteraction();
+        assert.ok(env.currentInterior, 'Space interaction must enter building interior');
+        env.exitBuildingInterior();
+    });
+
+    test('House Interior Blank Slate & Custom Prop Collision Stability', () => {
+        const env = loadGameEnvironment();
+        const testBuilding = { id: 'blank_cottage_test', name: 'Blank Cottage', wCols: 4, hRows: 3 };
+
+        // Enter building - must be blank slate by default
+        env.enterBuildingInterior(testBuilding);
+        assert.ok(env.currentInterior, 'Interior must be active');
+        assert.equal(env.currentInterior.hideDefaultDecor, true, 'Default decor must be hidden for clean blank slate');
+        assert.equal(env.currentInterior.props.length, 0, 'New interior props must start as clean empty list');
+
+        // Verify narrative manuscript desk and relic chest exist
+        assert.ok(env.currentInterior.chest, 'Must have relic chest');
+        assert.ok(env.currentInterior.prop, 'Must have narrative manuscript desk');
+
+        // Render interior without throwing
+        const mockCtx = env.document.getElementById('gameCanvas').getContext('2d');
+        assert.doesNotThrow(() => {
+            env.renderInterior(mockCtx, 800, 600);
+        });
+
+        // Add custom prop with collision enabled
+        env.currentInterior.props.push({
+            id: 'p_custom_table',
+            assetId: 'int_table_dining',
+            x: 300,
+            y: 280,
+            w: 96,
+            h: 48,
+            hasCollision: true
+        });
+
+        // Move player inside interior with collision props - MUST NOT throw ReferenceError on obstacles!
+        assert.doesNotThrow(() => {
+            env.moveEntityWithCollision(env.player, 0, 5);
+        }, 'Obstacle resolution must not crash or throw TDZ ReferenceError');
+
+        // Save interior and verify persistence in localStorage
+        env.saveCurrentInterior();
+        env.exitBuildingInterior();
+        assert.equal(env.currentInterior, null);
+
+        // Re-enter building - custom props must persist!
+        env.enterBuildingInterior(testBuilding);
+        assert.equal(env.currentInterior.props.length, 1);
+        assert.equal(env.currentInterior.props[0].id, 'p_custom_table');
+        assert.equal(env.currentInterior.hideDefaultDecor, true);
+
+        // Clean up
+        env.exitBuildingInterior();
+    });
+
+    test('isTileBlocked Performance & Stationary Anvil / Grill / Bonfire Collision', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(0);
+
+        // Armory Blacksmith Forge is at col 11.5, row 12.5 (col 11, row 12)
+        // The station tile itself is blocked
+        assert.equal(env.isTileBlocked(11, 12), true, 'Forge station tile (11, 12) must be blocked');
+
+        // The adjacent walking tile directly in front of the forge (col 11, row 13) is open
+        assert.equal(env.isTileBlocked(11, 13), false, 'Walking tile directly in front of forge (11, 13) must NOT be blocked');
+
+        // Ensure isTileBlocked strictly returns a boolean and never a truthy object
+        const result = env.isTileBlocked(11, 13);
+        assert.equal(typeof result, 'boolean', 'isTileBlocked must return boolean, never object');
+    });
+
 });

@@ -128,6 +128,9 @@ function loadGameEnvironment() {
         mainLoop,
         renderSceneBuilderOverlay,
         get activeCamera() { return (typeof activeCamera !== "undefined") ? activeCamera : null; },
+        isTileBlocked,
+        saveCurrentInterior,
+        get TILE_SIZE() { return (typeof TILE_SIZE !== "undefined") ? TILE_SIZE : 44; },
         };`;
 
     function createMockElement(id = '') {

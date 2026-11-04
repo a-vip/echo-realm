@@ -8396,20 +8396,7 @@ const MAPS = [
         }
         if (!currentInterior && typeof INTERACTIVE_STATIONS !== 'undefined' && INTERACTIVE_STATIONS && INTERACTIVE_STATIONS[currentMapIndex]) {
             for (const st of INTERACTIVE_STATIONS[currentMapIndex]) {
-                const sx = st.col * TILE_SIZE;
-                const sy = st.row * TILE_SIZE;
-                if (Math.hypot(player.x - sx, player.y - sy) < 52) {
-                    return { type: 'station', obj: st, label: st.name };
-                }
-            }
-        }
-        if (!currentInterior && typeof INTERACTIVE_STATIONS !== 'undefined' && INTERACTIVE_STATIONS && INTERACTIVE_STATIONS[currentMapIndex]) {
-            for (const st of INTERACTIVE_STATIONS[currentMapIndex]) {
-                const sx = st.col * TILE_SIZE;
-                const sy = st.row * TILE_SIZE;
-                if (Math.hypot(player.x - sx, player.y - sy) < 56) {
-                    return { type: 'station', obj: st, label: st.name };
-                }
+                if (Math.floor(st.col) === col && Math.floor(st.row) === row) return true;
             }
         }
         if (!currentInterior && typeof signposts !== 'undefined' && signposts && signposts.length > 0) {
@@ -8430,8 +8417,9 @@ const MAPS = [
                 for (const b of mapMeta.buildings) {
                     if (col >= b.col && col < b.col + b.wCols && row >= b.row && row < b.row + b.hRows) {
                         const doorCol = b.col + Math.floor(b.wCols / 2);
+                        const isDoorCol = (b.wCols % 2 === 0) ? (col === doorCol || col === doorCol - 1) : (col === doorCol);
                         const doorRow = b.row + b.hRows - 1;
-                        if (col === doorCol && row === doorRow) return false; // Doorway is open and walkable
+                        if (isDoorCol && row === doorRow) return false; // Doorway is open and walkable
                         return true;
                     }
                 }
@@ -8460,6 +8448,40 @@ const MAPS = [
             const doorMaxY = roomH - 12;
 
             // Solid Physical Interior Obstacle Boxes { x1, y1, x2, y2 }
+            const obstacles = [];
+            if (isKeep) {
+                // Grand Colonnade Fluted Marble Pillars
+                obstacles.push(
+                    { x1: 220, y1: 260, x2: 270, y2: 340 },
+                    { x1: 220, y1: 480, x2: 270, y2: 560 },
+                    { x1: roomW - 270, y1: 260, x2: roomW - 220, y2: 340 },
+                    { x1: roomW - 270, y1: 480, x2: roomW - 220, y2: 560 },
+                    // Elevated Throne Dais (top center)
+                    { x1: Math.floor(roomW / 2) - 110, y1: 90, x2: Math.floor(roomW / 2) + 110, y2: 225 },
+                    // Treasury gold mounds (left and right alcove boundaries)
+                    { x1: 40, y1: 180, x2: 120, y2: 380 },
+                    { x1: roomW - 120, y1: 180, x2: roomW - 40, y2: 380 }
+                );
+            } else {
+                if (currentInterior.chest) {
+                    obstacles.push({
+                        x1: currentInterior.chest.x - 2,
+                        y1: currentInterior.chest.y - 2,
+                        x2: currentInterior.chest.x + 46,
+                        y2: currentInterior.chest.y + 46
+                    });
+                }
+                if (currentInterior.prop) {
+                    obstacles.push({
+                        x1: (currentInterior.prop.x || 120) - 4,
+                        y1: (currentInterior.prop.y || 220) - 4,
+                        x2: (currentInterior.prop.x || 120) + 68,
+                        y2: (currentInterior.prop.y || 220) + 52
+                    });
+                }
+            }
+
+            // Custom placed props with collision enabled
             if (currentInterior.props && Array.isArray(currentInterior.props)) {
                 currentInterior.props.forEach(p => {
                     if (p.hasCollision) {
@@ -8472,29 +8494,6 @@ const MAPS = [
                     }
                 });
             }
-            const obstacles = isKeep ? [
-                // Grand Colonnade Fluted Marble Pillars
-                { x1: 220, y1: 260, x2: 270, y2: 340 },
-                { x1: 220, y1: 480, x2: 270, y2: 560 },
-                { x1: roomW - 270, y1: 260, x2: roomW - 220, y2: 340 },
-                { x1: roomW - 270, y1: 480, x2: roomW - 220, y2: 560 },
-                // Elevated Throne Dais (top center)
-                { x1: Math.floor(roomW / 2) - 110, y1: 90, x2: Math.floor(roomW / 2) + 110, y2: 225 },
-                // Treasury gold mounds (left and right alcove boundaries)
-                { x1: 40, y1: 180, x2: 120, y2: 380 },
-                { x1: roomW - 120, y1: 180, x2: roomW - 40, y2: 380 }
-            ] : [
-                // Bookshelves (left wall)
-                { x1: 0, y1: 0, x2: 76, y2: 215 },
-                // Reading desk (left side)
-                { x1: 96, y1: 232, x2: 172, y2: 286 },
-                // Dining Table & Turned-Wood Chairs (center room)
-                { x1: 276, y1: 278, x2: 476, y2: 366 },
-                // Treasure Chest
-                { x1: 616, y1: 196, x2: 664, y2: 244 },
-                // Central Fireplace hearth
-                { x1: 318, y1: 0, x2: 442, y2: 140 }
-            ];
 
             // Resolve X movement with obstacle box collision
             ent.x += dx;
@@ -8637,6 +8636,21 @@ const MAPS = [
 
             ent.x = Math.max(minX, Math.min(maxX, ent.x));
             ent.y = Math.max(minY, Math.min(maxY, ent.y));
+        }
+
+        // Automatic walk-in doorway transition for player in overworld
+        if (ent === player && !currentInterior) {
+            const mapMeta = MAPS[currentMapIndex];
+            if (mapMeta && mapMeta.buildings && Array.isArray(mapMeta.buildings)) {
+                for (const b of mapMeta.buildings) {
+                    const doorX = (b.col + b.wCols / 2) * TILE_SIZE;
+                    const doorY = (b.row + b.hRows) * TILE_SIZE;
+                    if (Math.abs(ent.x - doorX) < 32 && (ent.y <= doorY + 6 && ent.y >= doorY - 32)) {
+                        enterBuildingInterior(b);
+                        return;
+                    }
+                }
+            }
         }
     }
 
@@ -9253,6 +9267,16 @@ const MAPS = [
         player.isMoving = (mx !== 0 || my !== 0);
         if (player.isMoving) {
             moveEntityWithCollision(player, mx * totalSpd * dt, my * totalSpd * dt);
+            if (!currentInterior && mapMeta.buildings && Array.isArray(mapMeta.buildings)) {
+                for (const b of mapMeta.buildings) {
+                    const doorX = (b.col + b.wCols / 2) * TILE_SIZE;
+                    const doorY = (b.row + b.hRows) * TILE_SIZE;
+                    if (Math.abs(player.x - doorX) < 32 && (player.y <= doorY + 6 && player.y >= doorY - 32)) {
+                        enterBuildingInterior(b);
+                        return;
+                    }
+                }
+            }
             player.animTimer = (player.animTimer || 0) + dt;
             if (player.animTimer > 0.13) {
                 player.animTimer = 0;
@@ -9744,7 +9768,7 @@ const MAPS = [
         const props = savedInterior && Array.isArray(savedInterior.props) ? JSON.parse(JSON.stringify(savedInterior.props)) : [];
         const floorType = (savedInterior && savedInterior.floorType) || 'int_floor_wood';
         const wallType = (savedInterior && savedInterior.wallType) || 'int_wall_wood';
-        const hideDefaultDecor = savedInterior ? !!savedInterior.hideDefaultDecor : false;
+        const hideDefaultDecor = savedInterior ? (savedInterior.hideDefaultDecor !== false) : true;
 
         currentInterior = {
             building,
@@ -10747,6 +10771,22 @@ const MAPS = [
             }
         }
 
+        // Narrative Manuscript Desk
+        if (currentInterior.prop) {
+            const deskX = offX + (currentInterior.prop.x || 120);
+            const deskY = floorY + (currentInterior.prop.y ? (currentInterior.prop.y - 110) : 110);
+            if (assets.hasImage('int_chair_study')) {
+                assets.drawImage(ctx, 'int_chair_study', deskX + 8, deskY - 24, 48, 48);
+            }
+            if (assets.hasImage('int_desk_scholar')) {
+                assets.drawImage(ctx, 'int_desk_scholar', deskX, deskY, 64, 48);
+            }
+            ctx.font = 'bold 9px monospace';
+            ctx.fillStyle = '#fde047';
+            ctx.textAlign = 'center';
+            ctx.fillText('📖 MANUSCRIPT [SPACE]', deskX + 32, deskY - 10);
+        }
+
         // Render Custom Scene Builder Placed Props in Room Interior
         if (currentInterior.props && Array.isArray(currentInterior.props)) {
             currentInterior.props.forEach(p => {
@@ -10912,8 +10952,8 @@ const MAPS = [
             for (const b of mapMeta.buildings) {
                 const doorX = (b.col + b.wCols / 2) * TILE_SIZE;
                 const doorY = (b.row + b.hRows) * TILE_SIZE;
-                if (Math.hypot(player.x - doorX, player.y - doorY) < 58) {
-                    return { type: 'door', obj: b };
+                if (Math.abs(player.x - doorX) < 48 && Math.abs(player.y - doorY) < 72) {
+                    return { type: 'door', obj: b, label: `Enter ${b.name || 'Building'} [SPACE]` };
                 }
             }
         }
