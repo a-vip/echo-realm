@@ -2117,6 +2117,15 @@
     assets.registerImage('int_bookshelf_tall', 'assets/ingame/environment/interiors/bookshelves/bookshelf_tall.png');
     assets.registerImage('int_bookshelf_medium', 'assets/ingame/environment/interiors/bookshelves/bookshelf_medium.png');
     assets.registerImage('int_bookshelf_wide', 'assets/ingame/environment/interiors/bookshelves/bookshelf_wide.png');
+    assets.registerImage('int_bookcase_grand', 'assets/ingame/environment/interiors/bookshelves/bookcase_grand.png');
+    assets.registerImage('int_bookcase_single', 'assets/ingame/environment/interiors/bookshelves/bookcase_single.png');
+    assets.registerImage('int_bookcase_medium', 'assets/ingame/environment/interiors/bookshelves/bookcase_medium.png');
+    assets.registerImage('int_cupboard_double', 'assets/ingame/environment/interiors/bookshelves/cupboard_double.png');
+    assets.registerImage('int_cupboard_glass', 'assets/ingame/environment/interiors/bookshelves/cupboard_glass.png');
+    assets.registerImage('int_wardrobe_tall', 'assets/ingame/environment/interiors/bookshelves/wardrobe_tall.png');
+    assets.registerImage('int_cupboard_small', 'assets/ingame/environment/interiors/bookshelves/cupboard_small.png');
+    assets.registerImage('int_cupboard_narrow', 'assets/ingame/environment/interiors/bookshelves/cupboard_narrow.png');
+    assets.registerImage('int_cupboard_tall', 'assets/ingame/environment/interiors/bookshelves/cupboard_tall.png');
     assets.registerImage('int_desk_scholar', 'assets/ingame/environment/interiors/tables/desk_scholar.png');
     assets.registerImage('int_table_dining', 'assets/ingame/environment/interiors/tables/table_dining.png');
     assets.registerImage('int_table_coffee', 'assets/ingame/environment/interiors/tables/table_coffee.png');
@@ -9766,8 +9775,11 @@ const MAPS = [
             } catch (e) {}
         }
         const props = savedInterior && Array.isArray(savedInterior.props) ? JSON.parse(JSON.stringify(savedInterior.props)) : [];
-        const floorType = (savedInterior && savedInterior.floorType) || 'int_floor_wood';
-        const wallType = (savedInterior && savedInterior.wallType) || 'int_wall_wood';
+        const isArchive = (building.id === 'archive_sanctuary' || building.style === 'archive_tower');
+        const defaultFloor = isArchive ? 'int_floor_stone' : 'int_floor_wood';
+        const defaultWall = isArchive ? 'int_wall_stone' : 'int_wall_wood';
+        const floorType = (savedInterior && savedInterior.floorType) || defaultFloor;
+        const wallType = (savedInterior && savedInterior.wallType) || defaultWall;
         const hideDefaultDecor = savedInterior ? (savedInterior.hideDefaultDecor !== false) : true;
 
         currentInterior = {
@@ -9967,25 +9979,23 @@ const MAPS = [
         ctx.stroke();
 
         // 5. Grand Library Bookshelves along North Wall (Pixel-Perfect 96x96 High-Res Assets)
-        if (assets.hasImage('int_bookshelf_grand')) {
+        const grandSprite = assets.hasImage('int_bookcase_grand') ? 'int_bookcase_grand' : 'int_bookshelf_grand';
+        if (assets.hasImage(grandSprite)) {
             const grandW = 96;
             const grandH = 96;
-            assets.drawImage(ctx, 'int_bookshelf_grand', offX + 40, offY + 14, grandW, grandH);
-            assets.drawImage(ctx, 'int_bookshelf_grand', offX + 145, offY + 14, grandW, grandH);
-            assets.drawImage(ctx, 'int_bookshelf_grand', offX + roomW - 241, offY + 14, grandW, grandH);
-            assets.drawImage(ctx, 'int_bookshelf_grand', offX + roomW - 136, offY + 14, grandW, grandH);
-        } else if (assets.hasImage('int_bookshelf_wide')) {
-            for (let bx = offX + 30; bx < offX + roomW - 100; bx += 105) {
-                assets.drawImage(ctx, 'int_bookshelf_wide', bx, offY + 14, 96, 96);
-            }
+            assets.drawImage(ctx, grandSprite, offX + 40, offY + 14, grandW, grandH);
+            assets.drawImage(ctx, grandSprite, offX + 145, offY + 14, grandW, grandH);
+            assets.drawImage(ctx, grandSprite, offX + roomW - 241, offY + 14, grandW, grandH);
+            assets.drawImage(ctx, grandSprite, offX + roomW - 136, offY + 14, grandW, grandH);
         }
 
         // 6. Side Wall Bookshelves (Pixel-Perfect 48x96 Tall Modular Bookcases)
-        if (assets.hasImage('int_bookshelf_tall')) {
-            assets.drawImage(ctx, 'int_bookshelf_tall', offX + 16, floorY + 30, 48, 96);
-            assets.drawImage(ctx, 'int_bookshelf_tall', offX + 16, floorY + 150, 48, 96);
-            assets.drawImage(ctx, 'int_bookshelf_tall', offX + roomW - 64, floorY + 30, 48, 96);
-            assets.drawImage(ctx, 'int_bookshelf_tall', offX + roomW - 64, floorY + 150, 48, 96);
+        const sideSprite = assets.hasImage('int_bookcase_single') ? 'int_bookcase_single' : 'int_bookshelf_tall';
+        if (assets.hasImage(sideSprite)) {
+            assets.drawImage(ctx, sideSprite, offX + 16, floorY + 30, 48, 96);
+            assets.drawImage(ctx, sideSprite, offX + 16, floorY + 150, 48, 96);
+            assets.drawImage(ctx, sideSprite, offX + roomW - 64, floorY + 30, 48, 96);
+            assets.drawImage(ctx, sideSprite, offX + roomW - 64, floorY + 150, 48, 96);
         }
 
         // 7. Left Study Alcove: Scholar Study Desk & High-Backed Chair (Pixel-Perfect 64x48 & 48x48)
@@ -14027,17 +14037,25 @@ const MAPS = [
             { id: 'int_wall_stone', name: 'Stone Slate Wall', type: 'wall', tileId: 105, w: 48, h: 96, preview: 'assets/ingame/environment/interiors/walls/wall_stone_slate.png' }
         ],
         furniture: [
-            { id: 'int_bookshelf_grand', name: 'Grand Double Bookcase', type: 'prop', w: 96, h: 96, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_grand.png' },
-            { id: 'int_bookshelf_wide', name: 'Wide Library Shelf', type: 'prop', w: 96, h: 96, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_wide.png' },
-            { id: 'int_bookshelf_tall', name: 'Tall Modular Shelf', type: 'prop', w: 48, h: 96, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_tall.png' },
-            { id: 'int_bookshelf_medium', name: 'Medium Half Shelf', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_medium.png' },
-            { id: 'int_table_dining', name: 'Dining Table', type: 'prop', w: 96, h: 48, preview: 'assets/ingame/environment/interiors/tables/table_dining.png' },
-            { id: 'int_desk_scholar', name: 'Scholar Desk', type: 'prop', w: 64, h: 48, preview: 'assets/ingame/environment/interiors/tables/desk_scholar.png' },
-            { id: 'int_table_coffee', name: 'Coffee Table', type: 'prop', w: 96, h: 64, preview: 'assets/ingame/environment/interiors/tables/table_coffee.png' },
+            { id: 'int_bookcase_grand', name: 'Grand Bookcase Hutch', type: 'prop', w: 96, h: 96, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/bookcase_grand.png' },
+            { id: 'int_bookcase_single', name: 'Tall Library Bookcase', type: 'prop', w: 48, h: 96, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/bookcase_single.png' },
+            { id: 'int_bookcase_medium', name: 'Medium Study Shelf', type: 'prop', w: 48, h: 48, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/bookcase_medium.png' },
+            { id: 'int_cupboard_double', name: 'Double Cupboard', type: 'prop', w: 48, h: 48, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/cupboard_double.png' },
+            { id: 'int_cupboard_glass', name: 'Glass Display Cabinet', type: 'prop', w: 48, h: 48, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/cupboard_glass.png' },
+            { id: 'int_wardrobe_tall', name: 'Tall Wardrobe', type: 'prop', w: 48, h: 64, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/wardrobe_tall.png' },
+            { id: 'int_cupboard_tall', name: 'Tall Closed Cupboard', type: 'prop', w: 48, h: 96, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/cupboard_tall.png' },
+            { id: 'int_cupboard_small', name: 'Small Wall Cabinet', type: 'prop', w: 32, h: 32, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/cupboard_small.png' },
+            { id: 'int_cupboard_narrow', name: 'Narrow Side Cabinet', type: 'prop', w: 32, h: 48, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/cupboard_narrow.png' },
+            { id: 'int_bookshelf_grand', name: 'Grand Double Bookcase', type: 'prop', w: 96, h: 96, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_grand.png' },
+            { id: 'int_bookshelf_wide', name: 'Wide Library Shelf', type: 'prop', w: 96, h: 96, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_wide.png' },
+            { id: 'int_bookshelf_tall', name: 'Tall Modular Shelf', type: 'prop', w: 48, h: 96, hasCollision: true, preview: 'assets/ingame/environment/interiors/bookshelves/bookshelf_tall.png' },
+            { id: 'int_desk_scholar', name: 'Scholar Writing Desk', type: 'prop', w: 64, h: 48, hasCollision: true, preview: 'assets/ingame/environment/interiors/tables/desk_scholar.png' },
+            { id: 'int_table_dining', name: 'Dining Table', type: 'prop', w: 96, h: 48, hasCollision: true, preview: 'assets/ingame/environment/interiors/tables/table_dining.png' },
+            { id: 'int_table_coffee', name: 'Coffee Table', type: 'prop', w: 96, h: 64, hasCollision: true, preview: 'assets/ingame/environment/interiors/tables/table_coffee.png' },
             { id: 'int_chair_armchair', name: 'Armchair', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/chairs/chair_armchair.png' },
             { id: 'int_chair_study', name: 'Study Chair', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/chairs/chair_study.png' },
-            { id: 'int_fireplace_anim', name: 'Animated Chimney', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/fireplaces/fireplace_brick.png' },
-            { id: 'int_fireplace_brick', name: 'Brick Fireplace', type: 'prop', w: 48, h: 48, preview: 'assets/ingame/environment/interiors/fireplaces/fireplace_brick.png' },
+            { id: 'int_fireplace_anim', name: 'Animated Chimney', type: 'prop', w: 48, h: 48, hasCollision: true, preview: 'assets/ingame/environment/interiors/fireplaces/fireplace_brick.png' },
+            { id: 'int_fireplace_brick', name: 'Brick Fireplace', type: 'prop', w: 48, h: 48, hasCollision: true, preview: 'assets/ingame/environment/interiors/fireplaces/fireplace_brick.png' },
             { id: 'int_rug_large', name: 'Ornate Persian Rug', type: 'prop', w: 192, h: 192, preview: 'assets/ingame/environment/interiors/carpets/rug_ornate_large.png' },
             { id: 'int_rug_runner', name: 'Runner Rug', type: 'prop', w: 64, h: 64, preview: 'assets/ingame/environment/interiors/carpets/rug_runner.png' }
         ],

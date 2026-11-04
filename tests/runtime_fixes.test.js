@@ -1389,6 +1389,8 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
             translate: () => {},
             scale: () => {},
             rotate: () => {},
+            ellipse: () => {},
+            ellipse: () => {},
             fillText: () => {},
             createLinearGradient: () => ({ addColorStop: () => {} }),
             createRadialGradient: () => ({ addColorStop: () => {} }),
@@ -1774,6 +1776,86 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         // Ensure isTileBlocked strictly returns a boolean and never a truthy object
         const result = env.isTileBlocked(11, 13);
         assert.equal(typeof result, 'boolean', 'isTileBlocked must return boolean, never object');
+    });
+
+    test('Authentic Cupboards & Bookcases Cropped from Cupboard-Sheet, Clean Desks & Grand Archive Rendering', () => {
+        const env = loadGameEnvironment();
+        const fs = require('fs');
+        const path = require('path');
+
+        const base = path.join(__dirname, '..', 'assets', 'ingame', 'environment', 'interiors');
+        const filesToCheck = [
+            path.join(base, 'bookshelves', 'bookcase_grand.png'),
+            path.join(base, 'bookshelves', 'bookcase_single.png'),
+            path.join(base, 'bookshelves', 'bookcase_medium.png'),
+            path.join(base, 'bookshelves', 'cupboard_double.png'),
+            path.join(base, 'bookshelves', 'cupboard_glass.png'),
+            path.join(base, 'bookshelves', 'wardrobe_tall.png'),
+            path.join(base, 'bookshelves', 'cupboard_small.png'),
+            path.join(base, 'bookshelves', 'cupboard_narrow.png'),
+            path.join(base, 'bookshelves', 'cupboard_tall.png'),
+            path.join(base, 'tables', 'desk_scholar.png'),
+            path.join(base, 'walls', 'wall_wood_panel.png'),
+            path.join(base, 'walls', 'wall_stone_slate.png'),
+            path.join(base, 'floors', 'floor_wood_plank.png'),
+            path.join(base, 'floors', 'floor_oak_parquet.png'),
+            path.join(base, 'floors', 'floor_stone_slate.png')
+        ];
+
+        filesToCheck.forEach(fp => {
+            assert.ok(fs.existsSync(fp), 'Asset must exist: ' + fp);
+            const stat = fs.statSync(fp);
+            assert.ok(stat.size > 100, 'Asset must be valid non-empty file: ' + fp);
+        });
+
+        // Verify BUILDER_CATALOG has the new cupboard items
+        const furn = env.BUILDER_CATALOG.furniture;
+        assert.ok(furn.find(f => f.id === 'int_bookcase_grand'), 'Grand Bookcase Hutch must be in catalog');
+        assert.ok(furn.find(f => f.id === 'int_bookcase_single'), 'Tall Library Bookcase must be in catalog');
+        assert.ok(furn.find(f => f.id === 'int_cupboard_double'), 'Double Cupboard must be in catalog');
+        assert.ok(furn.find(f => f.id === 'int_cupboard_glass'), 'Glass Display Cabinet must be in catalog');
+        assert.ok(furn.find(f => f.id === 'int_wardrobe_tall'), 'Tall Wardrobe must be in catalog');
+        assert.ok(furn.find(f => f.id === 'int_cupboard_small'), 'Small Wall Cabinet must be in catalog');
+        assert.ok(furn.find(f => f.id === 'int_desk_scholar'), 'Scholar Writing Desk must be in catalog');
+
+        // Test entering The Grand Archive
+        env.loadMap(0);
+        const archive = env.MAPS[0].buildings.find(b => b.id === 'archive_sanctuary');
+        assert.ok(archive, 'Grand Archive must exist on Map 0');
+        env.enterBuildingInterior(archive);
+        assert.ok(env.currentInterior, 'Player must enter Grand Archive interior');
+        assert.equal(env.currentInterior.floorType, 'int_floor_stone', 'Grand Archive must default to stone floor');
+        assert.equal(env.currentInterior.wallType, 'int_wall_stone', 'Grand Archive must default to stone wall');
+        assert.equal(env.currentInterior.hideDefaultDecor, true, 'Default decor starts hidden for clean blank slate');
+
+        // Render interior without throwing
+        const mockCtx = {
+            save: () => {},
+            restore: () => {},
+            fillRect: () => {},
+            strokeRect: () => {},
+            beginPath: () => {},
+            arc: () => {},
+            rect: () => {},
+            moveTo: () => {},
+            lineTo: () => {},
+            stroke: () => {},
+            fill: () => {},
+            fillText: () => {},
+            measureText: () => ({ width: 50 }),
+            drawImage: () => {},
+            createLinearGradient: () => ({ addColorStop: () => {} }),
+            setLineDash: () => {},
+            translate: () => {},
+            scale: () => {},
+            rotate: () => {},
+            ellipse: () => {}
+        };
+        assert.doesNotThrow(() => {
+            env.renderInterior(mockCtx, 800, 600);
+        }, 'renderInterior must not throw for Grand Archive');
+
+        env.exitBuildingInterior();
     });
 
 });
