@@ -131,6 +131,8 @@ function loadGameEnvironment() {
         isTileBlocked,
         saveCurrentInterior,
         get TILE_SIZE() { return (typeof TILE_SIZE !== "undefined") ? TILE_SIZE : 44; },
+        getCachedCobbleTile,
+        renderMinimap,
         };`;
 
     function createMockElement(id = '') {

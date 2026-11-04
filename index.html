@@ -1648,7 +1648,10 @@
                 const img = new Image();
                 img.src = src;
                 entry.img = img;
-                img.onload = () => { entry.loaded = true; };
+                img.onload = () => {
+                    entry.loaded = true;
+                    if (id === 'floors_tiles') COBBLE_TILE_CACHE = null;
+                };
                 img.onerror = () => { entry.loaded = false; };
             }
             return entry;
@@ -1682,7 +1685,10 @@
                 const img = new Image();
                 img.src = src;
                 entry.img = img;
-                img.onload = () => { entry.loaded = true; };
+                img.onload = () => {
+                    entry.loaded = true;
+                    if (id === 'floors_tiles') COBBLE_TILE_CACHE = null;
+                };
                 img.onerror = () => { entry.loaded = false; };
             }
             return entry;
@@ -1694,7 +1700,10 @@
                 const img = new Image();
                 img.src = src;
                 entry.img = img;
-                img.onload = () => { entry.loaded = true; };
+                img.onload = () => {
+                    entry.loaded = true;
+                    if (id === 'floors_tiles') COBBLE_TILE_CACHE = null;
+                };
                 img.onerror = () => { entry.loaded = false; };
             }
             return entry;
@@ -5766,6 +5775,30 @@ const MAPS = [
     const minimapCanvas = document.getElementById('minimapCanvas');
     const mmCtx = minimapCanvas.getContext('2d');
 
+    // Performance Caches for locked 60 FPS in Overworld & Minimap
+    let minimapBaseCanvas = null;
+    let minimapBaseCtx = null;
+    let minimapNeedsFullRedraw = true;
+    let minimapCachedMapIndex = -1;
+    let COBBLE_TILE_CACHE = null;
+    const ACTIVE_RENDER_LIST = [];
+
+    function getMinimapTileColor(t) {
+        if (t === 1) return '#475569';
+        if (t === 2) return '#1e293b';
+        if (t === 3) return '#065f46';
+        if (t === 4) return '#0284c7';
+        if (t === 5) return '#1e293b';
+        if (t === 7) return '#16a34a';
+        if (t === 8) return '#d97706';
+        if (t === 9) return '#15803d';
+        if (t === 10) return '#e11d48';
+        if (t === 11) return '#9333ea';
+        if (t === 12) return '#b45309';
+        if (t === 13) return '#78350f';
+        return '#0f172a';
+    }
+
     let appState = 'INTRO'; // 'INTRO', 'TITLE', 'CHAR_CREATE', 'PLAYING', 'PAUSED', 'DIALOGUE', 'ITEM_FANFARE'
     let currentMapIndex = 0;
     let highestMapReached = 0;
@@ -5896,7 +5929,18 @@ const MAPS = [
                 const c = centerCol + dc;
                 if (r >= 0 && r < curRows && c >= 0 && c < curCols) {
                     if (dr * dr + dc * dc <= radSq) {
-                        if (fogGrid[r]) fogGrid[r][c] = true;
+                        if (fogGrid[r] && !fogGrid[r][c]) {
+                            fogGrid[r][c] = true;
+                            if (minimapBaseCtx && minimapCanvas) {
+                                const mw = minimapCanvas.width;
+                                const mh = minimapCanvas.height;
+                                const tw = mw / curCols;
+                                const th = mh / curRows;
+                                const t = mapGrid[r] ? mapGrid[r][c] : 0;
+                                minimapBaseCtx.fillStyle = getMinimapTileColor(t);
+                                minimapBaseCtx.fillRect(c * tw, r * th, tw + 0.5, th + 0.5);
+                            }
+                        }
                     }
                 }
             }
@@ -7928,6 +7972,7 @@ const MAPS = [
         audio.startZoneBgm(mapIndex);
 
         // Reset & Initialize Dynamic Minimap Fog of War
+        minimapNeedsFullRedraw = true;
         fogGrid = [];
         for (let r = 0; r < rows; r++) {
             fogGrid[r] = [];
@@ -11213,6 +11258,108 @@ const MAPS = [
         return true;
     }
 
+    function initCobbleTileCache() {
+        if (typeof document === 'undefined') return;
+        COBBLE_TILE_CACHE = { bright: [], dark: [] };
+        [true, false].forEach(isBright => {
+            const key = isBright ? 'bright' : 'dark';
+            const roadBed = isBright ? '#b48a4d' : '#2b3648';
+            const stoneLight = isBright ? '#f3e5c0' : '#79889e';
+            const stoneMid = isBright ? '#dbc28f' : '#52627a';
+            const stoneDark = isBright ? '#825c23' : '#1b2433';
+            const mortarDark = isBright ? '#6a4918' : '#111827';
+
+            for (let pVariant = 0; pVariant < 4; pVariant++) {
+                const cCanvas = document.createElement('canvas');
+                cCanvas.width = 32;
+                cCanvas.height = 32;
+                const cCtx = cCanvas.getContext('2d');
+
+                cCtx.fillStyle = roadBed;
+                cCtx.fillRect(0, 0, 32, 32);
+
+                if (assets && assets.hasImage && assets.hasImage('floors_tiles')) {
+                    const pxSrc = isBright ? (96 + (pVariant % 3) * 16) : (256 + (pVariant % 3) * 16);
+                    const pySrc = isBright ? 160 : 16;
+                    assets.drawImage(cCtx, 'floors_tiles', pxSrc, pySrc, 16, 16, 0, 0, 32, 32);
+                }
+
+                let stones = [];
+                if (pVariant === 0) {
+                    stones = [
+                        { sx: 2, sy: 2, sw: 20, sh: 16 },
+                        { sx: 24, sy: 2, sw: 15, sh: 18 },
+                        { sx: 2, sy: 20, sw: 17, sh: 18 },
+                        { sx: 21, sy: 22, sw: 18, sh: 16 }
+                    ];
+                } else if (pVariant === 1) {
+                    stones = [
+                        { sx: 2, sy: 2, sw: 24, sh: 10 },
+                        { sx: 28, sy: 2, sw: 11, sh: 10 },
+                        { sx: 2, sy: 14, sw: 13, sh: 11 },
+                        { sx: 17, sy: 14, sw: 22, sh: 11 },
+                        { sx: 2, sy: 27, sw: 22, sh: 11 },
+                        { sx: 26, sy: 27, sw: 13, sh: 11 }
+                    ];
+                } else if (pVariant === 2) {
+                    stones = [
+                        { sx: 3, sy: 3, sw: 13, sh: 11 },
+                        { sx: 18, sy: 2, sw: 11, sh: 13 },
+                        { sx: 31, sy: 4, sw: 8, sh: 10 },
+                        { sx: 2, sy: 16, sw: 11, sh: 10 },
+                        { sx: 15, sy: 16, sw: 13, sh: 11 },
+                        { sx: 30, sy: 16, sw: 9, sh: 12 },
+                        { sx: 4, sy: 28, sw: 15, sh: 10 },
+                        { sx: 21, sy: 28, sw: 17, sh: 10 }
+                    ];
+                } else {
+                    stones = [
+                        { sx: 3, sy: 3, sw: 16, sh: 17 },
+                        { sx: 21, sy: 3, sw: 17, sh: 15 },
+                        { sx: 3, sy: 22, sw: 18, sh: 16 },
+                        { sx: 23, sy: 20, sw: 15, sh: 18 }
+                    ];
+                }
+
+                stones.forEach(st => {
+                    cCtx.fillStyle = mortarDark;
+                    cCtx.beginPath();
+                    drawRoundRect(cCtx, st.sx, st.sy, st.sw, st.sh, 3);
+                    cCtx.fill();
+
+                    cCtx.fillStyle = stoneMid;
+                    cCtx.beginPath();
+                    drawRoundRect(cCtx, st.sx + 1, st.sy + 1, st.sw - 2, st.sh - 2, 2.5);
+                    cCtx.fill();
+
+                    cCtx.fillStyle = stoneLight;
+                    cCtx.fillRect(st.sx + 2, st.sy + 1, Math.max(2, st.sw - 5), 1.5);
+                    cCtx.fillRect(st.sx + 1.5, st.sy + 2, 1.5, Math.max(2, st.sh - 5));
+
+                    if ((st.sx + st.sy) % 3 === 0) {
+                        cCtx.fillStyle = stoneDark;
+                        cCtx.fillRect(st.sx + Math.floor(st.sw * 0.5), st.sy + Math.floor(st.sh * 0.5), 1.5, 1.5);
+                    }
+                });
+
+                if (pVariant === 3 && isBright) {
+                    cCtx.fillStyle = '#15803d';
+                    cCtx.fillRect(18, 18, 3, 2);
+                    cCtx.fillRect(19, 19, 2, 2);
+                }
+
+                COBBLE_TILE_CACHE[key][pVariant] = cCanvas;
+            }
+        });
+    }
+
+    function getCachedCobbleTile(isBright, pVariant) {
+        if (!COBBLE_TILE_CACHE) initCobbleTileCache();
+        if (!COBBLE_TILE_CACHE) return null;
+        const key = isBright ? 'bright' : 'dark';
+        return COBBLE_TILE_CACHE[key] ? COBBLE_TILE_CACHE[key][(pVariant || 0) % 4] : null;
+    }
+
     function renderGameplay() {
         const w = canvas.width;
         const h = canvas.height;
@@ -11240,14 +11387,18 @@ const MAPS = [
         if (!Number.isFinite(player.x)) player.x = (Math.floor(curCols / 2) + 0.5) * TILE_SIZE;
         if (!Number.isFinite(player.y)) player.y = (Math.floor(curRows / 2) + 0.5) * TILE_SIZE;
 
-        let camX = Math.floor(player.x - viewW / 2);
-        let camY = Math.floor(player.y - viewH / 2);
+        let camX = player.x - viewW / 2;
+        let camY = player.y - viewH / 2;
         if (!Number.isFinite(camX)) camX = 0;
         if (!Number.isFinite(camY)) camY = 0;
         if (worldW > viewW) camX = Math.max(0, Math.min(worldW - viewW, camX));
-        else camX = Math.floor((worldW - viewW) / 2);
+        else camX = (worldW - viewW) / 2;
         if (worldH > viewH) camY = Math.max(0, Math.min(worldH - viewH, camY));
-        else camY = Math.floor((worldH - viewH) / 2);
+        else camY = (worldH - viewH) / 2;
+
+        // Snapping to integer device pixels to eliminate subpixel camera jitter / skipping frames illusion
+        camX = Math.round(camX * ZOOM) / ZOOM;
+        camY = Math.round(camY * ZOOM) / ZOOM;
 
         activeCamera = { camX, camY, zoom: ZOOM, viewW, viewH };
 
@@ -11256,7 +11407,8 @@ const MAPS = [
             camY += (Math.random() - 0.5) * 10;
         }
 
-        const renderList = [];
+        const renderList = ACTIVE_RENDER_LIST;
+        renderList.length = 0;
 
         ctx.save();
         ctx.imageSmoothingEnabled = false;
@@ -11297,7 +11449,6 @@ const MAPS = [
                         assets.drawImage(ctx, 'floors_tiles', gxSrc, gySrc, 16, 16, tx, ty, TILE_SIZE + 0.5, TILE_SIZE + 0.5);
                     }
                     const windPhase = (nowMs / 420) + (c * 0.45) + (r * 0.35);
-                    const windSway = Math.sin(windPhase) * 3.5;
 
                     if (isBright && assets.hasImage('pixel_vegetation') && tileHash % 7 === 0) {
                         const vegCol = (tileHash % 4) * 32;
@@ -11305,167 +11456,54 @@ const MAPS = [
                         assets.drawImage(ctx, 'pixel_vegetation', vegCol, 384, 32, 32, tx + 4 + swayOff, ty + 4, 28, 28);
                     }
 
-                    // Draw organic grass blade clusters per meadow tile
-                    if (tileHash % 2 === 0) {
+                    // Draw organic grass blade clusters per meadow tile (accentuated on meadow tiles tileHash % 6 === 0)
+                    if (tileHash % 6 === 0) {
+                        const windSway = Math.sin(windPhase) * 3.0;
                         const gx = tx + 8 + (tileHash % 16);
-                        const gy = ty + 16 + ((tileHash * 3) % 18);
+                        const gy = ty + 16 + ((tileHash * 3) % 12);
                         
                         // Base shadow
                         ctx.fillStyle = isBright ? '#15803d' : '#1e293b';
                         ctx.fillRect(gx - 1, gy, 4, 1.5);
                         
-                        // Blade 1 (sways left/right with wind)
-                        ctx.strokeStyle = isBright ? '#22c55e' : '#334155';
-                        ctx.lineWidth = 1.5;
-                        ctx.beginPath();
-                        ctx.moveTo(gx, gy);
-                        ctx.quadraticCurveTo(gx + windSway * 0.5, gy - 4, gx + windSway, gy - 8);
-                        ctx.stroke();
-
-                        // Blade 1 tip highlight
+                        // Crisp fast blades
+                        ctx.fillStyle = isBright ? '#22c55e' : '#334155';
+                        ctx.fillRect(gx + windSway * 0.5, gy - 4, 1.5, 4);
+                        ctx.fillRect(gx + windSway, gy - 8, 1.5, 4);
                         ctx.fillStyle = isBright ? '#86efac' : '#475569';
-                        ctx.fillRect(Math.round(gx + windSway), Math.round(gy - 8), 1.5, 1.5);
+                        ctx.fillRect(gx + windSway, gy - 8, 1.5, 1.5);
 
-                        // Blade 2
-                        ctx.beginPath();
-                        ctx.moveTo(gx + 2, gy);
-                        ctx.quadraticCurveTo(gx + 2 + windSway * 0.6, gy - 3, gx + 2 + windSway * 0.9 + 2, gy - 6);
-                        ctx.stroke();
+                        ctx.fillStyle = isBright ? '#16a34a' : '#1e293b';
+                        ctx.fillRect(gx + 2 + windSway * 0.6, gy - 5, 1.5, 5);
+                        ctx.fillRect(gx - 2 + windSway * 0.4, gy - 4, 1.5, 4);
 
-                        // Blade 3
-                        ctx.beginPath();
-                        ctx.moveTo(gx - 2, gy);
-                        ctx.quadraticCurveTo(gx - 2 + windSway * 0.4, gy - 3, gx - 2 + windSway * 0.7 - 2, gy - 5);
-                        ctx.stroke();
-                    }
-
-                    if (isBright && tileHash % 5 === 0) {
-                        const gx2 = tx + 24 + ((tileHash * 5) % 14);
-                        const gy2 = ty + 8 + ((tileHash * 7) % 16);
-                        const sway2 = Math.sin(windPhase + 1.2) * 3.0;
-
-                        ctx.strokeStyle = '#4ade80';
-                        ctx.lineWidth = 1.5;
-                        ctx.beginPath();
-                        ctx.moveTo(gx2, gy2);
-                        ctx.quadraticCurveTo(gx2 + sway2 * 0.5, gy2 - 3, gx2 + sway2, gy2 - 7);
-                        ctx.stroke();
-                        ctx.fillStyle = '#bbf7d0';
-                        ctx.fillRect(Math.round(gx2 + sway2), Math.round(gy2 - 7), 1.5, 1.5);
-
-                        // Occasional tiny yellow wildflower head swaying on top
-                        if (tileHash % 15 === 0) {
+                        if (isBright && tileHash % 18 === 0) {
                             ctx.fillStyle = '#fde047';
-                            ctx.beginPath();
-                            ctx.arc(gx2 + sway2, gy2 - 8, 2, 0, Math.PI * 2);
-                            ctx.fill();
+                            ctx.fillRect(gx + windSway - 1, gy - 9, 3, 3);
                             ctx.fillStyle = '#f59e0b';
-                            ctx.fillRect(gx2 + sway2 - 0.5, gy2 - 8.5, 1, 1);
+                            ctx.fillRect(gx + windSway, gy - 8, 1, 1);
                         }
                     }
                 }
 
                 if (t === 1) {
-                    // Contiguous 32-Bit Cobblestone Highway (4 Richly Varied Flagstone Patterns & Organic Feathered Edges)
-                    const roadBed = isBright ? '#b48a4d' : '#2b3648';
-                    const stoneLight = isBright ? '#f3e5c0' : '#79889e';
-                    const stoneMid = isBright ? '#dbc28f' : '#52627a';
-                    const stoneDark = isBright ? '#825c23' : '#1b2433';
-                    const mortarDark = isBright ? '#6a4918' : '#111827';
-
-                    // Road foundation bed
-                    ctx.fillStyle = roadBed;
-                    ctx.fillRect(tx, ty, TILE_SIZE + 1, TILE_SIZE + 1);
-                    if (assets.hasImage('floors_tiles')) {
-                        const pxSrc = isBright ? (96 + (tileHash % 3) * 16) : (256 + (tileHash % 3) * 16);
-                        const pySrc = isBright ? (160 + (tileHash % 2) * 16) : (16 + (tileHash % 2) * 16);
-                        assets.drawImage(ctx, 'floors_tiles', pxSrc, pySrc, 16, 16, tx, ty, TILE_SIZE, TILE_SIZE);
+                    // Contiguous 32-Bit Cobblestone Highway (Cached offscreen canvases for blazing 60 FPS performance)
+                    const pVariant = (tileHash ^ (c * 7 + r * 13)) % 4;
+                    const cCanvas = getCachedCobbleTile(isBright, pVariant);
+                    if (cCanvas) {
+                        ctx.drawImage(cCanvas, tx, ty, TILE_SIZE + 0.5, TILE_SIZE + 0.5);
+                    } else {
+                        ctx.fillStyle = isBright ? '#dbc28f' : '#52627a';
+                        ctx.fillRect(tx, ty, TILE_SIZE + 1, TILE_SIZE + 1);
                     }
 
-                    // Neighbor Adjacency
+                    // Neighbor Adjacency (Soft roadside dithering on borders without neighboring road)
                     const hasN = r > 0 && mapGrid[r - 1] && mapGrid[r - 1][c] === 1;
                     const hasS = r < curRows - 1 && mapGrid[r + 1] && mapGrid[r + 1][c] === 1;
                     const hasW = c > 0 && mapGrid[r][c - 1] === 1;
                     const hasE = c < curCols - 1 && mapGrid[r][c + 1] === 1;
+                    const stoneMid = isBright ? '#dbc28f' : '#52627a';
 
-                    // 4 Distinct Artisanal Paving Layouts (Breaking the repetitive 5-stone pattern)
-                    const pVariant = (tileHash ^ (c * 7 + r * 13)) % 4;
-                    let stones = [];
-
-                    if (pVariant === 0) {
-                        // Variant 0: Large Interlocking Polygonal Master Flagstones
-                        stones = [
-                            { sx: tx + 2, sy: ty + 2, sw: 20, sh: 16 },
-                            { sx: tx + 24, sy: ty + 2, sw: 15, sh: 18 },
-                            { sx: tx + 2, sy: ty + 20, sw: 17, sh: 18 },
-                            { sx: tx + 21, sy: ty + 22, sw: 18, sh: 16 }
-                        ];
-                    } else if (pVariant === 1) {
-                        // Variant 1: Staggered Ashlar Masonry Pavers (Running Bond)
-                        stones = [
-                            { sx: tx + 2, sy: ty + 2, sw: 24, sh: 10 },
-                            { sx: tx + 28, sy: ty + 2, sw: 11, sh: 10 },
-                            { sx: tx + 2, sy: ty + 14, sw: 13, sh: 11 },
-                            { sx: tx + 17, sy: ty + 14, sw: 22, sh: 11 },
-                            { sx: tx + 2, sy: ty + 27, sw: 22, sh: 11 },
-                            { sx: tx + 26, sy: ty + 27, sw: 13, sh: 11 }
-                        ];
-                    } else if (pVariant === 2) {
-                        // Variant 2: Natural River Cobble Mosaic (Varying Rounded Shapes & Gravel)
-                        stones = [
-                            { sx: tx + 3, sy: ty + 3, sw: 13, sh: 11 },
-                            { sx: tx + 18, sy: ty + 2, sw: 11, sh: 13 },
-                            { sx: tx + 31, sy: ty + 4, sw: 8, sh: 10 },
-                            { sx: tx + 2, sy: ty + 16, sw: 11, sh: 10 },
-                            { sx: tx + 15, sy: ty + 16, sw: 13, sh: 11 },
-                            { sx: tx + 30, sy: ty + 16, sw: 9, sh: 12 },
-                            { sx: tx + 4, sy: ty + 28, sw: 15, sh: 10 },
-                            { sx: tx + 21, sy: ty + 28, sw: 17, sh: 10 }
-                        ];
-                    } else {
-                        // Variant 3: Weathered Ancient Slabs with Moss Crevices
-                        stones = [
-                            { sx: tx + 3, sy: ty + 3, sw: 16, sh: 17 },
-                            { sx: tx + 21, sy: ty + 3, sw: 17, sh: 15 },
-                            { sx: tx + 3, sy: ty + 22, sw: 18, sh: 16 },
-                            { sx: tx + 23, sy: ty + 20, sw: 15, sh: 18 }
-                        ];
-                    }
-
-                    // Render individual stone slabs
-                    stones.forEach(st => {
-                        // Mortar shadow
-                        ctx.fillStyle = mortarDark;
-                        ctx.beginPath();
-                        drawRoundRect(ctx, st.sx, st.sy, st.sw, st.sh, 3);
-                        ctx.fill();
-
-                        // Main stone face
-                        ctx.fillStyle = stoneMid;
-                        ctx.beginPath();
-                        drawRoundRect(ctx, st.sx + 1, st.sy + 1, st.sw - 2, st.sh - 2, 2.5);
-                        ctx.fill();
-
-                        // Bevel highlight
-                        ctx.fillStyle = stoneLight;
-                        ctx.fillRect(st.sx + 2, st.sy + 1, Math.max(2, st.sw - 5), 1.5);
-                        ctx.fillRect(st.sx + 1.5, st.sy + 2, 1.5, Math.max(2, st.sh - 5));
-
-                        // Stone texture speck
-                        if ((st.sx + st.sy) % 3 === 0) {
-                            ctx.fillStyle = stoneDark;
-                            ctx.fillRect(st.sx + Math.floor(st.sw * 0.5), st.sy + Math.floor(st.sh * 0.5), 1.5, 1.5);
-                        }
-                    });
-
-                    // Variant 3 Moss Crevices
-                    if (pVariant === 3 && isBright) {
-                        ctx.fillStyle = '#15803d';
-                        ctx.fillRect(tx + 18, ty + 18, 3, 2);
-                        ctx.fillRect(tx + 19, ty + 19, 2, 2);
-                    }
-
-                    // Natural organic roadside dithering (Soft stone beveling without harsh perimeter stripes)
                     if (!hasN) {
                         ctx.fillStyle = stoneMid;
                         ctx.fillRect(tx + 8, ty - 1, 4, 1.5);
@@ -12437,8 +12475,14 @@ const MAPS = [
     function renderMinimap() {
         const mw = minimapCanvas.width;
         const mh = minimapCanvas.height;
-        mmCtx.fillStyle = '#050811';
-        mmCtx.fillRect(0, 0, mw, mh);
+
+        if (!minimapBaseCanvas) {
+            minimapBaseCanvas = document.createElement('canvas');
+            minimapBaseCanvas.width = mw;
+            minimapBaseCanvas.height = mh;
+            minimapBaseCtx = minimapBaseCanvas.getContext('2d');
+            minimapNeedsFullRedraw = true;
+        }
 
         const curCols = getMapCols(currentMapIndex);
         const curRows = getMapRows(currentMapIndex);
@@ -12448,35 +12492,29 @@ const MAPS = [
         const tw = mw / curCols;
         const th = mh / curRows;
 
-        // Draw explored tiles from fogGrid
-        for (let r = 0; r < curRows; r++) {
-            for (let c = 0; c < curCols; c++) {
-                if (fogGrid[r] && fogGrid[r][c]) {
-                    const t = mapGrid[r] ? mapGrid[r][c] : 0;
-                    let color = '#0f172a'; // standard ground
-                    if (t === 1) color = '#475569'; // path
-                    else if (t === 2) color = '#1e293b'; // perimeter wall
-                    else if (t === 3) color = '#065f46'; // tree
-                    else if (t === 4) color = '#0284c7'; // river
-                    else if (t === 5) color = '#1e293b'; // sanctuary
-                    else if (t === 7) color = '#16a34a'; // hedge
-                    else if (t === 8) color = '#d97706'; // bridge
-                    else if (t === 9) color = '#15803d'; // meadow wildflowers
-                    else if (t === 10) color = '#e11d48'; // outrage vent
-                    else if (t === 11) color = '#9333ea'; // stasis rune
-                    else if (t === 12) color = '#b45309'; // village building
-                    else if (t === 13) color = '#78350f'; // fence
-                    mmCtx.fillStyle = color;
-                    mmCtx.fillRect(c * tw, r * th, tw + 0.5, th + 0.5);
-                } else {
-                    // Subtle fog speckle
-                    if ((r + c) % 4 === 0) {
-                        mmCtx.fillStyle = '#0a1020';
-                        mmCtx.fillRect(c * tw, r * th, tw, th);
+        if (minimapNeedsFullRedraw || minimapCachedMapIndex !== currentMapIndex) {
+            minimapCachedMapIndex = currentMapIndex;
+            minimapBaseCtx.fillStyle = '#050811';
+            minimapBaseCtx.fillRect(0, 0, mw, mh);
+
+            // Draw explored tiles from fogGrid onto cache canvas
+            for (let r = 0; r < curRows; r++) {
+                for (let c = 0; c < curCols; c++) {
+                    if (fogGrid[r] && fogGrid[r][c]) {
+                        const t = mapGrid[r] ? mapGrid[r][c] : 0;
+                        minimapBaseCtx.fillStyle = getMinimapTileColor(t);
+                        minimapBaseCtx.fillRect(c * tw, r * th, tw + 0.5, th + 0.5);
+                    } else if ((r + c) % 4 === 0) {
+                        minimapBaseCtx.fillStyle = '#0a1020';
+                        minimapBaseCtx.fillRect(c * tw, r * th, tw, th);
                     }
                 }
             }
+            minimapNeedsFullRedraw = false;
         }
+
+        // Single instant blit of pre-rendered terrain base
+        mmCtx.drawImage(minimapBaseCanvas, 0, 0);
 
         // Portals (only revealed if tile explored)
         portals.forEach(p => {

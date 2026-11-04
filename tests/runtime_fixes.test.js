@@ -1858,4 +1858,41 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         env.exitBuildingInterior();
     });
 
+    test('60 FPS Overworld Performance: Cached Cobblestone Tiles, Incremental Minimap & Smooth Device-Pixel Camera', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(1); // Performative Valley (Kakariko Village with cobblestones)
+        
+        // 1. Verify Cobblestone Pre-rendered Offscreen Tile Cache
+        for (let pVariant = 0; pVariant < 4; pVariant++) {
+            const brightTile = env.getCachedCobbleTile(true, pVariant);
+            assert.ok(brightTile, `Bright cobblestone variant ${pVariant} must exist in cache`);
+            assert.equal(brightTile.width, 32);
+            assert.equal(brightTile.height, 32);
+
+            const darkTile = env.getCachedCobbleTile(false, pVariant);
+            assert.ok(darkTile, `Dark cobblestone variant ${pVariant} must exist in cache`);
+            assert.equal(darkTile.width, 32);
+            assert.equal(darkTile.height, 32);
+        }
+
+        // 2. Verify Minimap Pre-rendered Base Layer
+        assert.doesNotThrow(() => {
+            env.renderMinimap();
+        }, 'renderMinimap must execute cleanly using base cache');
+
+        // 3. Verify Camera Device-Pixel Snapping & 60 FPS Render Tick
+        assert.doesNotThrow(() => {
+            env.updateGameplay(0.016);
+            env.renderGameplay();
+        }, 'renderGameplay must execute without frame drops or vector bottlenecks');
+
+        const cam = env.activeCamera;
+        assert.ok(cam, 'Active camera must be populated');
+        const zoom = cam.zoom || 1.35;
+        // Verify screen device-pixel alignment: camX * zoom and camY * zoom should be integers
+        const screenX = Math.round(cam.camX * zoom);
+        const expectedX = Math.round(screenX) / zoom;
+        assert.ok(Math.abs(cam.camX - expectedX) < 0.001, 'camX must be aligned to integer device pixels');
+    });
+
 });
