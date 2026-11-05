@@ -151,7 +151,7 @@
     <canvas id="gameCanvas" class="w-full h-full"></canvas>
 
     <!-- CRT SCANLINE OVERLAY -->
-    <div id="crtOverlay" class="crt-scanlines fixed inset-0 z-10"></div>
+    <div id="crtOverlay" class="crt-scanlines fixed inset-0 z-10 hidden"></div>
 
     <!-- =================================================================== -->
     <!-- 7-SCENE OPENING CUTSCENE OVERLAY                                    -->
@@ -828,7 +828,7 @@
                 </div>
                 <div class="flex justify-between items-center py-2 border-t border-slate-800">
                     <span class="font-bold text-slate-300">CRT Scanline Filter</span>
-                    <input id="toggleCrt" type="checkbox" checked class="w-4 h-4 accent-cyan-400" />
+                    <input id="toggleCrt" type="checkbox" class="w-4 h-4 accent-cyan-400" />
                 </div>
                 <div class="flex justify-between items-center py-2 border-t border-slate-800">
                     <span class="font-bold text-slate-300">Combat Screen Shake</span>
@@ -1650,7 +1650,10 @@
                 entry.img = img;
                 img.onload = () => {
                     entry.loaded = true;
-                    if (id === 'floors_tiles') COBBLE_TILE_CACHE = null;
+                    if (id === 'floors_tiles' || id === 'pixel_vegetation') {
+                        COBBLE_TILE_CACHE = null;
+                        GRASS_TILE_CACHE = null;
+                    }
                 };
                 img.onerror = () => { entry.loaded = false; };
             }
@@ -1687,7 +1690,10 @@
                 entry.img = img;
                 img.onload = () => {
                     entry.loaded = true;
-                    if (id === 'floors_tiles') COBBLE_TILE_CACHE = null;
+                    if (id === 'floors_tiles' || id === 'pixel_vegetation') {
+                        COBBLE_TILE_CACHE = null;
+                        GRASS_TILE_CACHE = null;
+                    }
                 };
                 img.onerror = () => { entry.loaded = false; };
             }
@@ -1702,7 +1708,10 @@
                 entry.img = img;
                 img.onload = () => {
                     entry.loaded = true;
-                    if (id === 'floors_tiles') COBBLE_TILE_CACHE = null;
+                    if (id === 'floors_tiles' || id === 'pixel_vegetation') {
+                        COBBLE_TILE_CACHE = null;
+                        GRASS_TILE_CACHE = null;
+                    }
                 };
                 img.onerror = () => { entry.loaded = false; };
             }
@@ -2622,16 +2631,25 @@
             const dx = Math.round(x - dw / 2);
             const dy = Math.round(y - dh + 6);
 
+            // Fluid 4-direction Walk Cycle Bobbing & Body Sway:
+            // When moving, the character visibly steps with rhythmic vertical bob and subtle horizontal sway!
+            let walkBobY = 0;
+            let walkSwayX = 0;
+            if (isMoving) {
+                walkBobY = (walkStep % 2 === 0) ? -2 : 0;
+                walkSwayX = (walkStep === 0) ? -1 : (walkStep === 2 ? 1 : 0);
+            }
+
             ctx.save();
             ctx.imageSmoothingEnabled = false;
-            // Ground drop shadow
+            // Ground drop shadow (stays anchored to floor)
             ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
             ctx.beginPath();
             ctx.ellipse(x, y + 4, dw * 0.38, dw * 0.16, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Draw character frame
-            assets.drawPokemonSprite(ctx, regEntry.sheet, frameCol, dx, dy, dw, dh);
+            // Draw character frame with walk bobbing & sway applied
+            assets.drawPokemonSprite(ctx, regEntry.sheet, frameCol, dx + walkSwayX, dy + walkBobY, dw, dh);
 
             // Mind Freed serene aura: Keeps their own model and gender, never turns into player copy!
             if (isMindFreed) {
@@ -2889,9 +2907,21 @@
             px(12, 5, 1, 3, '#f8fafc');
         }
 
-        // Walking foot bob
-        const leftFootY = (frame === 1) ? 16 : 17;
-        const rightFootY = (frame === 3) ? 16 : 17;
+        // Walking foot bob and body bounce
+        const isPlayer = (role === 'player' || role === 'hero');
+        const isMoving = opts.isMoving !== undefined
+            ? !!opts.isMoving
+            : (isPlayer
+                ? (typeof player !== 'undefined' && player && !!player.isMoving)
+                : (frame !== 0));
+        const walkStep = (opts.isMoving !== undefined && opts.frame !== undefined)
+            ? opts.frame
+            : (isPlayer
+                ? (typeof player !== 'undefined' && player ? (player.animFrame || 0) : 0)
+                : (opts.frame !== undefined ? opts.frame : (Math.floor(performance.now() / 130) % 4)));
+
+        const leftFootY = isMoving ? ((walkStep === 0) ? 14 : 17) : ((frame === 1) ? 16 : 17);
+        const rightFootY = isMoving ? ((walkStep === 2) ? 14 : 17) : ((frame === 3) ? 16 : 17);
 
         // 1. High-Detail Boots & Trousers
         let bootCol = '#1e293b';
@@ -3099,7 +3129,7 @@
         }
 
         // Arms & Vambraces
-        const armSwing = (frame === 1) ? -1 : (frame === 3 ? 1 : 0);
+        const armSwing = isMoving ? ((walkStep === 0) ? -3 : (walkStep === 2 ? 3 : 0)) : ((frame === 1) ? -1 : (frame === 3 ? 1 : 0));
         const handCol = (role === 'player' && equipment && equipment.hands && equipment.hands.visualColor)
             ? equipment.hands.visualColor
             : (role === 'avi' ? '#b87747' : skinColor);
@@ -5781,6 +5811,8 @@ const MAPS = [
     let minimapNeedsFullRedraw = true;
     let minimapCachedMapIndex = -1;
     let COBBLE_TILE_CACHE = null;
+    let GRASS_TILE_CACHE = null;
+    let currentMapTrees = [];
     const ACTIVE_RENDER_LIST = [];
 
     function getMinimapTileColor(t) {
@@ -8209,11 +8241,43 @@ const MAPS = [
         }
 
         revealFogAround(player.x, player.y, 6);
+        rebuildMapTreesCache(mapIndex);
         hazardCleanseProgress = {};
 
         unlockRiverBridgeIfReady();
         updateAllHud();
         wireSceneBuilderUI();
+    }
+
+    function rebuildMapTreesCache(mIdx) {
+        currentMapTrees = [];
+        const mGrid = (typeof mapGrid !== 'undefined' && mapGrid && mapGrid.length > 0) ? mapGrid : ((typeof MAPS !== 'undefined' && MAPS[mIdx]) ? MAPS[mIdx].grid : null);
+        if (!mGrid) return;
+        const curR = mGrid.length;
+        const curC = mGrid[0] ? mGrid[0].length : 0;
+        const treeW = 64;
+        const treeH = 80;
+        for (let r = 0; r < curR; r++) {
+            for (let c = 0; c < curC; c++) {
+                if (mGrid[r] && mGrid[r][c] === 3) {
+                    const tx = c * TILE_SIZE;
+                    const ty = r * TILE_SIZE;
+                    currentMapTrees.push({
+                        type: 'tree',
+                        tx,
+                        ty,
+                        baseY: ty + TILE_SIZE,
+                        draw: () => {
+                            if (assets.hasImage('alttp_tree_lone')) {
+                                assets.drawImage(ctx, 'alttp_tree_lone', tx + (TILE_SIZE - treeW) / 2, ty + TILE_SIZE - treeH, treeW, treeH);
+                            } else if (assets.hasImage('alttp_tree')) {
+                                assets.drawImage(ctx, 'alttp_tree', tx + (TILE_SIZE - treeW) / 2, ty + TILE_SIZE - treeH, treeW, treeH);
+                            }
+                        }
+                    });
+                }
+            }
+        }
     }
 
     function unlockRiverBridgeIfReady() {
@@ -9332,7 +9396,7 @@ const MAPS = [
                 }
             }
             player.animTimer = (player.animTimer || 0) + dt;
-            if (player.animTimer > 0.13) {
+            if (player.animTimer >= 0.12) {
                 player.animTimer = 0;
                 player.animFrame = ((player.animFrame || 0) + 1) % 4;
             }
@@ -9374,7 +9438,8 @@ const MAPS = [
                 }
             });
         } else {
-            player.animFrame = 0;
+            player.animTimer = 0;
+            player.animFrame = 1;
         }
 
         // 2. [Q] Prism Beam Channeling
@@ -10110,10 +10175,12 @@ const MAPS = [
         // 12. Draw Player inside Interior
         drawCharacterSprite(ctx, offX + player.x, offY + player.y, 2.3, {
             role: 'player',
-            dir: player.dir,
-            frame: player.frame,
-            skinColor: '#fde6d8',
-            tunicColor: '#0284c7',
+            characterKey: player.characterKey || 'player_m',
+            dir: itemFanfare.active ? 0 : player.dir,
+            frame: itemFanfare.active ? 1 : player.animFrame,
+            isMoving: itemFanfare.active ? false : player.isMoving,
+            skinColor: (DIFFICULTY_PROFILES[player.skinIndex] || DIFFICULTY_PROFILES[0]).skinHex,
+            tunicColor: player.tunicColor,
             equipment: player.equipment
         });
 
@@ -10889,10 +10956,16 @@ const MAPS = [
         // 12. Player Character Inside Room
         drawCharacterSprite(ctx, offX + player.x, offY + player.y, 2.3, {
             role: 'player',
+            characterKey: player.characterKey || 'player_m',
             dir: itemFanfare.active ? 0 : player.dir,
-            frame: itemFanfare.active ? 0 : player.walkFrame || 0,
-            skinColor: player.skinColor || '#fdba74',
-            holdingItemOverhead: itemFanfare.active
+            frame: itemFanfare.active ? 1 : player.animFrame,
+            isMoving: itemFanfare.active ? false : player.isMoving,
+            skinColor: (DIFFICULTY_PROFILES[player.skinIndex] || DIFFICULTY_PROFILES[0]).skinHex,
+            hairStyle: player.hairStyle,
+            hairColor: player.hairColor,
+            tunicColor: player.tunicColor,
+            holdingItemOverhead: itemFanfare.active,
+            equipment: player.equipment
         });
 
         // In-Engine Scene Builder Overlay inside interior rooms
@@ -11360,6 +11433,53 @@ const MAPS = [
         return COBBLE_TILE_CACHE[key] ? COBBLE_TILE_CACHE[key][(pVariant || 0) % 4] : null;
     }
 
+    function initGrassTileCache() {
+        if (typeof document === 'undefined') return;
+        GRASS_TILE_CACHE = { bright: [], dark: [] };
+        [true, false].forEach(isBright => {
+            const key = isBright ? 'bright' : 'dark';
+            const baseGrass = isBright ? '#337903' : '#1e3a1f';
+            for (let v = 0; v < 4; v++) {
+                const gCanvas = document.createElement('canvas');
+                gCanvas.width = 32;
+                gCanvas.height = 32;
+                const gCtx = gCanvas.getContext('2d');
+                gCtx.fillStyle = baseGrass;
+                gCtx.fillRect(0, 0, 32, 32);
+
+                if (assets && assets.hasImage && assets.hasImage('floors_tiles')) {
+                    const gxSrc = (v === 1) ? 16 : (v === 2 ? 48 : 32);
+                    assets.drawImage(gCtx, 'floors_tiles', gxSrc, 160, 16, 16, 0, 0, 32, 32);
+                }
+
+                if (isBright && assets && assets.hasImage && assets.hasImage('pixel_vegetation') && v === 1) {
+                    assets.drawImage(gCtx, 'pixel_vegetation', 0, 384, 32, 32, 2, 2, 28, 28);
+                }
+
+                if (v === 0 || v === 2) {
+                    const gx = 12 + (v === 0 ? 0 : 6);
+                    gCtx.fillStyle = isBright ? '#15803d' : '#1e293b';
+                    gCtx.fillRect(gx - 1, 18, 4, 1.5);
+                    gCtx.fillStyle = isBright ? '#22c55e' : '#334155';
+                    gCtx.fillRect(gx, 14, 1.5, 4);
+                    gCtx.fillStyle = isBright ? '#86efac' : '#475569';
+                    gCtx.fillRect(gx + 1, 11, 1.5, 1.5);
+                    gCtx.fillStyle = isBright ? '#16a34a' : '#1e293b';
+                    gCtx.fillRect(gx + 2, 13, 1.5, 5);
+                }
+
+                GRASS_TILE_CACHE[key][v] = gCanvas;
+            }
+        });
+    }
+
+    function getCachedGrassTile(isBright, pVariant) {
+        if (!GRASS_TILE_CACHE) initGrassTileCache();
+        if (!GRASS_TILE_CACHE) return null;
+        const key = isBright ? 'bright' : 'dark';
+        return GRASS_TILE_CACHE[key] ? GRASS_TILE_CACHE[key][(pVariant || 0) % 4] : null;
+    }
+
     function renderGameplay() {
         const w = canvas.width;
         const h = canvas.height;
@@ -11438,51 +11558,14 @@ const MAPS = [
                 // Overlap by 1px to eliminate fractional sub-pixel seams
                 ctx.fillRect(tx, ty, TILE_SIZE + 1, TILE_SIZE + 1);
 
-                // Pixel-art grass texture & wind-animated swaying 32-bit grass blades (flowing back and forth with wind)
+                // Pixel-art grass ground (Cached offscreen canvases for blazing 60 FPS performance)
                 if (t === 0 || t === 9) {
-                    if (isBright && assets.hasImage('floors_tiles')) {
-                        // Master seamless grass tile: (32, 160) - subtle variation without alternating checkerboard!
-                        let gxSrc = 32;
-                        if (tileHash % 13 === 0) gxSrc = 16;
-                        else if (tileHash % 17 === 0) gxSrc = 48;
-                        const gySrc = 160;
-                        assets.drawImage(ctx, 'floors_tiles', gxSrc, gySrc, 16, 16, tx, ty, TILE_SIZE + 0.5, TILE_SIZE + 0.5);
-                    }
-                    const windPhase = (nowMs / 420) + (c * 0.45) + (r * 0.35);
-
-                    if (isBright && assets.hasImage('pixel_vegetation') && tileHash % 7 === 0) {
-                        const vegCol = (tileHash % 4) * 32;
-                        const swayOff = Math.round(Math.sin(windPhase) * 1.5);
-                        assets.drawImage(ctx, 'pixel_vegetation', vegCol, 384, 32, 32, tx + 4 + swayOff, ty + 4, 28, 28);
-                    }
-
-                    // Draw organic grass blade clusters per meadow tile (accentuated on meadow tiles tileHash % 6 === 0)
-                    if (tileHash % 6 === 0) {
-                        const windSway = Math.sin(windPhase) * 3.0;
-                        const gx = tx + 8 + (tileHash % 16);
-                        const gy = ty + 16 + ((tileHash * 3) % 12);
-                        
-                        // Base shadow
-                        ctx.fillStyle = isBright ? '#15803d' : '#1e293b';
-                        ctx.fillRect(gx - 1, gy, 4, 1.5);
-                        
-                        // Crisp fast blades
-                        ctx.fillStyle = isBright ? '#22c55e' : '#334155';
-                        ctx.fillRect(gx + windSway * 0.5, gy - 4, 1.5, 4);
-                        ctx.fillRect(gx + windSway, gy - 8, 1.5, 4);
-                        ctx.fillStyle = isBright ? '#86efac' : '#475569';
-                        ctx.fillRect(gx + windSway, gy - 8, 1.5, 1.5);
-
-                        ctx.fillStyle = isBright ? '#16a34a' : '#1e293b';
-                        ctx.fillRect(gx + 2 + windSway * 0.6, gy - 5, 1.5, 5);
-                        ctx.fillRect(gx - 2 + windSway * 0.4, gy - 4, 1.5, 4);
-
-                        if (isBright && tileHash % 18 === 0) {
-                            ctx.fillStyle = '#fde047';
-                            ctx.fillRect(gx + windSway - 1, gy - 9, 3, 3);
-                            ctx.fillStyle = '#f59e0b';
-                            ctx.fillRect(gx + windSway, gy - 8, 1, 1);
-                        }
+                    const gCanvas = getCachedGrassTile(isBright, tileHash % 4);
+                    if (gCanvas) {
+                        ctx.drawImage(gCanvas, tx, ty, TILE_SIZE + 0.5, TILE_SIZE + 0.5);
+                    } else {
+                        ctx.fillStyle = baseGrass;
+                        ctx.fillRect(tx, ty, TILE_SIZE + 1, TILE_SIZE + 1);
                     }
                 }
 
@@ -11887,25 +11970,16 @@ const MAPS = [
         });
 
         // PASS 2: Y-SORTED FOREGROUND ENTITIES & PHYSICAL OBJECTS (Depth sorting)
-        // 1. Trees as physical objects (Grounded directly onto terrain without floating shadow)
-        for (let r = minRow; r < maxRow; r++) {
-            for (let c = minCol; c < maxCol; c++) {
-                if (mapGrid[r] && mapGrid[r][c] === 3) {
-                    const tx = c * TILE_SIZE;
-                    const ty = r * TILE_SIZE;
-                    const treeW = 64;
-                    const treeH = 80;
-                    renderList.push({
-                        type: 'tree',
-                        baseY: ty + TILE_SIZE,
-                        draw: () => {
-                            if (assets.hasImage('alttp_tree_lone')) {
-                                assets.drawImage(ctx, 'alttp_tree_lone', tx + (TILE_SIZE - treeW) / 2, ty + TILE_SIZE - treeH, treeW, treeH);
-                            } else if (assets.hasImage('alttp_tree')) {
-                                assets.drawImage(ctx, 'alttp_tree', tx + (TILE_SIZE - treeW) / 2, ty + TILE_SIZE - treeH, treeW, treeH);
-                            }
-                        }
-                    });
+        // 1. Trees as physical objects (Precomputed tree cache with fast viewport culling)
+        if (currentMapTrees && currentMapTrees.length > 0) {
+            const minX = camX - 64;
+            const maxX = camX + viewW + 64;
+            const minY = camY - 80;
+            const maxY = camY + viewH + 80;
+            for (let i = 0; i < currentMapTrees.length; i++) {
+                const tr = currentMapTrees[i];
+                if (tr.tx >= minX && tr.tx <= maxX && tr.ty >= minY && tr.ty <= maxY) {
+                    renderList.push(tr);
                 }
             }
         }
@@ -12376,9 +12450,11 @@ const MAPS = [
 
                 drawCharacterSprite(ctx, player.x, player.y, 2.3, {
                     role: 'player',
+                    characterKey: player.characterKey || 'player_m',
                     dir: itemFanfare.active ? 0 : player.dir,
-                    frame: itemFanfare.active ? 0 : player.animFrame,
-                    skinColor: DIFFICULTY_PROFILES[player.skinIndex].skinHex,
+                    frame: itemFanfare.active ? 1 : player.animFrame,
+                    isMoving: itemFanfare.active ? false : player.isMoving,
+                    skinColor: (DIFFICULTY_PROFILES[player.skinIndex] || DIFFICULTY_PROFILES[0]).skinHex,
                     hairStyle: player.hairStyle,
                     hairColor: player.hairColor,
                     tunicColor: player.tunicColor,
@@ -13895,6 +13971,8 @@ const MAPS = [
             highestMapReached,
             player: {
                 name: player.name,
+                characterKey: player.characterKey || 'player_m',
+                gender: player.gender || 'male',
                 skinIndex: player.skinIndex,
                 hairStyle: player.hairStyle,
                 hairColor: player.hairColor,
@@ -14031,6 +14109,8 @@ const MAPS = [
             const data = JSON.parse(raw);
             resetGameState(false);
             Object.assign(player, data.player);
+            if (!player.characterKey) player.characterKey = 'player_m';
+            if (!player.gender) player.gender = 'male';
             highestMapReached = data.highestMapReached || data.currentMapIndex || 0;
             loadMap(data.currentMapIndex || 0);
             updateAllHud();
@@ -15152,6 +15232,7 @@ const MAPS = [
 
     if (canvas) {
         canvas.addEventListener('mousemove', (e) => {
+            if (appState !== 'BUILDER') return;
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
@@ -15204,6 +15285,7 @@ const MAPS = [
 
         // HTML5 Drag-and-Drop from Palette onto Canvas
         canvas.addEventListener('dragover', (e) => {
+            if (appState !== 'BUILDER') return;
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
@@ -15298,6 +15380,7 @@ const MAPS = [
         });
 
         window.addEventListener('mouseup', () => {
+            if (appState !== 'BUILDER') return;
             builderIsMouseDown = false;
             if (builderDraggedProp) {
                 saveCurrentInterior();
@@ -15583,7 +15666,14 @@ const MAPS = [
         document.getElementById('volLabel').textContent = `${e.target.value}%`;
     };
     document.getElementById('toggleCrt').onchange = (e) => {
-        document.getElementById('crtOverlay').style.display = e.target.checked ? 'block' : 'none';
+        const crt = document.getElementById('crtOverlay');
+        if (e.target.checked) {
+            crt.classList.remove('hidden');
+            crt.style.display = 'block';
+        } else {
+            crt.classList.add('hidden');
+            crt.style.display = 'none';
+        }
     };
 
     const btnToggleDevModeEl = document.getElementById('btnToggleDevMode');
@@ -15618,7 +15708,8 @@ const MAPS = [
     let lastTime = performance.now();
     function mainLoop(now) {
         try {
-            const dt = Math.min(0.05, (now - lastTime) / 1000);
+            const rawDt = (now - lastTime) / 1000;
+            const dt = Math.min(0.04, Math.max(0.008, rawDt));
             lastTime = now;
 
             if (appState === 'INTRO') {

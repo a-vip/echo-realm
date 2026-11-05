@@ -1895,4 +1895,64 @@ describe('Runtime Gameplay Fixes & Stability Test Suite', () => {
         assert.ok(Math.abs(cam.camX - expectedX) < 0.001, 'camX must be aligned to integer device pixels');
     });
 
+    test('Zero-Lag 60 FPS Engine: Cached Grass Tiles, Precomputed Tree Buffer, Character Persistence & Walk Cycle Fluidity', () => {
+        const env = loadGameEnvironment();
+        env.loadMap(0); // Quiet Archive Sanctuary
+
+        // 1. Verify Pre-rendered Offscreen Grass Tile Cache
+        for (let v = 0; v < 4; v++) {
+            const brightGrass = env.getCachedGrassTile(true, v);
+            assert.ok(brightGrass, `Bright grass variant ${v} must exist in cache`);
+            assert.equal(brightGrass.width, 32);
+            assert.equal(brightGrass.height, 32);
+
+            const darkGrass = env.getCachedGrassTile(false, v);
+            assert.ok(darkGrass, `Dark grass variant ${v} must exist in cache`);
+            assert.equal(darkGrass.width, 32);
+            assert.equal(darkGrass.height, 32);
+        }
+
+        // 2. Verify Precomputed Tree Buffer on Map Load
+        assert.ok(Array.isArray(env.currentMapTrees), 'currentMapTrees must be an array');
+        assert.ok(env.currentMapTrees.length > 0, 'currentMapTrees must contain precomputed tree entries');
+        const firstTree = env.currentMapTrees[0];
+        assert.equal(firstTree.type, 'tree');
+        assert.equal(typeof firstTree.tx, 'number');
+        assert.equal(typeof firstTree.ty, 'number');
+        assert.equal(typeof firstTree.draw, 'function');
+
+        // 3. Verify Character Key & Gender Persistence
+        env.selectRosterCharacter('astronaut');
+        assert.equal(env.player.characterKey, 'astronaut');
+        assert.equal(env.player.gender, 'male');
+
+        // 4. Verify 4-Direction Walk Cycle Direction Frame Column Calculation
+        // South (dir 0): idle is 1; walking cycles 0, 1, 2
+        assert.equal(env.getPokemonSpriteFrameCol(0, false, 0), 1, 'Idle South must be frame 1');
+        assert.equal(env.getPokemonSpriteFrameCol(0, true, 0), 0, 'Moving South step 0 must be frame 0');
+        assert.equal(env.getPokemonSpriteFrameCol(0, true, 1), 1, 'Moving South step 1 must be frame 1');
+        assert.equal(env.getPokemonSpriteFrameCol(0, true, 2), 2, 'Moving South step 2 must be frame 2');
+
+        // North (dir 1): idle is 10; walking cycles 9, 10, 11
+        assert.equal(env.getPokemonSpriteFrameCol(1, false, 0), 10, 'Idle North must be frame 10');
+        assert.equal(env.getPokemonSpriteFrameCol(1, true, 0), 9, 'Moving North step 0 must be frame 9');
+        assert.equal(env.getPokemonSpriteFrameCol(1, true, 2), 11, 'Moving North step 2 must be frame 11');
+
+        // East (dir 3): idle is 4; walking cycles 3, 4, 5
+        assert.equal(env.getPokemonSpriteFrameCol(3, false, 0), 4, 'Idle East must be frame 4');
+        assert.equal(env.getPokemonSpriteFrameCol(3, true, 0), 3, 'Moving East step 0 must be frame 3');
+        assert.equal(env.getPokemonSpriteFrameCol(3, true, 2), 5, 'Moving East step 2 must be frame 5');
+
+        // West (dir 2): idle is 7; walking cycles 6, 7, 8
+        assert.equal(env.getPokemonSpriteFrameCol(2, false, 0), 7, 'Idle West must be frame 7');
+        assert.equal(env.getPokemonSpriteFrameCol(2, true, 0), 6, 'Moving West step 0 must be frame 6');
+        assert.equal(env.getPokemonSpriteFrameCol(2, true, 2), 8, 'Moving West step 2 must be frame 8');
+
+        // 5. Verify renderGameplay and updateGameplay execute smoothly
+        assert.doesNotThrow(() => {
+            env.updateGameplay(0.016);
+            env.renderGameplay();
+        }, 'renderGameplay must execute without errors with cached grass and tree buffers');
+    });
+
 });

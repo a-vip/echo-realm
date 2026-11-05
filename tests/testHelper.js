@@ -132,6 +132,9 @@ function loadGameEnvironment() {
         saveCurrentInterior,
         get TILE_SIZE() { return (typeof TILE_SIZE !== "undefined") ? TILE_SIZE : 44; },
         getCachedCobbleTile,
+        getCachedGrassTile,
+        initGrassTileCache,
+        get currentMapTrees() { return (typeof currentMapTrees !== "undefined") ? currentMapTrees : []; },
         renderMinimap,
         };`;
 
